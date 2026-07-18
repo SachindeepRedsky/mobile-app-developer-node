@@ -1,0 +1,215 @@
+{% extends "backend/auth_partials/layout.html" %}
+
+{% block style %}
+<style>
+    .dropdown-container {
+        width: 300px;
+    }
+
+    .select2-container .select2-selection--multiple {
+        height: 40px;
+    }
+</style>
+{% endblock %}
+
+{% block body %}
+
+<!-- Main Content -->
+<div class="page-wrapper">
+    <div class="container-fluid">
+        <div class="content-header">
+            <div class="container-fluid">
+                <div class="row mb-2">
+                    <div class="col-sm-6">
+                    </div>
+                    <div class="col-sm-6">
+                        <ol class="breadcrumb float-sm-right">
+                            <li class="breadcrumb-item"><a href="/backend/dashboard"><i
+                                        class="fas fa-tachometer-alt"></i>
+                                    Dashboard</a></li>
+                            <li class="breadcrumb-item"><a href="/backend/brand">Campaign</a></li>
+                            <li class="breadcrumb-item active">Edit Campaign</li>
+                        </ol>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% include "backend/auth_partials/notification.html" %}
+
+        <section class="content">
+            <div class="container-fluid">
+                <div class="row">
+                    <div class="col-md-12">
+                        <div class="card">
+                            <div class="card-header">
+                                <h6 class="card-title" style="font-weight: bolder;">Edit Campaign</h6>
+                            </div>
+                            <div class="card-body">
+                                <form id="editCampaign" method="POST" action="/backend/updateCampaign/{{campaign.id}}"
+                                    class="form-horizontal">
+
+                                    <div class="row">
+
+                                        <div class="col-md-12">
+                                            <div class="form-group">
+                                                <label class="control-label mb-10" for="campaignName">Campaign Name
+                                                </label>
+                                                <input type="text" class="form-control" id="campaignName"
+                                                    placeholder="Enter Campaign Name" required name="campaignName" style="width: 50%;"
+                                                    value="{{campaign.campaignName}}">
+                                            </div>
+                                        </div>
+
+                                        <!-- <div class="col-md-6">
+                                            <div class="form-group  dropdown-container">
+                                                <label for="status" class="mb-10  col-form-label">Select Brand </label>
+                                                <select id="brand" name="brand" multiple="multiple"
+                                                    style="width: 100%;">
+                                                    {% for brands in brand %}
+                                                    <option value="{{ brands.id }}" {% for selectedBrand in
+                                                        selectedBrands%} {% if brands.id==selectedBrand.brand_id
+                                                        %}selected{%endif%} {%endfor%}>
+                                                        {{ brands.brandName }}
+                                                        </option>
+                                                    {% endfor %}
+                                                </select>
+                                            </div>
+                                            <span id="ErroForBag"
+                                                style="color: red; font-weight: bold; display: none;">Please first enter
+                                                total numbr of bags.</span>
+                                        </div> -->
+                                        <div class="row"></div>
+                                        <div class="col-sm-12">
+                                            <div class="form-group" style="width: 50%;">
+                                                <label for="brand" class="mb-10 col-form-label">Selected Brand</label>
+                                                {% for brands in brand %}
+                                                    {% for selectedBrand in selectedBrands %}
+                                                        {% if brands.id == selectedBrand.brand_id %}
+                                                            <!-- Display the brand name -->
+                                                            <input type="text" class="form-control" id="brand" name="brandName" 
+                                                                   value="{{ brands.brandName }}" readonly>
+                                        
+                                                            <!-- Pass the brand ID in a hidden field -->
+                                                            <input type="hidden" name="brand" value="{{ brands.id }}">
+                                                        {% endif %}
+                                                    {% endfor %}
+                                                {% endfor %}
+                                            </div>
+                                        </div>                       
+                                    </div>
+
+
+
+                                    <div class="text-right">
+                                        <input type="submit" class="btn btn-success statusChange" value="Update">
+                                        <a href="/backend/campaign" class="btn btn-danger">Back</a>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+        <!-- /Content -->
+    </div>
+</div>
+<script type="text/javascript">
+    // Get the current date
+    var today = new Date().toISOString().split('T')[0];
+    // Set the min attribute of the expiryDate input to today's date
+    document.getElementById('expiryDate').setAttribute('min', today);
+</script>
+<!-- Modal -->
+<div class="modal fade" id="staticBackdrop" tabindex="-1" aria-labelledby="staticBackdropLabel" aria-hidden="true"
+    data-bs-backdrop="static" data-bs-keyboard="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="staticBackdropLabel">Static Backdrop Modal</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                This modal will not close when clicking outside of it or pressing the escape key.
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block Jscript %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/js/select2.min.js"></script>
+
+<script src="/plugins/jquery-validation/jquery.validate.min.js"></script>
+<script src="//cdnjs.cloudflare.com/ajax/libs/jquery-form-validator/2.3.26/jquery.form-validator.min.js"></script>
+<script src="/plugins/jquery-validation/jquery.validate.min.js"></script>
+
+
+<script>
+
+    $(document).ready(function () {
+        // $('#bagsNo').on('input', function () {
+        //     var numberOfBags = $(this).val();
+        //     console.log('Number of bags:', numberOfBags);
+        //     var selectedBrandValues = $('#brand option:selected').map(function () { return $(this).val() }).get();
+        //     console.log('Selected brand values:', selectedBrandValues);
+        //     if (selectedBrandValues.length) {
+
+        //         $.ajax({
+        //             type: 'POST',
+        //             url: "/backend/checkBrandCoupen",
+        //             data: {
+        //                 brandId: selectedBrandValues,
+        //                 bags: +numberOfBags,
+        //                 type: "bag"
+        //             },
+        //             success: function (result) {
+        //                 console.log("result -> ", result);
+
+        //                 if (result.status == "success") {
+        //                     Swal.fire({
+        //                         text: result.message,
+        //                         showCancelButton: false,
+        //                         confirmButtonColor: "#e69a2a",
+        //                         confirmButtonText: "Refresh",
+        //                     }).then((result) => {
+        //                         console.log("result --> ", result);
+        //                         console.log("result.isConfirm", result.isConfirmed);
+
+        //                         location.reload();
+
+        //                     });
+        //                 }
+        //             }
+        //         });
+        //     }
+
+        // });
+
+        $('#editCampaign').validate({
+            rules: {
+                campaignName: {
+                    required: true,
+                },
+                brand: {
+                    required: true,
+                },
+            },
+            messages: {
+                campaignName: {
+                    required: 'Brand name is required',
+                },
+                brand: {
+                    required: 'Brand is required',
+                }
+            },
+        });
+    });
+
+
+</script>
+{% endblock %}

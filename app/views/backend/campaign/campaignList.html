@@ -1,0 +1,183 @@
+{% extends "backend/auth_partials/layout.html" %}
+
+{% block style %}
+<style>
+    div#playerTable_paginate {
+        text-align: right;
+    }
+
+    div#playerTable_filter {
+        text-align: right;
+    }
+</style>
+{% endblock %}
+
+{% block body %}
+<!-- Content Header (Page header) -->
+<section class="content-header">
+    <div class="container-fluid">
+        <div class="row mb-2">
+            <div class="col-sm-6">
+                <h1>{{title}}</h1>
+            </div>
+            <div class="col-sm-6">
+                <ol class="breadcrumb float-sm-right">
+                    <li class="breadcrumb-item"><a href="/backend/dashboard"><i class="fas fa-tachometer-alt"></i>
+                            Dashboard</a></li>
+                    <li class="breadcrumb-item active">Campaign</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+</section>
+{% include "backend/auth_partials/notification.html" %}
+
+<!-- Main content -->
+<section class="content">
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <div class="row justify-content-end">
+
+                        <div class="col-md-3 text-right">
+                            <a href="/backend/addCampaign" class="btn btn-block btn-primary">
+                                Create New Campaign
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                <!-- /.card-header -->
+                <div class="card-body">
+                    <table id="brandTable" class="table table-bordered table-striped">
+                        <thead>
+                            <tr>
+                                <th>Sr. No.</th>
+                                <th>Campaign ID</th>
+                                <!-- <th>Brand Name</th> -->
+                                <th>Campaign Name</th>
+                                <th>Total Number of Bags</th>
+                                <th>Status</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+                <!-- /.card-body -->
+            </div>
+            <!-- /.card -->
+        </div>
+        <!-- /.col -->
+    </div>
+    <!-- /.row -->
+</section>
+{% endblock %}
+
+{% block Jscript %}
+
+<script>
+    var orderTable = "";
+    var host = window.location.origin;
+    // $(document).ready(function () {
+    orderTable = $('#brandTable').DataTable({
+        "oLanguage": {
+            "sSearch": "Search"
+        },
+        // "orderable": false,
+        "processing": true,
+        "serverSide": true,
+        "ordering": false,
+        "autoWidth": false,
+        "pagination": true,
+        "pageLength": 10,
+        "scrollX": true,
+        // "scrollY": 230,
+        "ajax": {
+            "url": "/backend/getCampaign",
+        },
+        "columns": [
+            {
+                "data": "No",
+                render: function (data, type, full, meta) {
+                    return meta.row + 1;
+                }
+            },
+            {
+                "data": "campaignId",
+                render: function (data, type, row) {
+                    console.log("row---", row);
+                    if (row.id != undefined) {
+                        return row.id;
+                    } else {
+                        return "-";
+                    }
+                }
+            },
+            // {
+            //     "data": "brandName",
+            //     render: function (data, type, row) {
+            //         if (row.brandDetails.brandName != undefined) {
+            //             return row.brandDetails.brandName;
+            //         } else {
+            //             return "-";
+            //         }
+            //     }
+            // },
+            {
+                "data": "campaignName",
+                render: function (data, type, row) {
+                    if (row.campaignName != undefined) {
+                        return row.campaignName
+                            ;
+                    } else {
+                        return "-";
+                    }
+                }
+            },
+            {
+                "data": "bags",
+                render: function (data, type, row) {
+                    console.log("row.coupon------", row);
+                    if (row.bags) {
+                        return row.bags;
+                    } else {
+                        return 0;
+                    }
+                }
+            },
+            {
+                "data": "status",
+                render: function (data, type, row) {
+                    if (row.status !== undefined) {
+                        if (row.status === "published") {
+                            return '<span style="color: green;">Published</span>';
+                        } else {
+                            return '<span style="color: red;">UnPublished</span>';
+                        }
+                    } else {
+                        return '<span style="color: red;">UnPublished</span>';  // Default to red for undefined or any other status
+                    }
+                }
+            },
+
+            {
+                "data": "action",
+                render: function (data, type, row) {
+                    let button = "btn-danger"
+                    // if (row.status == 'unpublished') {
+                    //     button = "btn-success"
+                    // }
+                    console.log("row", row);
+                    return `
+                        <a href="/backend/campaignDetail/${row.id}" title="View Campaign" name="view" id="${row.id}" class="btn btn-primary btn-xs btn-rounded view"> <i class="fa fa-eye" aria-hidden="true"></i></a>
+                        <a href="/backend/editCampaign/${row.id}" title="Edit Campaign" name="edit" id="${row.id}" class="btn btn-warning btn-xs btn-rounded edit">
+                         <i class="far fa-edit"></i> </a>  
+                        <a href="/backend/deleteCampaign/${row.id}" title="Delete Brand" name="delete" id="${row.id}" class="btn btn-danger btn-xs btn-rounded delete" onclick="deletePlayer(${row.id})"><i class="fa fa-trash" aria-hidden="true"></i></a>`;
+                }
+            }
+        ]
+
+    });
+</script>
+{% endblock %}

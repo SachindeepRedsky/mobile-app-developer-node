@@ -1,0 +1,7 @@
+node_modules/
+package-lock.json
+.env
+env.js
+log/public/mobile-app-dev-cicd.php
+public/mobile-app-dev-cicd.php
+log/*

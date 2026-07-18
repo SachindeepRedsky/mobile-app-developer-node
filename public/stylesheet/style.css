@@ -1,0 +1,176 @@
+.sidebar-mini.layout-fixed span.brand-mini {
+    display: none;
+}
+
+.sidebar-mini.layout-fixed.sidebar-collapse span.brand-mini {
+    display: block;
+}
+
+.sidebar-mini.layout-fixed.sidebar-collapse span.brand-text {
+    display: none;
+}
+#myTable_wrapper .dataTables_length{
+    margin-top: 16px !important; 
+    }
+.sidebar-mini.layout-fixed.sidebar-collapse .logo-name {
+    display: none !important;
+}
+
+.sidebar-mini.layout-fixed.sidebar-collapse .user-panel .brand-text {
+    display: none !important;
+}
+
+.sidebar-mini.sidebar-collapse.layout-fixed .main-sidebar:hover .brand-link span.brand-text {
+    display: block !important;
+}
+
+.sidebar-mini.sidebar-collapse.layout-fixed .main-sidebar:hover .brand-link span.brand-mini {
+    display: none;
+}
+
+/* .sidebar-mini.layout-fixed .user-panel .brand-text {
+    display: block;
+} */
+.main-sidebar:hover .brand-mini {
+    text-align: center;
+}
+
+.error {
+    color: red;
+}
+
+label#profileAdd {
+    width: 30px;
+    height: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #30A1A4;
+    color: #ffff;
+    border-radius: 50%;
+    padding: 6px;
+    position: absolute;
+    top: 71px;
+    left: 75px;
+    font-size: 13px;
+}
+
+.sidebar-collapse table.table.dataTable {
+    width: 100% !important;
+}
+
+.sidebar-collapse .dataTables_scrollHeadInner {
+    width: 100% !important;
+}
+
+.form-error {
+    display: block;
+}
+
+/* .dataTables_scrollBody::-webkit-scrollbar {
+    width: 0px;
+}
+
+.dataTables_scroll{
+    width: auto;
+}
+table#userTable{
+    width: 100% !important;
+} */
+
+.total_chips {
+    border: 1px solid #323039;
+    color: #323039;
+    margin-right: 30px;
+    margin-top: 3px;
+    float: left;
+    padding: 5px;
+}
+
+.nav-link p{
+    font-size: 14px;
+}
+
+/* .nav-link .nav-icon{
+    font-size: 14px;
+} */
+
+.nav-link{
+    padding-left: 10px;
+}
+
+/* Profile page Change Password Block CSS */
+
+.inputField {
+    position: relative;
+}
+
+.password-toggle {
+    position: absolute;
+    /* top: 50; */
+    margin-top: -18px;
+    right: 20px;
+    transform: translateY(-50%);
+    cursor: pointer;
+}
+.content-wrapper .page-wrapper .content-header{
+    padding: 8px .5rem;
+}
+.dataTables_scroll .dataTables_scrollBody tbody tr td{
+    font-size: clamp(12px,4vw,14px);
+}
+.content-wrapper .page-wrapper  .content-header h1 {
+font-size: clamp(18px,4vw,24px);
+}
+.dataTables_scroll thead tr th{
+    font-size: clamp(12px,4vw,14px);
+    white-space: nowrap;
+}
+.btn-list{
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+select {
+    padding: 3px;
+    border-radius: 5px !important;
+    border: 1px solid #80808075 !important;
+    outline: none !important;
+}
+.badge {
+    padding: 7px 6px;
+    font-size: 10px;
+}
+
+tbody .btn-warning {
+    box-shadow: none;
+    border-radius: 3px !important;
+}
+div.dataTables_wrapper div.dataTables_paginate ul.pagination{
+    margin: 10px 0;
+}
+.tableBtnGrp{
+    display: flex;
+    gap: 5px;
+}
+.UploadAdImage{
+    font-size: 14px;
+}
+tbody tr td {
+    text-align: center;
+}
+thead tr th {
+    text-align: center;
+}
+
+@media(max-width:767px){
+    .total_chips{
+        margin-right: 4px;
+    }
+    /* .dataTables_scroll .dataTables_scrollBody tbody tr td{
+        font-size: 12px;
+    }
+    .dataTables_scroll thead tr th{
+        font-size: 12px;
+    } */
+}

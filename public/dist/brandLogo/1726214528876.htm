@@ -1,0 +1,526 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title></title>
+  <!-- Favicon -->
+  <link rel="shortcut icon" href="/dist/img/logo.png">
+  <link rel="icon" href="/dist/img/logo.png" type="image/x-icon">
+  <!-- Google Font: Source Sans Pro -->
+  <link rel="stylesheet"
+    href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,400i,700&display=fallback">
+  <!-- Font Awesome -->
+  <link rel="stylesheet" href="/plugins/fontawesome-free/css/all.min.css">
+  <!-- DataTables -->
+  <link rel="stylesheet" href="/plugins/datatables-bs4/css/dataTables.bootstrap4.min.css">
+  <link rel="stylesheet" href="/plugins/datatables-responsive/css/responsive.bootstrap4.min.css">
+  <link rel="stylesheet" href="/plugins/datatables-buttons/css/buttons.bootstrap4.min.css">
+
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
+  <!-- Select2 CSS -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/css/select2.min.css" />  <!-- sweet alert css 2 -->
+  <link rel="stylesheet" href="/others/sweetalert2.min.css" />
+  <!-- Ionicons -->
+  <link rel="stylesheet" href="/others/ionicons.min.css">
+  <!-- Tempusdominus Bootstrap 4 -->
+  <link rel="stylesheet" href="/plugins/tempusdominus-bootstrap-4/css/tempusdominus-bootstrap-4.min.css">
+  <!-- iCheck -->
+  <link rel="stylesheet" href="/plugins/icheck-bootstrap/icheck-bootstrap.min.css">
+  <!-- JQVMap -->
+  <link rel="stylesheet" href="/plugins/jqvmap/jqvmap.min.css">
+  <!-- Theme style -->
+  <link rel="stylesheet" href="/dist/css/adminlte.min.css">
+  <link rel="stylesheet" href="/stylesheet/style.css">
+  <!-- overlayScrollbars -->
+  <link rel="stylesheet" href="/plugins/overlayScrollbars/css/OverlayScrollbars.min.css">
+  <!-- Daterange picker -->
+  <link rel="stylesheet" href="/plugins/daterangepicker/daterangepicker.css">
+  <!-- summernote -->
+  <link rel="stylesheet" href="/plugins/summernote/summernote-bs4.min.css">
+</head>
+<style>
+#picture__input {
+  display: none;
+}
+
+.picture {
+  width: 300px;
+  aspect-ratio: 6/2;
+  background: #ddd;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #aaa;
+  border: 1px solid currentcolor;
+  cursor: pointer;
+  font-family: sans-serif;
+  transition: color 300ms ease-in-out, background 300ms ease-in-out;
+  outline: none;
+  overflow: hidden;
+}
+
+.picture:hover {
+  color: #777;
+  background: #ccc;
+}
+
+.picture:active {
+  border-color: turquoise;
+  color: turquoise;
+  background: #eee;
+}
+
+.picture:focus {
+  color: #777;
+  background: #ccc;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
+}
+
+.picture__img {
+  max-width: 100%;
+}
+
+</style>
+<body class="hold-transition sidebar-mini layout-fixed">
+  <div class="wrapper">
+
+    <!-- Navbar -->
+    <nav class="main-header navbar navbar-expand navbar-white navbar-light">
+  <!-- Left navbar links -->
+  <ul class="navbar-nav">
+    <li class="nav-item">
+      <a class="nav-link" data-widget="pushmenu" href="#" role="button"><i class="fas fa-bars"></i></a>
+    </li>
+  </ul>
+
+  <!-- Right navbar links -->
+  <ul class="navbar-nav ml-auto">
+    <!-- User profile link -->
+    <li class="nav-item dropdown">
+
+      <a class="dropdown-item" href="/backend/profile"> <img src="/dist/img/5976.jpg" class="img-circle"
+          alt="Agent Image" width="40" height="30"></a>
+    </li>
+    <a class="dropdown-item d-flex align-items-center" href="/backend/logout"><i class="fas fa-sign-out-alt"></i></a>
+  </ul>
+</nav>
+    <!-- /.navbar -->
+
+    <!-- Main Sidebar Container -->
+    <aside class="main-sidebar sidebar-dark-primary elevation-4">
+  <!-- Sidebar -->
+  <div class="sidebar">
+    <div class="d-flex">
+      <a href="/backend/dashboard" class="brand-link" style="text-align: center">
+        <!-- mini logo for sidebar mini 50x50 pixels go style css -->
+        <span class="brand-mini"><b>JA</b></span>
+        <!-- logo for regular state and mobile devices -->
+        <span class="brand-text logo-name"><b>Application</b></span>
+      </a>
+    </div>
+
+    <!-- Sidebar Menu -->
+    <nav class="mt-2">
+      <ul class="nav nav-pills nav-sidebar flex-column" data-widget="treeview" role="menu" data-accordion="false">
+        <!-- Add icons to the links using the .nav-icon class with font-awesome or any other icon font library -->
+
+        <li class="nav-item">
+          <a href="/backend/dashboard" class="nav-link ">
+            <i class="nav-icon fas fa-tachometer-alt"></i>
+            <p>Dashboard</p>
+          </a>
+        </li>
+
+        <li class="nav-item">
+          <a href="/backend/user" class="nav-link ">
+            <i class="nav-icon fas fa-users"></i>
+            <p>User Management</p>
+          </a>
+        </li>
+
+        <li class="nav-item">
+          <a href="/backend/brand" class="nav-link active">
+            <i class="nav-icon fas fa-ticket-alt"></i>
+            <p>Brand Management</p>
+          </a>
+        </li>
+
+        <li class="nav-item">
+          <a href="/backend/campaign" class="nav-link ">
+            <i class="nav-icon  fas fa-bullhorn"></i>
+            <p>Campaign Management</p>
+          </a>
+        </li>
+
+
+        <li class="nav-item">
+          <a href="/backend/cmsPages" class="nav-link ">
+            <i class="nav-icon fas fa-file-alt"></i>
+            <p>CMS Management</p>
+          </a>
+        </li>
+
+        <li class="nav-item  ">
+          <a href="/backend/profile" class="nav-link ">
+            <i class="nav-icon fas fa-cogs"></i>
+            <p> Setting </p>
+          </a>
+        </li>
+      </ul>
+    </nav>
+    <!-- /.sidebar-menu -->
+  </div>
+  <!-- /.sidebar -->
+</aside>
+
+    <!-- Content Wrapper. Contains page content -->
+    <div class="content-wrapper">
+      
+<!-- Content Header (Page header) -->
+<section class="content-header">
+    <div class="container-fluid">
+        <div class="row mb-2">
+            <div class="col-sm-6">
+                <h1>Brand Management</h1>
+            </div>
+            <div class="col-sm-6">
+                <ol class="breadcrumb float-sm-right">
+                    <li class="breadcrumb-item"><a href="/backend/dashboard"><i class="fas fa-tachometer-alt"></i>
+                            Dashboard</a></li>
+                    <li class="breadcrumb-item active">Brand</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Main content -->
+<section class="content">
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <div class="col-md-10"></div>
+                    <div class="card-header">
+                        <div class="row justify-content-end">
+                         
+                            <div class="col-md-2 text-right">
+                                <a href="/backend/addBrand" class="btn btn-block btn-primary">
+                                    Add Brand
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+
+                <!-- /.card-header -->
+                <div class="card-body">
+                    <table id="brandTable" class="table table-bordered table-striped">
+                        <thead>
+                            <tr>
+                                <th>Sr. No.</th>
+                                <th>Brand Logo</th>
+                                <th>Brand Name</th>
+                                <th>Total Number of Coupons</th>
+                                <th>Status</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+                <!-- /.card-body -->
+            </div>
+            <!-- /.card -->
+        </div>
+        <!-- /.col -->
+    </div>
+    <!-- /.row -->
+</section>
+
+    </div>
+    <!-- /.content-wrapper -->
+    <!-- jQuery 3 -->
+<!-- <script src="/plugins/jquery/jquery.min.js"></script> -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+<!-- Bootstrap 3.3.7 -->
+<script src="/plugins/bootstrap/js/bootstrap.min.js"></script>
+<!-- FastClick -->
+<script src="/plugins/fastclick/fastclick.js"></script>
+<!-- AdminLTE App -->
+<script src="/dist/js/adminlte.min.js"></script>
+<!-- jQuery Validation -->
+<script src="/plugins/jquery-validation/jquery.validate.min.js"></script>
+<!-- Sparkline -->
+<script src="/vendor/bower_components/jquery-sparkline/dist/jquery.sparkline.min.js"></script>
+<!-- jvectormap -->
+<!-- <script src="/plugins/jqvmap/jquery.vmap.min.js"></script> -->
+<!-- SlimScroll -->
+<script src="/vendor/bower_components/jquery-slimscroll/jquery.slimscroll.min.js"></script>
+<!-- ChartJS -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.7.0/Chart.bundle.min.js"></script>
+<!-- jQuery Form Validator -->
+<script src="//cdnjs.cloudflare.com/ajax/libs/jquery-form-validator/2.3.26/jquery.form-validator.min.js"></script>
+<!-- Date Range Picker -->
+<script src="/plugins/daterangepicker/daterangepicker.js"></script>
+<!-- DataTables -->
+<script src="/vendor/bower_components/datatables/media/js/jquery.dataTables.min.js"></script>
+<script src="/vendor/bower_components/datatables/media/js/dataTables.bootstrap.min.js"></script>
+
+<!-- SweetAlert 2 -->
+<!-- <script src="/plugins/sweetalert2/sweetalert2.min.js"></script> -->
+
+<!-- <script src="/vendor/bower_components/sweetalert/dist/sweetalert.min.js"></script> -->
+<!-- <script src="/dist/js/sweetalert-data.js"></script> -->
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+
+<!-- Bootstrap Datepicker -->
+<script src="/vendor/bower_components/bootstrap-datepicker/dist/js/bootstrap-datepicker.min.js"></script>
+<!-- Bootstrap Colorpicker -->
+<script src="/vendor/bower_components/bootstrap-colorpicker/dist/js/bootstrap-colorpicker.min.js"></script>
+<!-- Moment.js -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.5.1/moment.min.js"></script>
+<!-- Bootstrap Datetimepicker -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datetimepicker/3.0.0/js/bootstrap-datetimepicker.min.js"></script>
+<!-- Switchery JavaScript -->
+<script src="/vendor/bower_components/switchery/dist/switchery.min.js"></script>
+
+<script>
+  // Uncomment and customize as needed
+  // $.validate({
+  //   modules: 'location, date, security, file',
+  // });
+</script>
+
+
+    <!-- Control Sidebar -->
+    <aside class="control-sidebar control-sidebar-dark">
+      <!-- Control sidebar content goes here -->
+    </aside>
+    <!-- /.control-sidebar -->
+  </div>
+  <!-- ./wrapper -->
+
+  <!-- jQuery -->
+  <script src="/plugins/jquery/jquery.min.js"></script>
+  <!-- jQuery UI 1.11.4 -->
+  <script src="/plugins/jquery-ui/jquery-ui.min.js"></script>
+  <!-- Resolve conflict in jQuery UI tooltip with Bootstrap tooltip -->
+  <script>
+    $.widget.bridge('uibutton', $.ui.button)
+  </script>
+  <!-- Bootstrap 4 -->
+  <script src="/plugins/bootstrap/js/bootstrap.bundle.min.js"></script>
+  <!-- ChartJS -->
+  <script src="/plugins/chart.js/Chart.min.js"></script>
+  <!-- Sparkline -->
+  <script src="/plugins/sparklines/sparkline.js"></script>
+  <!-- Jquery validation plugin -->
+  <script src="/plugins/jquery-validation/jquery.validate.min.js"></script>
+  <!-- DataTables  & Plugins -->
+  <script src="/plugins/datatables/jquery.dataTables.min.js"></script>
+  <script src="/plugins/datatables-bs4/js/dataTables.bootstrap4.min.js"></script>
+  <script src="/plugins/datatables-responsive/js/dataTables.responsive.min.js"></script>
+  <script src="/plugins/datatables-responsive/js/responsive.bootstrap4.min.js"></script>
+  <script src="/plugins/datatables-buttons/js/dataTables.buttons.min.js"></script>
+  <script src="/plugins/datatables-buttons/js/buttons.bootstrap4.min.js"></script>
+  <script src="/plugins/jszip/jszip.min.js"></script>
+  <script src="/plugins/pdfmake/pdfmake.min.js"></script>
+  <script src="/plugins/pdfmake/vfs_fonts.js"></script>
+  <script src="/plugins/datatables-buttons/js/buttons.html5.min.js"></script>
+  <script src="/plugins/datatables-buttons/js/buttons.print.min.js"></script>
+  <script src="/plugins/datatables-buttons/js/buttons.colVis.min.js"></script>
+  <!-- JQVMap -->
+  <!-- <script src="/plugins/jqvmap/jquery.vmap.min.js"></script> -->
+  <!-- <script src="/plugins/jqvmap/maps/jquery.vmap.usa.js"></script> -->
+  <!-- jQuery Knob Chart -->
+  <script src="/plugins/jquery-knob/jquery.knob.min.js"></script>
+  <!-- daterangepicker -->
+  <script src="/plugins/moment/moment.min.js"></script>
+  <script src="/plugins/daterangepicker/daterangepicker.js"></script>
+  <!-- Tempusdominus Bootstrap 4 -->
+  <script src="/plugins/tempusdominus-bootstrap-4/js/tempusdominus-bootstrap-4.min.js"></script>
+  <!-- Summernote -->
+  <script src="/plugins/summernote/summernote-bs4.min.js"></script>
+  <!-- Sweet alert 2  -->
+  <script src="/others/sweetalert2.min.js"></script>
+  <!-- overlayScrollbars -->
+  <script src="/plugins/overlayScrollbars/js/jquery.overlayScrollbars.min.js"></script>
+  <!-- AdminLTE App -->
+  <script src="/dist/js/adminlte.js"></script>
+
+  <link rel="stylesheet"
+    href="https://cdnjs.cloudflare.com/ajax/libs/jquery-datetimepicker/2.5.20/jquery.datetimepicker.css" />
+  <script
+    src="https://cdnjs.cloudflare.com/ajax/libs/jquery-datetimepicker/2.5.20/jquery.datetimepicker.full.min.js"></script>
+  
+
+<script>
+    var orderTable = "";
+    var host = window.location.origin;
+    // $(document).ready(function () {
+    orderTable = $('#brandTable').DataTable({
+        "oLanguage": {
+            "sSearch": "Search"
+        },
+        // "orderable": false,
+        "processing": true,
+        "serverSide": true,
+        "ordering": false,
+        "autoWidth": false,
+        "pagination": true,
+        "pageLength": 10,
+        "scrollX": true,
+        // "scrollY": 230,
+        "ajax": {
+            "url": "/backend/getBrand",
+        },
+        "columns": [
+            {
+                "data": "No",
+                render: function (data, type, full, meta) {
+                    return meta.row + 1;
+                }
+            },
+            {
+                "data": "brandLogo",
+                render: function (data, type, row) {
+                    console.log("row---", row);
+
+                        return '<img src="' + row.brandLogo + '" alt="Brand Logo" width="50" height="50">';
+                   
+                }
+            },
+
+            {
+                "data": "brandName",
+                render: function (data, type, row) {
+                    if (row.brandName != undefined) {
+                        return row.brandName;
+                    } else {
+                        return "-";
+                    }
+                }
+            },
+            {
+                "data": "coupons",
+                render: function (data, type, row) {
+                    // console.log("row.coupon------", row.coupons.length);
+                    if (row.coupons.length) {
+                        return row.coupons.length;
+                    } else {
+                        return 0;
+                    }
+                }
+            },
+            {
+                "data": "status",
+                render: function (data, type, row) {
+                    if (row.status !== undefined) {
+                        if (row.status === "active") {
+                            return '<span style="color: green;">Active</span>';
+                        } else {
+                            return '<span style="color: red;">InActive</span>';
+                        }
+                    } else {
+                        return '<span style="color: red;">InActive</span>';  // Default to red for undefined or any other status
+                    }
+                }
+            },
+
+            {
+                "data": "action",
+                render: function (data, type, row) {
+
+                    // console.log("row", row.id);
+                    return `
+                        <a href="/backend/brandDetail/${row.id}" title="View Brand" name="view" id="${row.id}" class="btn btn-primary btn-xs btn-rounded view"> <i class="fa fa-eye" aria-hidden="true"></i></a>
+                        <a href="/backend/editBrand/${row.id}" title="Edit Brand" name="edit" id="${row.id}" class="btn btn-warning btn-xs btn-rounded edit"><i class="far fa-edit"></i></a>
+                        <a href="/backend/deleteBrand/${row.id}" title="Delete Brand" name="delete" id="${row.id}" class="btn btn-danger btn-xs btn-rounded delete" onclick="deletePlayer(${row.id})"><i class="fa fa-trash" aria-hidden="true"></i></a>`;
+                }
+            }
+        ]
+
+    });
+    $(document).ready(function () {
+        $(document).ready(function () {
+            //block & unblock
+            $('body').on('click', '.playerActive', function (e) {
+                var id = $(this).attr('id');
+                console.log("id -->", id);
+                var name = $(this).attr('name');
+                console.log("name--->>", name);
+
+                if (name == "active") {
+                    name = "Block"
+                } else {
+                    name = "Unblock"
+                }
+                console.log("name---", name);
+                var thisElement = this;
+                Swal.fire({
+                    title: "Are you sure?",
+                    text: "Do you want to " + name + " the User?",
+                    // type: "warning",
+                    showCancelButton: true,
+                    confirmButtonColor: "#e69a2a",
+                    confirmButtonText: "Yes, " + name + " it!",
+                    cancelButtonText: "No, cancel pls!",
+                    // closeOnConfirm: false,
+                    // closeOnCancel: false
+                }).then((result) => {
+                    console.log("result --> ", result);
+                    console.log("result.isConfirm", result.isConfirmed);
+
+                    if (result.isConfirmed) {
+                        console.log("true");
+                        $.ajax({
+                            type: 'POST',
+                            url: host + "/backend/user/blockUnblockUser",
+                            data: {
+                                id: id
+                            },
+                            success: function (resultData) {
+                                console.log("winning result", resultData);
+                                if (resultData == 'success') {
+                                    let changeText = 'Active';
+                                    if ($(thisElement).parent().parent().find('td  .playerActive').hasClass("btn-success")) {
+                                        changeText = 'inactive';
+                                        $(thisElement).parent().parent().find('td  .playerActive').removeClass("btn-success");
+                                        $(thisElement).parent().parent().find('td  .playerActive').addClass("btn-danger");
+                                        $('#status-' + id).css({ color: "red" });
+                                    } else {
+                                        $(thisElement).parent().parent().find('td  .playerActive').removeClass("btn-danger");
+                                        $(thisElement).parent().parent().find('td  .playerActive').addClass("btn-success");
+                                        $('#status-' + id).css({ color: "green" });
+                                    }
+                                    $('#status-' + id).html(changeText);
+                                    location.reload()
+
+                                } else {
+                                    console.log("Something went wrong");
+                                    alert("Something went wrong")
+                                }
+
+                            }
+                        });
+                    }
+
+                });
+
+
+                return false;
+            });
+        });
+    });
+
+</script>
+
+</body>
+
+</html>

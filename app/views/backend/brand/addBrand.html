@@ -1,0 +1,215 @@
+{% extends "backend/auth_partials/layout.html" %}
+{% block body %}
+<style>
+    .resp-picture {
+        aspect-ratio: auto !important;
+        width: 150px !important;
+        height: 150px !important;
+    }
+
+    .resp-picture img {
+        width: 100%;
+    }
+</style>
+<!-- Main Content -->
+<div class="page-wrapper">
+    <div class="container-fluid">
+        <!-- Title -->
+        <div class="content-header">
+            <div class="container-fluid">
+                <div class="row mb-2">
+                    <div class="col-sm-6">
+                        <!-- <h1 class="m-0">Add Brand</h1> -->
+                    </div><!-- /.col -->
+                    <div class="col-sm-6">
+                        <ol class="breadcrumb float-sm-right">
+                            <li class="breadcrumb-item"><a href="/backend/dashboard"><i
+                                        class="fas fa-tachometer-alt"></i> Dashboard</a></li>
+                            <li class="breadcrumb-item"><a href="/backend/brand">Brand</a></li>
+                            {% if brand %}
+                            <li class="breadcrumb-item active">Edit Brand</li>
+                            {% else %}
+                            <li class="breadcrumb-item active">Add Brand</li>
+                            {% endif %}
+                        </ol>
+                    </div><!-- /.col -->
+                </div><!-- /.row -->
+            </div><!-- /.container-fluid -->
+        </div>
+        <!-- /Title -->
+        {% include "backend/auth_partials/notification.html" %}
+
+        <section class="content">
+            <div class="container-fluid">
+                <div class="row">
+                    <div class="col-md-12">
+                        <div class="card">
+                            <div class="card-header">
+                                {% if brand %}
+                                <h6 class="card-title" style="font-weight: bolder;">Edit Brand</h6>
+                                {% else %}
+                                <h6 class="card-title" style="font-weight: bolder;">Add New Brand</h6>
+                                {% endif %}
+                            </div>
+                            <div class="card-body">
+                                <form method="POST"
+                                    action="{% if brand %}/backend/updateBrand/{{brand.id}}{% else %}/backend/addBrandPost{% endif %}"
+                                    class="form-horizontal" enctype="multipart/form-data"
+                                    id="{% if brand %}editBrandForm{% else %}addBrandForm{% endif %}">
+
+                                    <!-- Brand Logo -->
+                                    <div class="form-group">
+                                        <div class="row align-items-center">
+                                            <label class="control-label mb-10 col-sm-2" for="brandLogo">Brand
+                                                Logo:</label>
+                                            <label class="picture resp-picture" for="picture__input" tabIndex="0">
+                                                <span class="picture__image">
+                                                    {% if brand and brand.brandLogo %}
+                                                    <img src="{{ brand.brandLogo }}" alt="Brand Logo" id="picture">
+                                                    {% else %}
+                                                    <img src="/dist/brandLogo/user.png" alt="Upload Image" id="picture">
+                                                    {% endif %}
+                                                </span>
+                                            </label>
+                                            <input type="file" name="picture__input" id="picture__input"
+                                                accept=".png, .jpg, .jpeg" onchange="validateImage(this)"
+                                                class="form-control">
+                                        </div>
+                                    </div>
+
+
+                                    <!-- Brand Name -->
+                                    <div class="form-group">
+                                        <div class="row">
+                                            <label class="control-label mb-10 col-sm-2" for="brandName">Brand Name*
+                                                :</label>
+                                            <div class="col-sm-6">
+                                                <input type="text" class="form-control" id="brandName"
+                                                    placeholder="Enter Brand name" required name="brandName"
+                                                    value="{% if brand %}{{brand.brandName}}{% endif %}">
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Status -->
+                                    <div class="form-group row">
+                                        <label for="status" class="mb-10 col-sm-2 col-form-label">Status</label>
+                                        <div class="col-md-6">
+                                            <select class="form-control" name="status" id="status">
+                                                <option value="active" {% if brand and brand.status=="active" %}
+                                                    selected {% endif %}>Active</option>
+                                                <option value="inactive" {% if brand and brand.status=="inactive" %}
+                                                    selected {% endif %}>Inactive</option>
+                                            </select>
+                                        </div>
+                                    </div>
+
+                                    <!-- Submit Button -->
+                                    <div class="text-right">
+                                        <input type="submit" class="btn btn-success statusChange"
+                                            value="{{'Update' if brand else 'Add' }}">
+                                        <a href="/backend/brand" class="btn btn-danger">Back</a>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block Jscript %}
+<script>
+    function validateImage(input) {
+        const file = input.files[0];
+        const validExtensions = ['image/jpeg', 'image/png', 'image/jpg']; // Allowed MIME types
+        const maxSize = 2 * 1024 * 1024; // 2 MB maximum size
+
+        if (file) {
+            if (!validExtensions.includes(file.type)) {
+                alert('Only JPG, PNG, or JPEG files are allowed.');
+                input.value = ''; // Clear the input
+                return;
+            }
+
+            if (file.size > maxSize) {
+                alert('File size must be less than 2 MB.');
+                input.value = ''; // Clear the input
+                return;
+            }
+
+            // If valid, display the selected image (optional)
+            const reader = new FileReader();
+            reader.onload = function (e) {
+                document.getElementById('picture').src = e.target.result;
+            };
+            reader.readAsDataURL(file);
+        }
+    }
+</script>
+
+<script>
+    $(document).ready(function () {
+        $('#addBrandForm').validate({
+            rules: {
+                brandName: {
+                    required: true,
+                },
+                picture__input: {
+                    required: true  // Picture is required only when adding a brand
+                },
+            },
+            messages: {
+                brandName: {
+                    required: '*Brand name is required',
+                },
+                picture__input: {
+                    required: '*Please choose a brand logo',
+                }
+            },
+        });
+        $('#editBrandForm').validate({
+            rules: {
+                brandName: {
+                    required: true,
+                },
+            },
+            messages: {
+                brandName: {
+                    required: '*Brand name is required',
+                },
+            },
+        });
+    });
+
+    // Image Preview
+    const inputFile = document.querySelector("#picture__input");
+    const pictureImage = document.querySelector(".picture__image");
+
+    inputFile.addEventListener("change", function (e) {
+        const inputTarget = e.target;
+        const file = inputTarget.files[0];
+
+        if (file) {
+            const reader = new FileReader();
+
+            reader.addEventListener("load", function (e) {
+                const readerTarget = e.target;
+
+                const img = document.createElement("img");
+                img.src = readerTarget.result;
+                img.classList.add("picture__img");
+
+                pictureImage.innerHTML = "";
+                pictureImage.appendChild(img);
+            });
+
+            reader.readAsDataURL(file);
+        }
+    });
+</script>
+{% endblock %}

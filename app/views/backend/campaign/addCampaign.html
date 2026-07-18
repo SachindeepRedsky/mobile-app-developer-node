@@ -1,0 +1,161 @@
+{% extends "backend/auth_partials/layout.html" %}
+
+{% block style %}
+<style>
+    .dropdown-container {
+        width: 300px;
+    }
+
+    .select2-container .select2-selection--multiple {
+        height: 40px;
+    }
+</style>
+{% endblock %}
+
+{% block body %}
+
+<!-- Main Content -->
+<div class="page-wrapper">
+    <div class="container-fluid">
+        <div class="content-header">
+            <div class="container-fluid">
+                <div class="row mb-2">
+                    <div class="col-sm-6">
+                    </div>
+                    <div class="col-sm-6">
+                        <ol class="breadcrumb float-sm-right">
+                            <li class="breadcrumb-item"><a href="/backend/dashboard"><i
+                                        class="fas fa-tachometer-alt"></i>
+                                    Dashboard</a></li>
+                            <li class="breadcrumb-item"><a href="/backend/brand">Campaign</a></li>
+                            <li class="breadcrumb-item active">{{title}}</li>
+                        </ol>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% include "backend/auth_partials/notification.html" %}
+
+        <section class="content">
+            <div class="container-fluid">
+                <div class="row">
+                    <div class="col-md-12">
+                        <div class="card">
+                            <div class="card-header">
+                                <h6 class="card-title" style="font-weight: bolder;">Add New Campaign</h6>
+                            </div>
+                            <div class="card-body">
+                                <form id="addPlayerValidate" method="POST" action="/backend/addCampaign" name="addBrand"
+                                    class="form-horizontal">
+
+                                    <div class="row">
+
+                                        <div class="col-md-12">
+                                            <div class="form-group">
+                                                <label class="control-label mb-10" for="campaignName">Campaign Name
+                                                </label>
+                                                <input type="text" class="form-control" id="campaignName"
+                                                    placeholder="Enter Campaign Name" required name="campaignName" style="width: 50%" />
+                                            </div>
+                                        </div>
+                                        <div class="row"></div>
+                                        <div class="col-md-12">
+                                            <div class="form-group dropdown-container" style="width: 50%">                                                <label for="status" class="mb-10 col-form-label">Select Brand</label>
+                                                <select id="brand" name="brand" style="width: 100%;">
+                                                    {% for brand in Brands %}
+                                                    <option value="{{brand.id}}">{{brand.brandName}}</option>
+                                                    {% endfor %}
+                                                </select>
+                                            </div> 
+                                            <span id="ErroForBag"
+                                                style="color: red; font-weight: bold; display: none;">Please first enter total number of bags.</span>
+                                        </div>
+
+                                    </div>
+
+                                    <div class="text-right">
+                                        <input type="submit" class="btn btn-success statusChange" value="Add">
+                                        <a href="/backend/campaign" class="btn btn-danger">Back</a>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+        <!-- /Content -->
+    </div>
+</div>
+<script type="text/javascript">
+    var today = new Date().toISOString().split('T')[0];
+    document.getElementById('expiryDate').setAttribute('min', today);
+</script>
+<!-- Modal -->
+<div class="modal fade" id="staticBackdrop" tabindex="-1" aria-labelledby="staticBackdropLabel" aria-hidden="true"
+    data-bs-backdrop="static" data-bs-keyboard="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="staticBackdropLabel">Static Backdrop Modal</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                This modal will not close when clicking outside of it or pressing the escape key.
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block Jscript %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/js/select2.min.js"></script>
+
+<script src="/plugins/jquery-validation/jquery.validate.min.js"></script>
+<script src="//cdnjs.cloudflare.com/ajax/libs/jquery-form-validator/2.3.26/jquery.form-validator.min.js"></script>
+<script src="/plugins/jquery-validation/jquery.validate.min.js"></script>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-toast-plugin/1.3.2/jquery.toast.js"
+    integrity="sha512-Y+cHVeYzi7pamIOGBwYHrynWWTKImI9G78i53+azDb1uPmU1Dz9/r2BLxGXWgOC7FhwAGsy3/9YpNYaoBy7Kzg=="
+    crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-toast-plugin/1.3.2/jquery.toast.min.js"
+    integrity="sha512-zlWWyZq71UMApAjih4WkaRpikgY9Bz1oXIW5G0fED4vk14JjGlQ1UmkGM392jEULP8jbNMiwLWdM8Z87Hu88Fw=="
+    crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+
+
+<script>
+
+    $(document).ready(function () {
+        $('#brand').select2({
+            placeholder: 'Select a brand',
+            allowClear: true,
+            tags: true
+        });
+
+          $("#addPlayerValidate").validate({
+            rules: {
+                campaignName: {
+                    required: true,
+                },
+                brand: {
+                    required: true,
+                },
+            },
+            messages: {
+                campaignName: {
+                    required: 'Brand name is required',
+                },
+                brand: {
+                    required: 'Brand is required',
+                },
+            },
+        });
+    });
+
+
+</script>
+{% endblock %}

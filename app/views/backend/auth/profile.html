@@ -1,0 +1,210 @@
+{% extends "backend/auth_partials/layout.html" %}
+
+{% block body %}
+<!-- Main Content -->
+<div class="page-wrapper">
+    <div class="container-fluid">
+
+        <div class="content-header">
+            <div class="container-fluid">
+                <div class="row mb-2">
+                    <div class="col-sm-6">
+                        <h1 class="m-0">User Profile</h1>
+                    </div><!-- /.col -->
+                    <div class="col-sm-6">
+                        <ol class="breadcrumb float-sm-right">
+                            <li class="breadcrumb-item"><a href="/backend/dashboard"><i class="fas fa-tachometer-alt"></i> Dashboard</a></li>
+                            <li class="breadcrumb-item active">User profile</li>
+                        </ol>
+                    </div><!-- /.col -->
+                </div><!-- /.row -->
+            </div><!-- /.container-fluid -->
+        </div>
+        {% include "backend/auth_partials/notification.html" %}
+
+        <!-- Row -->
+        <section class="content">
+            <div class="container-fluid">
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="card">
+                            <div class="card-header bg-gray">
+                                <h6 class="card-title" style="font-weight: bolder;">Edit Profile</h6>
+                            </div>
+                            <div class="card-body">
+                                <form id="editProfileForm" class="form-horizontal" action="/backend/profile/update" method="post" enctype="multipart/form-data">
+
+                                    <input type="hidden" name="id" value="{{user.id}}">
+
+                                    <div class="form-group">
+                                        <div class="col-12 col-md-12">
+                                            <div class="profile_img m-0">
+                                                <img id="myImg" src="{{user.profile_picture}}" style="width: 100px; height: 100px; border-radius: 50%;border: 5px solid rgb(0,123,255);">
+                                                <label for="avatar" class="profile-add" id="profileAdd"><i class="fas fa-pencil-alt"></i></label>
+                                                <input type="file" class="form-control" id="avatar" name="profileImage" accept=".png, .jpg, .jpeg" style="display: none;">
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="form-group">
+                                        <label for="exampleInputuname_3" class="control-label">Username*</label>
+                                        <div class="inputField">
+                                            <input type="text" class="form-control" id="name" placeholder="Enter Username" required name="name" value="{{user.name}}" data-validation="length required" data-validation-length="" data-validation-error-msg="Username is required">
+                                        </div>
+                                    </div>
+
+                                    <div class="form-group">
+                                        <label for="exampleInputEmail_3" class="control-label">Email*</label>
+                                        <div class="inputField">
+                                            <input type="email" class="form-control" placeholder="Enter Email" required name="email" id="email" value="{{user.email}}" data-validation="email">
+                                        </div>
+                                    </div>
+
+                                    <div class="form-group mb-0">
+                                        <button type="submit" class="btn btn-success">Update</button>
+                                        <a href="/backend/dashboard" class="btn btn-danger">Back</a>
+                                    </div>
+
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-md-6">
+                        <div class="card">
+                            <div class="card-header  bg-gray">
+                                <h6 class="card-title" style="font-weight: bolder;">Change Password</h6>
+                            </div>
+                            <div class="card-body">
+                                <form id="changePasswordForm" class="form-horizontal" action="/backend/changepasswordPost" method="post">
+                                    <input type="hidden" name="id" value="{{user.id}}">
+
+                                    <div class="form-group">
+                                        <label for="exampleInputuname_4" class="control-label">Current Password*</label>
+                                        <div class="inputField">
+                                            <input type="password" class="form-control" id="currentPassword" placeholder="Enter Current Password" name="currentPassword" data-validation="length" data-validation-length="min6">
+                                            <span class="password-toggle" id="toggleOldPassword"><i class="fa fa-eye"></i></span>
+                                        </div>
+                                    </div>
+
+                                    <div class="form-group">
+                                        <label for="exampleInputuname_4" class="control-label">New Password*</label>
+                                        <div class="inputField">
+                                            <input type="password" class="form-control" id="password" placeholder="Enter New Password" name="pass_confirmation" data-validation="length" data-validation-length="min6">
+                                            <span class="password-toggle" id="toggleNewPassword"><i class="fa fa-eye"></i></span>
+                                        </div>
+                                    </div>
+
+                                    <div class="form-group">
+                                        <label for="exampleInputEmail_4" class="control-label">Confirm Password*</label>
+                                        <div class="inputField">
+                                            <input type="password" class="form-control" placeholder="Enter Confirm Password" name="pass" data-validation="confirmation">
+                                            <span class="password-toggle" id="toggleConfirmPassword"><i class="fa fa-eye"></i></span>
+                                        </div>
+                                    </div>
+
+                                    <div class="form-group mb-0">
+                                        <button type="submit" class="btn btn-success" style="margin-top: 10px;margin-bottom: 20px;">Change Password</button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </section>
+
+        <!-- /Row -->
+    </div>
+</div>
+
+{% endblock %}
+
+{% block Jscript %}
+<script>
+    $(document).ready(function () {
+        // Custom email validation method
+        $.validator.addMethod("isValidEmail", function (value, element) {
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            return this.optional(element) || emailRegex.test(value);
+        }, "Please enter a valid email address");
+
+        $('#editProfileForm').validate({
+            rules: {
+                name: {
+                    required: true,
+                },
+                email: {
+                    required: true,
+                    isValidEmail: true
+                }
+            },
+            messages: {
+                name: {
+                    required: '*Name is required',
+                },
+                email: {
+                    required: '*Email is required',
+                    isValidEmail: 'Please enter a valid email address'
+                }
+            },
+            submitHandler: function (form) {
+                form.submit();
+            }
+        });
+
+        $("#changePasswordForm").validate({
+            rules: {
+                currentPassword: {
+                    required: true,
+                    rangelength: [6, 20]
+                },
+                pass_confirmation: {
+                    required: true,
+                    rangelength: [6, 20]
+                },
+                pass: {
+                    required: true,
+                    equalTo: "#password",
+                    rangelength: [6, 20]
+                }
+            },
+            messages: {
+                currentPassword: {
+                    required: "Please enter the current password",
+                    rangelength: "Current password length should be between 6 to 20 characters"
+                },
+                pass_confirmation: {
+                    required: "Please enter a new password",
+                    rangelength: "New password length should be between 6 to 20 characters"
+                },
+                pass: {
+                    required: "Please confirm your password",
+                    equalTo: "Passwords do not match",
+                    rangelength: "Confirm password length should be between 6 to 20 characters"
+                }
+            }
+        });
+
+        $(".password-toggle").click(function () {
+            var inputField = $(this).siblings('input');
+            var type = inputField.attr("type") === "password" ? "text" : "password";
+            inputField.attr("type", type);
+            $(this).find("i").toggleClass("fa-eye fa-eye-slash");
+        });
+    });
+
+    document.addEventListener('DOMContentLoaded', function () {
+        const avatarInput = document.getElementById('avatar');
+        const img = document.getElementById('myImg');
+
+        avatarInput.addEventListener('change', function () {
+            if (this.files && this.files[0]) {
+                img.src = URL.createObjectURL(this.files[0]);
+            }
+        });
+    });
+
+</script>
+{% endblock %}

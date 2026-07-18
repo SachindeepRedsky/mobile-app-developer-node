@@ -1,0 +1,592 @@
+{% extends "backend/auth_partials/layout.html" %}
+{% block style %}
+<style>
+    .inputField {
+        padding: 8px;
+    }
+
+    .control-label {
+        margin-top: 12px;
+    }
+
+    .profile-pic-preview {
+        max-width: 150px;
+        max-height: 150px;
+        margin-bottom: 10px;
+    }
+    .respec-picture {
+        aspect-ratio: auto !important;
+        width: 150px !important;
+        height: 150px !important;
+    }
+
+    .respec-picture img {
+        width: 100%;
+    }
+    .qr-code-cell {
+        text-align: center;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+
+    .qr-code-cell img {
+        max-width: 80px;
+        max-height: 80px;
+        border: 2px solid #007bff;
+        border-radius: 5px;
+        padding: 3px;
+        background: white;
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .qr-code-cell img:hover {
+        transform: scale(1.1);
+        box-shadow: 0 0 10px rgba(0, 123, 255, 0.5);
+    }
+
+    .qr-code-badge {
+        display: inline-block;
+        background: #28a745;
+        color: white;
+        padding: 3px 8px;
+        border-radius: 3px;
+        font-size: 11px;
+        font-weight: bold;
+        margin-left: 5px;
+    }
+
+    .qr-modal-content {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: 20px;
+    }
+
+    .qr-modal-img {
+        display: block;
+        margin: 20px auto;
+        max-width: 400px;
+        max-height: 400px;
+        border: 3px solid #007bff;
+        border-radius: 8px;
+        padding: 10px;
+        background: white;
+    }
+
+    .coupon-info-box {
+        background: #f8f9fa;
+        padding: 15px;
+        border-radius: 5px;
+        margin: 15px 0;
+        border-left: 4px solid #007bff;
+    }
+
+    .coupon-info-box p {
+        margin: 5px 0;
+        font-size: 14px;
+    }
+</style>
+{% endblock %}
+
+{% block body %}
+<section class="content-header">
+    <div class="container-fluid">
+        <div class="row mb-2">
+            <div class="col-sm-6">
+                <h1>
+                    {{title}}
+                </h1>
+            </div>
+            <div class="col-sm-6">
+                <ol class="breadcrumb float-sm-right">
+                    <li class="breadcrumb-item"><a href="/backend/dashboard"><i class="fas fa-tachometer-alt"></i>
+                            Dashboard</a>
+                    </li>
+                    <li class="breadcrumb-item"><a href="/backend/brand">Brand</a></li>
+                    <li class="breadcrumb-item active">{{title}}</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- /.Content Header -->
+{% include "backend/auth_partials/notification.html" %}
+
+<!-- Main content -->
+<section class="content">
+    <div class="row">
+        <div class="col-12">
+            <div class="card card-primary">
+                <div class="card-header bg-transparent ">
+                </div>
+                <div class="card-body">
+                    <div class="form-group row flex-column gap-3">
+                        <label for="profilepic respec-picture" class="col-md-3  col-form-label">Brand Logo</label>
+                        <img src="{{brandDetail.brandLogo}}" class="pl-2  profile-pic-preview" alt="Profile Picture"
+                            height="150" width="150">
+
+                    </div>
+
+                    <div class="col-md-9">
+                        <div class="form-group row">
+                            <label for="brandName" class="col-md-3 col-form-label">Brand Name</label>
+                            <div class="col-md-9">
+                                <input type="text" required class="form-control" name="brandName" id="brandName"
+                                    value="{{brandDetail.brandName}}" readonly>
+                            </div>
+                        </div>
+                        <div class="form-group row">
+                            <label for="status" class="col-md-3 col-form-label">Status</label>
+                            <div class="col-md-9">
+                                <input type="text" required class="form-control" name="status" id="status"
+                                    value="{{brandDetail.status}}" readonly>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+
+                </form>
+            </div>
+            <!-- /.card -->
+        </div>
+        <!-- /.col -->
+    </div>
+    <!-- /.row -->
+</section>
+<!-- <section class="content">
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-md-12">
+                <div class="card">
+
+                    <div class="card-body">
+                        <table class="table table-bordered table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Total Coupons</th>
+                                    <th>Used Coupons</th>
+                                    <th>Unused Coupons</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>{{totalCoupons}}</td>
+                                    <td>{{ usedCoupons }}</td>
+                                    <td>{{ unUsedCoupons }}</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>  -->
+ <!-- <section class="content">
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-md-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h6 class="card-title" style="font-weight: bolder;">Brand Coupon Inventory</h6>
+                        <div class="text-right">
+                            <button type="button" class="btn btn-primary" data-toggle="modal"
+                                data-target="#uploadCouponModal">
+                                Add Coupons
+                            </button>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div class="d-flex justify-content-end z-2 sort-by position-relative"
+                            style="margin-bottom: -42px; z-index: 3;">
+
+                            <div class="">
+                                <label>Sort By
+                                    <select id="sortCoupons" class="form-control form-control-sm">
+                                        <option value="all">All Coupons</option>
+                                        <option value="used">Used Coupons</option>
+                                        <option value="unused">Unused Coupons</option>
+                                    </select>
+                                </label>
+
+                            </div>
+                        </div>
+
+                        <table id="brandViewTable" class="table table-bordered table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Sr. No.</th>
+                                    <th>Campaign Name</th>
+                                    <th>Coupon Code</th>
+                                    <th>Status</th>
+                                    <th>Username</th>
+                                    <th>QR Code</th>
+                                </tr>
+                            </thead>
+                            <tbody id="couponTableBody"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section> -->
+<!-- Modal -->
+<div class="modal fade" id="uploadCouponModal" tabindex="-1" role="dialog" aria-labelledby="uploadCouponModalLabel"
+    aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="uploadCouponModalLabel">Add Coupon Codes</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label>Choose how to add coupons</label>
+                    <div class="btn-group btn-group-toggle w-100" data-toggle="buttons">
+                        <label class="btn btn-outline-primary active">
+                            <input type="radio" name="couponInputMode" value="manual" checked> Manual Entry
+                        </label>
+                        <label class="btn btn-outline-primary">
+                            <input type="radio" name="couponInputMode" value="csv"> CSV / Excel
+                        </label>
+                    </div>
+                </div>
+
+                <div id="manualCouponSection" class="coupon-input-section">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <label class="mb-0">Coupon List</label>
+                        <button type="button" id="addManualCouponRow" class="btn btn-sm btn-success">Add Row</button>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="table table-bordered mb-0">
+                            <thead>
+                                <tr>
+                                    <th style="width: 32%">Coupon Code</th>
+                                    <th style="width: 25%">Title</th>
+                                    <th style="width: 35%">Description</th>
+                                    <th style="width: 8%">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody id="manualCouponRows"></tbody>
+                        </table>
+                    </div>
+                </div>
+                <div id="csvCouponSection" class="coupon-input-section" style="display:none;">
+                    <form id="uploadCouponForm" enctype="multipart/form-data">
+                        <div class="form-group">
+                            <label for="couponFile">Choose CSV or XLS file</label>
+                            <input type="file" class="form-control-file" id="couponFile" name="file"
+                                accept=".csv, .xls, .xlsx" required>
+                        </div>
+                    </form>
+                </div>
+                <div id="manualStatus" class="alert" style="display:none;"></div>
+                <div id="uploadStatus" style="display: none;">
+                    <div id="uploadProgress" class="alert alert-info">Uploading...</div>
+                    <div id="uploadError" class="alert alert-danger" style="display: none;">Error occurred while
+                        uploading.</div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                <button type="submit" class="btn btn-primary" id="submitCouponAction">Save Coupon</button>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="card-footer">
+    <div class="text-right">
+    <a href="/backend/brand" class="btn btn-danger">Back</a>
+    </div>  
+</div>
+<div class="modal fade" id="qrCodeModal" tabindex="-1" role="dialog" aria-labelledby="qrCodeModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="qrCodeModalLabel">QR Code - <span id="modalCouponCode"></span></h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="qr-modal-content">
+                <img  id="modalQrImage" class="qr-modal-img" src="" alt="QR Code" style="margin:0 0 0 20%;">
+            </div>
+            <div class="modal-footer justify-content-center">
+                <a id="downloadQrBtn" href="" download class="btn btn-success">
+                    <i class="fa fa-download"></i> Download QR Code
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- /.content -->
+{% endblock %}
+
+{% block Jscript %}
+<!-- page script -->
+<script>
+    let orderTable = "";
+    var host = window.location.origin;
+    let brandId = '{{brandDetail.id}}'
+    console.log("brandId----", brandId);
+    function openQrModal(qrCodePath, couponCode) {
+        $('#modalQrImage').attr('src', qrCodePath);
+        $('#modalCouponCode').text(couponCode);
+        $('#downloadQrBtn')
+            .attr('href', qrCodePath)
+            .attr('download', couponCode + '.png');
+        $('#qrCodeModal').modal('show');
+    }
+
+    function showCouponSection(mode) {
+        $('.coupon-input-section').hide();
+        $('#' + mode + 'CouponSection').show();
+
+        if (mode === 'csv') {
+            $('#submitCouponAction').text('Upload');
+        } else {
+            $('#submitCouponAction').text('Save Coupons');
+        }
+    }
+
+    function addManualCouponRow() {
+        const rowIndex = $('#manualCouponRows tr').length;
+        $('#manualCouponRows').append(`
+            <tr class="manual-coupon-row">
+                <td>
+                    <input type="text" class="form-control form-control-sm manual-coupon-code" placeholder="Coupon code">
+                </td>
+                <td>
+                    <input type="text" class="form-control form-control-sm manual-coupon-title" placeholder="Title">
+                </td>
+                <td>
+                    <textarea class="form-control form-control-sm manual-coupon-description" rows="1" placeholder="Description"></textarea>
+                </td>
+                <td class="text-center">
+                    <button type="button" class="btn btn-xs btn-danger remove-manual-row">X</button>
+                </td>
+            </tr>
+        `);
+    }
+
+    $(document).ready(function () {
+        fetchData(null)
+        showCouponSection('manual');
+        addManualCouponRow();
+        $('input[name="couponInputMode"]').on('change', function () {
+            showCouponSection($(this).val());
+        });
+        $('#addManualCouponRow').on('click', function () {
+            addManualCouponRow();
+        });
+        $(document).on('click', '.remove-manual-row', function () {
+            const totalRows = $('#manualCouponRows tr').length;
+            if (totalRows > 1) {
+                $(this).closest('tr').remove();
+            }
+        });
+
+        $('#uploadCouponModal').on('hidden.bs.modal', function () {
+            $('#couponFile').val('');
+            $('#manualCouponRows').empty();
+            addManualCouponRow();
+            $('#uploadStatus').hide();
+            $('#manualStatus').hide();
+            $('#uploadProgress').removeClass('alert-success alert-danger').addClass('alert-info').text('Uploading...');
+            $('#uploadError').hide();
+            $('input[name="couponInputMode"]').prop('checked', false);
+            $('input[name="couponInputMode"][value="manual"]').prop('checked', true);
+            showCouponSection('manual');
+        });
+        $(document).on('click', '.qr-code-cell', function () {
+            const qrCodePath = $(this).data('qr');
+            const couponCode = $(this).data('code');
+            if (qrCodePath) {
+                openQrModal(qrCodePath, couponCode);
+            }
+        });
+        $('#submitCouponAction').on('click', function (e) {
+            e.preventDefault();
+            const mode = $('input[name="couponInputMode"]:checked').val();
+            if (mode === 'csv') {
+                let formData = new FormData($('#uploadCouponForm')[0]);
+                $('#uploadStatus').show();
+                $('#uploadError').hide();
+
+                $.ajax({
+                    url: `/backend/uploadCoupon?brandId=${brandId}`,
+                    type: 'POST',
+                    data: formData,
+                    processData: false,
+                    contentType: false,
+                    beforeSend: function () {
+                        $('#uploadProgress').text('Uploading...');
+                    },
+                    success: function (response) {
+                        if (response.success) {
+                            $('#uploadProgress').removeClass('alert-info').addClass('alert-success').text('Upload successful!');
+                            setTimeout(() => {
+                                location.reload();
+                            }, 1000);
+                        } else {
+                            $('#uploadProgress').removeClass('alert-info').addClass('alert-danger').text(response.message || 'Upload failed.');
+                        }
+                    },
+                    error: function () {
+                        $('#uploadError').show().text('Error occurred during the upload.');
+                    }
+                });
+                return;
+            }
+
+            const manualStatus = $('#manualStatus');
+            manualStatus.removeClass('alert-success alert-danger').addClass('alert-info').show().text('Saving coupons...');
+            const coupons = [];
+            $('#manualCouponRows tr').each(function () {
+                const code = $(this).find('.manual-coupon-code').val().trim();
+                const title = $(this).find('.manual-coupon-title').val().trim();
+                const description = $(this).find('.manual-coupon-description').val().trim();
+                if (code) {
+                    coupons.push({ couponCode: code, title, description });
+                }
+            });
+            if (!coupons.length) {
+                manualStatus.removeClass('alert-info').addClass('alert-danger').text('Please add at least one coupon code.');
+                return;
+            }
+            const payload = { brandId: brandId, mode: 'manual', coupons: coupons };
+            $.ajax({
+                url: '/backend/addCoupon',
+                type: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify(payload),
+                success: function (response) {
+                    if (response.success) {
+                        manualStatus.removeClass('alert-info').addClass('alert-success').text(response.message || 'Coupons saved successfully.');
+                        setTimeout(() => {
+                            location.reload();
+                        }, 1000);
+                    } else {
+                        manualStatus.removeClass('alert-info').addClass('alert-danger').text(response.message || 'Unable to save coupons.');
+                    }
+                },
+                error: function () {
+                    manualStatus.removeClass('alert-info').addClass('alert-danger').text('Something went wrong while saving coupons.');
+                }
+            });
+        });
+
+        $('#sortCoupons').on('change', function () {
+            var selectedValue = $(this).val();
+            console.log("selectedValue---", selectedValue);
+            fetchData(selectedValue)
+        });
+
+        function fetchData(selectedValue) {
+            let data = selectedValue ? selectedValue : ''
+            console.log("data-----", data);
+            // Destroy existing DataTable if it exists
+            if ($.fn.dataTable.isDataTable('#brandViewTable')) {
+                orderTable.destroy();
+            }
+            let options = {
+                "oLanguage": {
+                    "sSearch": "Search"
+                },
+                // "orderable": false,
+                "processing": true,
+                "serverSide": true,
+                "searching": false,
+                "ordering": false,
+                "autoWidth": false,
+                "pagination": true,
+                "pageLength": 10,
+                "scrollX": true,
+                // "scrollY": 230,
+                "ajax": {
+                    "url": `/backend/brandCouponDetail?brandId=${brandId}&selectedVal=${data}`,
+                },
+                "columns": [
+                    {
+                        "data": "No",
+                        render: function (data, type, full, meta) {
+                            return meta.row + 1;
+                        }
+                    },
+                    {
+                        "data": "campaignName",
+                        render: function (data, type, row) {
+                            // console.log("row--->>", row);
+                            if (row.campaignName != undefined) {
+                                return row.campaignName;
+                            } else {
+                                return "-";
+                            }
+                        }
+                    },
+
+                    {
+                        "data": "couponCode",
+                        render: function (data, type, row) {
+                            // console.log("row......", row);
+                            if (row.couponCode != undefined) {
+                                return row.couponCode;
+                            } else {
+                                return "-";
+                            }
+                        }
+                    },
+
+                    {
+                        "data": "status",
+                        render: function (data, type, row) {
+                            if (row.status !== undefined) {
+                                if (row.status === "used") {
+                                    return '<span style="color: green;">Used</span>';
+                                } else {
+                                    return '<span style="color: red;">UnUsed</span>';
+                                }
+                            } else {
+                                return '<span style="color: red;">UnUsed</span>';  // Default to red for undefined or any other status
+                            }
+                        }
+                    },
+                    {
+                        "data": "username",
+                        render: function (data, type, row) {
+                            // console.log("row.coupon------", row.coupons.length);
+                            if (row.userName) {
+                                return row.userName;
+                            } else {
+                                return "-";
+                            }
+                        }
+                    },
+                    {
+                        "data": "qrCode",
+                        render: function (data, type, row) {
+                            if (row.qrCode) {
+                                const qrPath = String(row.qrCode).replace(/"/g, '&quot;');
+                                const couponCode = String(row.couponCode || '').replace(/"/g, '&quot;');
+                                return `<div class="qr-code-cell" data-qr="${qrPath}" data-code="${couponCode}">
+                                    <span class="qr-code-badge">QR Code</span>
+                                </div>`;
+                            }
+                            return "-";
+                        }
+                    },
+                ]
+            }
+            orderTable = $('#brandViewTable').DataTable(options);
+        }
+    });
+
+
+</script>
+{% endblock %}

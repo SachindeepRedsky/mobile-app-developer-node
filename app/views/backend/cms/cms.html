@@ -1,0 +1,95 @@
+{% extends "backend/auth_partials/layout.html" %} {% block body %}
+
+
+<!-- Main Content -->
+<div class="page-wrapper">
+  <div class="container-fluid">
+
+    <!-- Title -->
+    <div class="content-header">
+      <div class="container-fluid">
+        <div class="row mb-2">
+          <div class="col-sm-6">
+            <!-- <h1 class="m-0">
+                            CMS Mangement
+                        </h1> -->
+          </div><!-- /.col -->
+          <div class="col-sm-6">
+            <ol class="breadcrumb float-sm-right">
+              <li class="breadcrumb-item"><a href="/backend/dashboard"><i class="fas fa-tachometer-alt"></i>
+                  Dashboard</a></li>
+              <li class="breadcrumb-item active"> CMS Management</li>
+            </ol>
+          </div><!-- /.col -->
+        </div><!-- /.row -->
+      </div><!-- /.container-fluid -->
+    </div>
+    <!-- /Title -->
+			{% include "backend/auth_partials/notification.html" %}
+
+    <!-- Row -->
+    <section class="content">
+      <div class="container-fluid">
+        <div class="row">
+          <div class="col-md-12">
+            <div class="card">
+              <div class="card-header">
+                <h6 class="card-title" style="font-weight: bolder;">CMS Management</h6>
+              </div>
+              <div class="card-body">
+                <table id="cmsTable" class="table table-bordered table-striped table-hover display  pb-30">
+                  <thead>
+                    <tr>
+                      <th>Sr No.</th>
+                      <th>CMS Page</th>
+                      <th>Action</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </div>
+</div>
+
+{% endblock %}
+{% block Jscript %}
+<script>
+  $(document).ready(function () {
+    var host = window.location.origin;
+    $('#cmsTable').DataTable({
+      "oLanguage": {
+        'sSearchPlaceholder': 'Search by CMS Page...',
+      },
+      "searching":false,
+      "processing": true,
+      "serverSide": true,
+      "ordering": false,
+      "autoWidth": false,
+      "pageLength": 10,
+      scrollX: true,
+      "ajax": host + "/backend/getCmsPage",
+      "columns": [{
+        "data": "id",
+        render: function (data, type, full, meta) {
+          return meta.row + 1;
+        }
+      }, {
+        "data": "title",
+  
+      }, {
+        "data": "action",
+        render: function (data, type, row) {
+          return '<div class="dropdown show"><a class="btn btn-warning btn-xs btn-rounded" href="/backend/editCms/' + row.id + '"><i class="fa fa-edit" aria-hidden="true"></i></a></div>';
+        }
+      }]
+    });
+  });
+
+</script>
+{% endblock %}

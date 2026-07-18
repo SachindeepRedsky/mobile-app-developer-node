@@ -1,0 +1,92 @@
+{% extends "backend/auth_partials/layout.html" %}
+
+{% block body %}
+
+
+    <!-- Content Wrapper. Contains page content -->
+        <!-- Content Header (Page header) -->
+        <div class="content-header">
+            <div class="container-fluid">
+                <div class="row mb-2">
+                    <div class="col-sm-6">
+                        <h1 class="m-0">Dashboard</h1>
+                    </div><!-- /.col -->
+                    <div class="col-sm-6">
+                        <ol class="breadcrumb float-sm-right">
+                            <li class="breadcrumb-item"><a href="/backend/dashboard">Home</a></li>
+                            <li class="breadcrumb-item active">Dashboard</li>
+                        </ol>
+                    </div><!-- /.col -->
+                </div><!-- /.row -->
+            </div><!-- /.container-fluid -->
+        </div>
+        <!-- /.content-header -->
+        {% include "backend/auth_partials/notification.html" %}
+
+        <!-- Main content -->
+        <section class="content">
+            <div class="container-fluid">
+                <!-- Small boxes (Stat box) -->
+                <div class="row mb-4">
+                    <!-- <div class="col-md-12">
+                        <div class="overview-wrap">
+                            <h2 class="title-1">Total Count</h2>
+                        </div>
+                    </div> -->
+                    
+                    <!-- Category Count -->
+                    <div class="col-lg-3 col-6">
+                        <div class="small-box bg-info">
+                            <div class="inner">
+                                <h3>{{ totalUsers }}</h3>
+                                <p>Total Number of Registered users</p>
+                            </div>
+                            <div class="icon">
+                                <i class="fas fa-user-friends"></i>
+                            </div>
+                            <a href="/backend/user" class="small-box-footer">More info <i class="fas fa-arrow-circle-right"></i></a>
+                        </div>
+                    </div>
+                    
+                    <!-- Game Count -->
+                    <div class="col-lg-3 col-6">
+                        <div class="small-box bg-success">
+                            <div class="inner">
+                                <h3>{{totalBrands}}</h3>
+                                <p>Total Number of Brands</p>
+                            </div>
+                            <div class="icon">
+                                <i class="fas fa-users"></i>
+                            </div>
+                            <a href="/backend/brand" class="small-box-footer">More info <i class="fas fa-arrow-circle-right"></i></a>
+                        </div>
+                    </div>
+                    
+                    <!-- Mail Count -->
+                    <div class="col-lg-3 col-6">
+                        <div class="small-box bg-warning">
+                            <div class="inner">
+                                <h3>{{ totalCampaign }}</h3>
+                                <p>Total Number of Campaigns</p>
+                            </div>
+                            <div class="icon">
+                                <i class="fas fa-bullhorn"></i>
+                            </div>
+                            <a href="/backend/campaign" class="small-box-footer">More info <i class="fas fa-arrow-circle-right"></i></a>
+                        </div>
+                    </div>
+                    
+                </div>
+                <!-- /.row -->
+                
+                <!-- Main row -->
+                <div class="row">
+                    <!-- Additional content can be added here -->
+                </div>
+                <!-- /.row (main row) -->
+            </div><!-- /.container-fluid -->
+        </section>
+
+
+<!-- ./wrapper -->
+{% endblock %}

@@ -1,0 +1,60 @@
+.remember-me {
+  margin-bottom: 10px;
+}
+
+.logo_img {
+  width: 100px;
+}
+
+.input-group-addon {
+  cursor: pointer;
+}
+
+.login_outer {
+  width: 100%;
+  max-width: 400px;
+  margin-top: -29px;
+}
+
+.logo_outer {
+  text-align: center;
+}
+
+.logo_outer img {
+  width: 330px;
+  margin-bottom: 5px;
+}
+
+form#login {
+  box-shadow: 5px 5px 0px rgb(89 77 251 / 39%);
+  height: 390px !important;
+}
+
+.input-group input:focus {
+  z-index: 1 !important;
+}
+
+.error{
+  color: red;
+}
+
+.input-group-append {
+  position: absolute;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  display: flex;
+  align-items: center;
+  padding: 0 10px;
+  z-index: 2;
+}
+
+.input-group-append .input-group-text {
+  background-color: transparent;
+  border: none;
+  color: #000;
+}
+
+.input-group-append {
+  right: 0;
+}

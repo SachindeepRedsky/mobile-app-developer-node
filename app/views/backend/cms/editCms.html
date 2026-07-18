@@ -1,0 +1,96 @@
+{% extends "backend/auth_partials/layout.html" %}
+{% block body %}
+
+<!-- Main Content -->
+<div class="page-wrapper">
+  <div class="container-fluid">
+
+    <!-- Title -->
+    <div class="content-header">
+      <div class="container-fluid">
+        <div class="row mb-2">
+          <div class="col-sm-6">
+            {% if cmsPage.type == "aboutUs" %}
+            <h1 class="m-0">About Us</h1>
+            {% elseif cmsPage.type == "privacyPolicy" %}
+            <h1 class="m-0">Privacy Policy</h1>
+            {% else %}
+            <h1 class="m-0">Terms and Conditions</h1>
+            {% endif %}
+          </div>
+          <div class="col-sm-6">
+            <ol class="breadcrumb float-sm-right">
+              <li class="breadcrumb-item"><a href="/backend/dashboard"><i class="fas fa-tachometer-alt"></i>
+                  Dashboard</a>
+              </li>
+              <li class="breadcrumb-item"><a href="/backend/cmsPage">CMS Pages</a></li>
+              <li class="breadcrumb-item active">Edit CMS</li>
+            </ol>
+          </div>
+        </div>
+      </div>
+    </div>
+    <!-- /Title -->
+
+    <!-- Row -->
+    <section class="content">
+      <div class="container-fluid">
+        <div class="row">
+          <div class="col-md-12">
+            <div class="card">
+              <div class="card-header"></div>
+              <div class="card-body">
+                <form method="POST" action="/backend/editCms/{{ cmsPage.id }}" class="form-horizontal">
+
+                  <!-- Title Field -->
+                  <div class="form-group">
+                    <label for="title" class="control-label">Title:</label>
+                    <div class="inputField">
+                      <input type="text" name="title" id="title" class="form-control" value="{{ cmsPage.title }}"
+                        required>
+                    </div>
+                  </div>
+
+                  <!-- Description Field -->
+                  <div class="form-group">
+                    <label for="content" class="control-label">Description:</label>
+                    <div class="inputField">
+                      <textarea name="description" id="content" rows="8" cols="110" style="resize:none;padding: 10px;"
+                        required>{{ cmsPage.description }}</textarea>
+                    </div>
+                  </div>
+
+                  <div class="box-footer">
+                    <button type="submit" class="btn btn-success">Update</button>
+                    <a href="/backend/cmsPages" class="btn btn-danger">Back</a>
+                  </div>
+                </form>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </div>
+</div>
+
+{% endblock %}
+{% block Jscript %}
+<script src="https://cdn.ckeditor.com/ckeditor5/39.0.0/classic/ckeditor.js"></script>
+
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    ClassicEditor
+      .create(document.querySelector('#content'), {
+        toolbar: [
+          'heading', '|', 'bold', 'italic', 'link', 'bulletedList', 'numberedList', '|',
+          'blockQuote', 'insertTable', 'undo', 'redo'
+        ]
+      })
+      .catch(error => {
+        console.error(error);
+      });
+  });
+</script>
+{% endblock %}

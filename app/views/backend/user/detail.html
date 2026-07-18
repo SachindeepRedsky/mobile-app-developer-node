@@ -1,0 +1,135 @@
+{% extends "backend/auth_partials/layout.html" %}
+{% block style %}
+<style>
+  .inputField {
+    padding: 8px;
+  }
+
+  .control-label {
+    margin-top: 12px;
+  }
+
+  .profile-pic-preview {
+    max-width: 150px;
+    max-height: 150px;
+    margin-bottom: 10px;
+  }
+</style>
+{% endblock %}
+
+{% block body %}
+<section class="content-header">
+  <div class="container-fluid">
+    <div class="row mb-2">
+      <div class="col-sm-6">
+        <h1>
+          {{title}}
+        </h1>
+      </div>
+      <div class="col-sm-6">
+        <ol class="breadcrumb float-sm-right">
+          <li class="breadcrumb-item"><a href="/backend/dashboard"><i class="fas fa-tachometer-alt"></i> Dashboard</a>
+          </li>
+          <li class="breadcrumb-item"><a href="/backend/user">User</a></li>
+          <li class="breadcrumb-item active">{{title}}</li>
+        </ol>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- /.Content Header -->
+{% include "backend/auth_partials/notification.html" %}
+
+<!-- Main content -->
+<section class="content">
+  <div class="row">
+    <div class="col-12">
+      <div class="card card-primary">
+        <div class="card-header bg-transparent ">
+        </div>
+        <div class="card-body">
+          <div class="form-group">
+            <div class="col-12 col-md-12">
+              <div class="profile_img m-0">
+                <img id="myImg" src="{{userDetail.profilePic}}" class="profile-pic-preview" alt="Profile Picture" height="150"
+                width="150"
+                  style="width: 100px; height: 100px; border-radius: 50%;border: 5px solid rgb(0,123,255);">
+                <!-- <label for="avatar" class="profile-add" id="profileAdd"></label> -->
+
+              </div>
+            </div>
+          </div>
+          <!-- <div class="form-group row flex-column gap-3">
+            <label for="profilepic" class="col-md-3 col-form-label">Profile Picture</label>
+            <img src="{{userDetail.profilePic}}" class="profile-pic-preview" alt="Profile Picture" height="150"
+              width="150">
+
+          </div> -->
+
+          <div class="col-md-9">
+
+
+
+            <div class="form-group row">
+              <label for="name" class="col-md-3 col-form-label">Name</label>
+              <div class="col-md-9">
+                <input type="text" required class="form-control" name="name" id="name" value="{{userDetail.firstName}}"
+                  readonly>
+              </div>
+            </div>
+
+            <div class="form-group row">
+              <label for="email" class="col-md-3 col-form-label">Email</label>
+              <div class="col-md-9">
+                <input type="text" class="form-control" name="email" id="email" value="{{userDetail.email}}" readonly>
+              </div>
+            </div>
+
+            <div class="form-group row">
+              <label for="mobile" class="col-md-3 col-form-label">Phone No</label>
+              <div class="col-md-9">
+                <input type="number" class="form-control" name="mobile" id="mobile" value="{{userDetail.mobile}}"
+                  readonly>
+              </div>
+            </div>
+
+            <div class="form-group row">
+              <label for="status" class="col-md-3 col-form-label">Status</label>
+              <div class="col-md-9">
+                <input type="text" class="form-control" value="{{userDetail.status}}" readonly>
+              </div>
+            </div>
+          </div>
+
+        </div>
+        <div class="card-footer">
+          <a href="/backend/user" class="btn btn-danger">Cancel</a>
+        </div>
+        </form>
+      </div>
+      <!-- /.card -->
+    </div>
+    <!-- /.col -->
+  </div>
+  <!-- /.row -->
+</section>
+<!-- /.content -->
+{% endblock %}
+
+{% block Jscript %}
+<!-- page script -->
+<script>
+  $(document).ready(function () {
+    var number = document.getElementById('mobile');
+    // Listen for input event on numInput.
+    number.onkeydown = function (e) {
+      if (!((e.keyCode > 95 && e.keyCode < 106)
+        || (e.keyCode > 47 && e.keyCode < 58)
+        || e.keyCode == 8)) {
+        return false;
+      }
+    }
+  });
+</script>
+{% endblock %}

@@ -1,0 +1,283 @@
+{% extends "backend/auth_partials/layout.html" %}
+
+{% block style %}
+<style>
+    div#playerTable_paginate {
+        text-align: right;
+    }
+
+    div#playerTable_filter {
+        text-align: right;
+    }
+</style>
+{% endblock %}
+
+{% block body %}
+<!-- Content Header (Page header) -->
+<section class="content-header">
+    <div class="container-fluid">
+        <div class="row mb-2">
+            <div class="col-sm-6">
+                <h1>User Management</h1>
+            </div>
+            <div class="col-sm-6">
+                <ol class="breadcrumb float-sm-right">
+                    <li class="breadcrumb-item"><a href="/backend/dashboard"><i class="fas fa-tachometer-alt"></i>
+                            Dashboard</a></li>
+                    <li class="breadcrumb-item active">User</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+</section>
+{% include "backend/auth_partials/notification.html" %}
+
+<!-- Main content -->
+<section class="content">
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header py-0">
+                    <div class="col-md-10"></div>
+                </div>
+                <!-- /.card-header -->
+                <div class="card-body">
+                    <table id="playerTable" class="table table-bordered table-striped">
+                        <thead>
+                            <tr>
+                                <th>Sr. No.</th>
+                                <th>Name</th>
+                                <th>Email Address</th>
+                                <th>Phone Number</th>
+                                <th>Status</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+                <!-- /.card-body -->
+            </div>
+            <!-- /.card -->
+        </div>
+        <!-- /.col -->
+    </div>
+    <!-- /.row -->
+</section>
+{% endblock %}
+
+{% block Jscript %}
+
+<script>
+    console.log("sadsadsa");
+    var orderTable = "";
+    var host = window.location.origin;
+    // $(document).ready(function () {
+    console.log("sadasd");
+    orderTable = $('#playerTable').DataTable({
+        "oLanguage": {
+            "sSearch": "Search"
+        },
+        // "orderable": false,
+        "processing": true,
+        "serverSide": true,
+        "ordering": false,
+        "autoWidth": false,
+        "pagination": true,
+        "pageLength": 10,
+        "scrollX": true,
+        // "scrollY": 230,
+        "ajax": {
+            "url": "/backend/getUsers",
+        },
+        "columns": [
+            {
+                "data": "No",
+                render: function (data, type, full, meta) {
+                    return meta.row + 1;
+                }
+            },
+            {
+                "data": "firstName",
+                render: function (data, type, row) {
+                    if (row.firstName != undefined) {
+                        return row.firstName;
+                    } else {
+                        return "-";
+                    }
+                }
+            },
+            {
+                "data": "email",
+                render: function (data, type, row) {
+                    if (row.email != undefined) {
+                        return row.email;
+                    } else {
+                        return "-";
+                    }
+                }
+            },
+            {
+                "data": "mobile",
+                render: function (data, type, row) {
+                    if (row.mobile != undefined) {
+                        return `${row.countryCode} ${row.mobile}`;
+                    } else {
+                        return '-';
+                    }
+                }
+            },
+            {
+                "data": "status",
+                render: function (data, type, row) {
+                    if (row.status !== undefined) {
+                        if (row.status === "active") {
+                            return '<span style="color: green;">Active</span>';
+                        } else {
+                            return '<span style="color: red;">InActive</span>';
+                        }
+                    } else {
+                        return '<span style="color: red;">InActive</span>';  // Default to red for undefined or any other status
+                    }
+                }
+            },
+
+            {
+                "data": "action",
+                render: function (data, type, row) {
+                    let button = "btn-danger"
+                    if (row.status == 'active') {
+                        button = "btn-success"
+                    }
+                    console.log("row", row.id);
+                    return `<a href="/backend/user/detail/${row.id}" title="View Player" name="view" id="${row.id}" class="btn btn-primary btn-xs btn-rounded view">
+                        <i class="fa fa-eye" aria-hidden="true"></i></a>
+                       <a href="#" style="margin-right:3px" type="button" title="Block Player" name="${row.status}" id="${row.id}" class="btn ${button}  btn-xs playerActive ">  <i class="fa fa-ban" aria-hidden="true" id="${row.status}"></i></a>`
+                }
+            }
+        ]
+
+    });
+    $(document).ready(function () {
+        $(document).ready(function () {
+            //block & unblock
+            $('body').on('click', '.playerActive', function (e) {
+                var id = $(this).attr('id');
+                console.log("id -->", id);
+                var name = $(this).attr('name');
+                console.log("name--->>", name);
+
+                if (name == "active") {
+                    name = "Block"
+                } else {
+                    name = "Unblock"
+                }
+                console.log("name---", name);
+                var thisElement = this;
+                Swal.fire({
+                    title: "Are you sure?",
+                    text: "Do you want to " + name + " the User?",
+                    // type: "warning",
+                    showCancelButton: true,
+                    confirmButtonColor: "#e69a2a",
+                    confirmButtonText: "Yes, " + name + " it!",
+                    cancelButtonText: "No, cancel pls!",
+                    // closeOnConfirm: false,
+                    // closeOnCancel: false
+                }).then((result) => {
+                    console.log("result --> ", result);
+                    console.log("result.isConfirm", result.isConfirmed);
+
+                    if (result.isConfirmed) {
+                        console.log("true");
+                        $.ajax({
+                            type: 'POST',
+                            url: host + "/backend/user/blockUnblockUser",
+                            data: {
+                                id: id
+                            },
+                            success: function (resultData) {
+                                console.log("winning result", resultData);
+                                if (resultData == 'success') {
+                                    let changeText = 'Active';
+                                    if ($(thisElement).parent().parent().find('td  .playerActive').hasClass("btn-success")) {
+                                        changeText = 'inactive';
+                                        $(thisElement).parent().parent().find('td  .playerActive').removeClass("btn-success");
+                                        $(thisElement).parent().parent().find('td  .playerActive').addClass("btn-danger");
+                                        $('#status-' + id).css({ color: "red" });
+                                    } else {
+                                        $(thisElement).parent().parent().find('td  .playerActive').removeClass("btn-danger");
+                                        $(thisElement).parent().parent().find('td  .playerActive').addClass("btn-success");
+                                        $('#status-' + id).css({ color: "green" });
+                                    }
+                                    $('#status-' + id).html(changeText);
+                                    location.reload()
+
+                                } else {
+                                    console.log("Something went wrong");
+                                    alert("Something went wrong")
+                                }
+
+                            }
+                        });
+                        // swal("Success!", "User " + name + " Succesfully.", "success");
+                    } else {
+                        // swal("Cancelled", "User " + name + " not Updated", "error");
+                    }
+
+                });
+
+                // Swal.fire({
+                //     title: "Are you sure?",
+                //     text: "Do you want to " + name + " the User?",
+                //     // type: "warning",
+                //     showCancelButton: true,
+                //     confirmButtonColor: "#e69a2a",
+                //     confirmButtonText: "Yes, " + name + " it!",
+                //     cancelButtonText: "No, cancel pls!",
+                //     // closeOnConfirm: false,
+                //     // closeOnCancel: false
+                // }, function (isConfirm) {
+                //     console.log("isConfirm  --->",isConfirm);
+                //     if (isConfirm) {
+                //         $.ajax({
+                //             type: 'POST',
+                //             url: host + "/backend/user/blockUnblockUser",
+                //             data: {
+                //                 id: id
+                //             },
+                //             success: function (resultData, data) {
+                //                 console.log("winning result", data, resultData);
+                //                 if (resultData == 'success') {
+                //                     let changeText = 'Active';
+                //                     if ($(thisElement).parent().parent().find('td  .playerActive').hasClass("btn-success")) {
+                //                         changeText = 'inactive';
+                //                         $(thisElement).parent().parent().find('td  .playerActive').removeClass("btn-success");
+                //                         $(thisElement).parent().parent().find('td  .playerActive').addClass("btn-danger");
+                //                         $('#status-' + id).css({ color: "red" });
+                //                     } else {
+                //                         $(thisElement).parent().parent().find('td  .playerActive').removeClass("btn-danger");
+                //                         $(thisElement).parent().parent().find('td  .playerActive').addClass("btn-success");
+                //                         $('#status-' + id).css({ color: "green" });
+                //                     }
+                //                     $('#status-' + id).html(changeText);
+                //                     location.reload()
+
+                //                 } else {
+                //                     alert("Something went wrong")
+                //                 }
+
+                //             }
+                //         });
+                //         swal("Success!", "User " + name + " Succesfully.", "success");
+                //     } else {
+                //         swal("Cancelled", "User " + name + " not Updated", "error");
+                //     }
+                // });
+                return false;
+            });
+        });
+    });
+
+</script>
+{% endblock %}
