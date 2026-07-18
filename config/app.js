@@ -35,7 +35,7 @@ module.exports = {
   googleClientId: GOOGLE_CLIENT_ID,
   baseUrl: BASE_URL,
   forntendUrl: "",
-  jwt_secret: JSON_WEB,
+  jwt_secret: process.env.JSON_WEB || JSON_WEB,
   twilio: {
     accountSid: TWILIO_ACCOUNT_SID,
     authToken: TWILIO_AUTHTOKEN,

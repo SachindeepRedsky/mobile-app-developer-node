@@ -27,7 +27,7 @@ var config = {
 			mail_service: "gmail",
 			smtp_sender_mail_id: 'admin@bagvertising.com'
 		},
-		jwt_secret:JSON_WEB || "default_jwt_secret_123",
+		jwt_secret:process.env.JSON_WEB || JSON_WEB || "default_jwt_secret_123",
 		jwt_expire:'1h'
 	},
 	development: {
@@ -42,7 +42,22 @@ var config = {
 			mail_service: "gmail",
 			smtp_sender_mail_id: 'admin@bagvertising.com'
 		},
-		jwt_secret:JSON_WEB || "default_jwt_secret_123",
+		jwt_secret:process.env.JSON_WEB || JSON_WEB || "default_jwt_secret_123",
+		jwt_expire:'1h'
+	},
+	production: {
+		"port": SERVER_PORT || 8080,
+		"baseUrl": BASE_URL || `http://localhost:${DEFAULT_PORT}`,
+		"siteName": "Bagvertising",
+		smtpMailer: {
+			host: SMTP_HOST,
+			port: SMTP_PORT,
+			user: SMTP_USER,
+			pass: SMTP_PASS,
+			mail_service: "gmail",
+			smtp_sender_mail_id: 'admin@bagvertising.com'
+		},
+		jwt_secret:process.env.JSON_WEB || JSON_WEB || "default_jwt_secret_123",
 		jwt_expire:'1h'
 	},
 	twilio: {
