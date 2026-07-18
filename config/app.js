@@ -37,8 +37,8 @@ module.exports = {
   forntendUrl: "",
   jwt_secret: JSON_WEB,
   twilio: {
-    accountSid: TWILIO_ACCOUNT_SID, //"AC56fc04a1506faced412bd0d9236128c3",
-    authToken: TWILIO_AUTHTOKEN, //"8c5f237a8bbcfbdd4cdfa8df9ce7eead",
+    accountSid: TWILIO_ACCOUNT_SID,
+    authToken: TWILIO_AUTHTOKEN,
     callerNumber: TWILIO_CALLER_NUMBER,
     otp_max_time: TWILIO_OTP_MAX_TIME,
   },
