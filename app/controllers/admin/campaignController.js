@@ -279,7 +279,7 @@ module.exports = function (model) {
                 const usedCoupons = await model.Bags.count({ where: { campaign_id: campaignId },
                     include: [{ model: model.Coupon, as: "couponDetails", where: { status: "used" }, required: true }]
                 });
-                const totalCoupons = await model.Bags.count({ where: { campaign_id: campaignId } });
+                const totalCoupons = await model.Bags.count({ where: { campaign_id: campaignId } }); 
                 const unUsedCoupons = totalCoupons - usedCoupons;
 
 
