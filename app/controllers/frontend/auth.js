@@ -686,7 +686,7 @@ module.exports = function (model, config) {
             username = `${userDetail.firstName} ${userDetail.lastName}`
           }
           let dsf = await model.Coupon.update(
-            { userId, userName: username, status: "used" },
+            { status: "used" },
             {
               where: { id: coupon_id, isExpired: false },
               raw: true,
@@ -791,6 +791,7 @@ module.exports = function (model, config) {
     };
     var failedMessage = { status: "fail", message: "", data: {} };
     const { couponId, couponCode, userId } = req.body;
+    console.log("redeemCoupon:::::::::::::::>>>>couponId: ", couponId, couponCode, userId);
     if (!couponId && !couponCode) {
       failedMessage.message = "Please provide couponId or couponCode.";
       return res.status(400).send(failedMessage);
@@ -806,7 +807,9 @@ module.exports = function (model, config) {
         failedMessage.message = "Coupon is expired and cannot be redeemed.";
         return res.status(400).send(failedMessage);
       }
-      await model.Coupon.update({ status: "used", assignStatus: "assigned", }, { where: whereClause,});
+      console.log("couponDetail:::::::::::::::>>>>couponDetail: ", couponId, userId);
+      const result = await model.CouponRecords.update({ status: "used" }, { where: {couponId, userId}});
+      console.log("resultttttttt::::::::, ", result)
       if (userId || couponDetail.userId) {
         const targetUserId = userId || couponDetail.userId;
         const existingRecord = await model.CouponRecords.findOne({ where: { userId: targetUserId, couponId: couponDetail.id,},});
@@ -847,18 +850,16 @@ module.exports = function (model, config) {
       // Fetch details from the Coupon model
       const recodrds = await model.CouponRecords.findAll({
         where: { userId },
-        attributes: ['coupon_id'],
-        group: ['coupon_id','product_Id'],
+        attributes: ['coupon_id', 'productId', 'status'],
         raw: true
       });
       console.log("recodrds:", recodrds);
 console.log("recodrds count:", recodrds.length);
-      const idsArray = recodrds.map(i => i.coupon_id);
+      const idsArray = [...new Set(recodrds.map(i => i.coupon_id))];
       console.log("idsArray", idsArray);
       const details = await model.Coupon.findAll({
         where: {
           id: { [Op.in]: idsArray },
-          assignStatus: "unassigned",
           isExpired: false
         },
         order: [["createdAt", "DESC"]],
@@ -877,20 +878,28 @@ console.log("recodrds count:", recodrds.length);
       // Process coupon details
       const couponData = await Promise.all(
         details.map(async (coupon) => {
-          const brand_id = coupon.brand_id;
+          const record = recodrds.find(
+              r => r.coupon_id === coupon.id
+          );
+          if (record) {
+              coupon.assignStatus =
+                  record.status === "used"
+                      ? "assigned"
+                      : "unassigned";
+          }
+
           const brandDetail = await model.Brand.findOne({
-            where: { id: brand_id },
-            raw: true,
+              where: { id: coupon.brand_id },
+              raw: true,
           });
 
-          // console.log("🚀 ~ details.map ~ brandDetail:", brandDetail)
-          // Add brand logo if available
-          if (brandDetail && brandDetail.brandLogo) {
-            coupon.brandLogo = brandDetail.brandLogo;
-            coupon.brandName = brandDetail.brandName
+          if (brandDetail) {
+              coupon.brandLogo = brandDetail.brandLogo;
+              coupon.brandName = brandDetail.brandName;
           }
-          return coupon; // Return individual coupon with the added brandLogo if available
-        })
+
+          return coupon;
+      })
       );
 console.log("couponData", couponData);
       // Return success response with data
