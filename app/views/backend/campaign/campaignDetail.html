@@ -66,7 +66,7 @@
           <div class="card">
             <div class="card-header">
               <h6 class="card-title" style="font-weight: bolder">
-                Brand Coupon Inventory
+                 Coupon Inventory
               </h6>
               <div class="text-right">
                 {% if campaignDetail.status != 'published' %}
@@ -87,12 +87,8 @@
                 <thead>
                   <tr>
                     <th>Sr. No.</th>
-                    <th>Campaign Name</th>
-                    <th>Coupon Code</th>
-                    <th>Status</th>
-                    <th>Username</th>
-                    <th>QR Code</th>
                     <th>Product ID</th>
+                    <th>Number Of Coupons</th>
                   </tr>
                 </thead>
                 <tbody id="couponTableBody"></tbody>
@@ -110,6 +106,7 @@
 <script>
     var brandId = '';
     var campaignId = '';
+    var grouped = {};
     function generateNumbr(length) {
     const characters = '1234567890';
     let result = '';
@@ -173,29 +170,25 @@
                     `);
                     return;
                 }
+                grouped = {};
+                response.result.forEach(function(item) {
+                    if (!grouped[item.productId]) {
+                        grouped[item.productId] = [];
+                    }
+                    grouped[item.productId].push(item);
+                });
 
-                response.result.forEach(function (item, index) {
-
-                    let statusBadge =
-                        item.status === "unused"
-                            ? '<span class="badge badge-success">Unused</span>'
-                            : '<span class="badge badge-danger">Used</span>';
-
-                    let qrCode = item.qrCode
-                        ? `<a href="javascript:void(0)" class="qr-code-cell" data-qr="${item.qrCode}" data-code="${item.couponCode}"><img src="${item.qrCode}" width="60" height="60"></a>`
-                        : "-";
+                Object.keys(grouped).forEach(function(productId, index) {
+                    const coupons = grouped[productId];
 
                     tbody.append(`
-                        <tr>
+                        <tr class="product-row" data-product="${productId}">
                             <td>${index + 1}</td>
-                            <td>${item.campaignName || "-"}</td>
-                            <td>${item.couponCode || "-"}</td>
-                            <td>${statusBadge}</td>
-                            <td>${item.userName || "-"}</td>
-                            <td>${qrCode}</td>
-                            <td>${item.productId || "-"}</td>
+                            <td>${productId}</td>
+                            <td>${coupons.length}</td>
                         </tr>
                     `);
+
                 });
                 if ($.fn.dataTable.isDataTable('#campaignTable')) {
                     $('#campaignTable').DataTable().destroy();
@@ -333,9 +326,9 @@
         },
         success: function (response) {
             if (response.success) {
-                let total = Number(bags) * Number(coupons);
+                let total = Number(coupons);
                 $("#couponSummary").html(
-                    `You have entered <b>${bags}</b> bags and <b>${coupons}</b> coupons. You need to add <b>${total}</b> coupon entries.`
+                    `You have entered <b>${bags}</b> bags and <b>${coupons}</b> coupons per bag. You only need to add <b>${total}</b> unique coupon codes. These coupon codes will be used for every bag.`
                 );
                 $('#bagsNo').val(bags);
                 $('#couponNo').val(coupons);
@@ -355,12 +348,43 @@
       });
     });
   });
-
+$(document).on("click", ".product-row", function () {
+    const productId = $(this).data("product");
+    const coupons = grouped[productId];
+    $("#modalProductId").text(productId);
+    let html = "";
+    coupons.forEach(function(item, index){
+        const statusBadge = item.status === "unused" ? '<span class="badge badge-success">Unused</span>' : '<span class="badge badge-danger">Used</span>';
+        const qr = item.qrCode ? ` <a href="javascript:void(0)">
+            <img
+                src="${item.qrCode}"
+                width="60"
+                class="qr-code-cell"
+                data-qr="${item.qrCode}"
+                data-code="${item.couponCode}"
+                style="cursor:pointer"
+            >
+        </a>
+      ` : "-";
+        html += `
+            <tr>
+                <td>${index + 1}</td>
+                <td>${item.campaignName || "-"}</td>
+                <td>${item.couponCode}</td>
+                <td>${statusBadge}</td>
+                <td>${item.userName || "-"}</td>
+                <td>${qr}</td>
+            </tr>
+        `;
+    });
+    $("#productCouponBody").html(html);
+    $("#productCouponModal").modal("show");
+});
   $(document).on('click', '#submitCouponAction', function (e) {
         e.preventDefault();
         const mode = $('input[name="couponInputMode"]:checked').val();
         if (mode === 'csv') {
-            const expectedCount = Number($('#couponNo').val()) * Number($('#bagsNo').val());
+            const expectedCount = Number($('#couponNo').val());
             if (!expectedCount || expectedCount <= 0) {
                 $('#uploadError').show().text('Please fill bags and coupon counts first.');
                 return;
@@ -434,7 +458,7 @@
                     coupons.push({ couponCode: code, title, description });
                 }
             });
-            const expectedCount = Number($('#couponNo').val()) * Number($('#bagsNo').val());
+            const expectedCount = Number($('#couponNo').val());
             if (!coupons.length) {
                 manualStatus.removeClass('alert-info').addClass('alert-danger').text('Please add at least one coupon code.');
                 return;
@@ -733,6 +757,36 @@
 
       </div>
 
+    </div>
+  </div>
+</div>
+<div class="modal fade" id="productCouponModal" tabindex="-1">
+    <div class="modal-dialog modal-xl modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    Coupons for Product :
+                    <span id="modalProductId"></span>
+                </h5>
+                <button type="button" class="close" data-dismiss="modal">
+                    <span>&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <table class="table table-bordered table-striped">
+                    <thead>
+                        <tr>
+                            <th>Sr.</th>
+                            <th>Campaign</th>
+                            <th>Coupon Code</th>
+                            <th>Status</th>
+                            <th>User</th>
+                            <th>QR Code</th>
+                        </tr>
+                    </thead>
+                    <tbody id="productCouponBody"></tbody>
+                </table>
+            </div>
     </div>
   </div>
 </div>

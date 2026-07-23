@@ -490,26 +490,23 @@ console.log("------------------------brandDetailWithCampaign.coupons",brandDetai
       );
       const insertedCoupons = await model.Coupon.bulkCreate(updatedCoupons);
       const totalBagCount = Number(request.body.bags || request.body.bagsNo || 0);
-      const couponCount = Array.isArray(request.body.coupons) ? request.body.coupons.length : Number(request.body.coupons || 0);
-      let couponsPerBag = Number(request.body.couponNo || 0);
-      if (!couponsPerBag && totalBagCount > 0 && couponCount > 0) {
-        couponsPerBag = Math.ceil(couponCount / totalBagCount);
-      }
       const bagProductIds = createBagProductIds(request.body.productId, totalBagCount);
-      const bagRecords = insertedCoupons.map((coupon, index) => {
-        const bagIndex = couponsPerBag > 0 ? Math.min(Math.floor(index / couponsPerBag), totalBagCount - 1) : 0;
-        return {
-          campaign_id: request.body.campaignId,
-          brand_id: brandId,
-          coupon_id: coupon.id,
-          bagName: `Bag${bagIndex + 1}`,
-          productId: bagProductIds.length ? bagProductIds[bagIndex] : request.body.productId,
-          expiryDate: request.body.expiryDate,
-          startingDate: request.body.startingDate,
-          status: 0,
-          isExpired: 0,
-        };
-      });
+      const bagRecords = [];
+      for (let bagIndex = 0; bagIndex < totalBagCount; bagIndex++) {
+          insertedCoupons.forEach((coupon) => {
+              bagRecords.push({
+                  campaign_id: request.body.campaignId,
+                  brand_id: brandId,
+                  coupon_id: coupon.id,
+                  bagName: `Bag${bagIndex + 1}`,
+                  productId: bagProductIds.length? bagProductIds[bagIndex]: request.body.productId,
+                  expiryDate: request.body.expiryDate,
+                  startingDate: request.body.startingDate,
+                  status: 0,
+                  isExpired: 0,
+              });
+          });
+      }
       await model.Bags.bulkCreate(bagRecords);
       if (request.body.campaignId) {
         const campaignUpdate = { status: 'published' };
@@ -559,7 +556,7 @@ console.log("------------------------brandDetailWithCampaign.coupons",brandDetai
           }
 
           const parsedCoupons = result.coupons || [];
-          const expectedCount = Number(request.body.bags) * Number(request.body.coupons);
+          const expectedCount = Number(request.body.coupons);
           if (expectedCount > 0 && parsedCoupons.length !== expectedCount) {
             return response.json({
               success: false,
@@ -582,22 +579,25 @@ console.log("------------------------brandDetailWithCampaign.coupons",brandDetai
 
           const insertedCoupons = await model.Coupon.bulkCreate(updatedCoupons);
           const totalBagCount = Number(request.body.bags || request.body.bagsNo || 0);
-          const couponsPerBag = Number(request.body.coupons || request.body.couponNo || 0);
           const bagProductIds = createBagProductIds(request.body.productId, totalBagCount);
-          const bagRecords = insertedCoupons.map((coupon, index) => {
-            const bagIndex = couponsPerBag > 0 ? Math.min(Math.floor(index / couponsPerBag), totalBagCount - 1) : 0;
-            return {
-              campaign_id: request.body.campaignId,
-              brand_id: brandId,
-              coupon_id: coupon.id,
-              bagName: `Bag${bagIndex + 1}`,
-              productId: bagProductIds.length ? bagProductIds[bagIndex] : request.body.productId,
-              expiryDate: request.body.expiryDate,
-              startingDate: request.body.startingDate,
-              status: false,
-              isExpired: false,
-            };
-          });
+          const bagRecords = [];
+          for (let bagIndex = 0; bagIndex < totalBagCount; bagIndex++) {
+              insertedCoupons.forEach((coupon) => {
+                  bagRecords.push({
+                      campaign_id: request.body.campaignId,
+                      brand_id: brandId,
+                      coupon_id: coupon.id,
+                      bagName: `Bag${bagIndex + 1}`,
+                      productId: bagProductIds.length
+                          ? bagProductIds[bagIndex]
+                          : request.body.productId,
+                      expiryDate: request.body.expiryDate,
+                      startingDate: request.body.startingDate,
+                      status: false,
+                      isExpired: false,
+                  });
+              });
+          }
           try {
             await model.Bags.bulkCreate(bagRecords);
             if (request.body.campaignId) {
@@ -622,7 +622,7 @@ console.log("------------------------brandDetailWithCampaign.coupons",brandDetai
 
         if (couponbulk.status == "success") {
           const parsedCoupons = couponbulk.coupons || [];
-          const expectedCount = Number(request.body.bags) * Number(request.body.coupons);
+          const expectedCount = Number(request.body.coupons);
           if (expectedCount > 0 && parsedCoupons.length !== expectedCount) {
             return response.json({
               success: false,
@@ -644,22 +644,23 @@ console.log("------------------------brandDetailWithCampaign.coupons",brandDetai
 
           const insertedCoupons = await model.Coupon.bulkCreate(updatedCoupons);
           const totalBagCount = Number(request.body.bags || request.body.bagsNo || 0);
-          const couponsPerBag = Number(request.body.coupons || request.body.couponNo || 0);
           const bagProductIds = createBagProductIds(request.body.productId, totalBagCount);
-          const bagRecords = insertedCoupons.map((coupon, index) => {
-            const bagIndex = couponsPerBag > 0 ? Math.min(Math.floor(index / couponsPerBag), totalBagCount - 1) : 0;
-            return {
-              campaign_id: request.body.campaignId,
-              brand_id: brandId,
-              coupon_id: coupon.id,
-              bagName: `Bag${bagIndex + 1}`,
-              productId: bagProductIds.length ? bagProductIds[bagIndex] : request.body.productId,
-              expiryDate: request.body.expiryDate,
-              startingDate: request.body.startingDate,
-              status: false,
-              is_expired: false,
-            };
-          });
+          const bagRecords = [];
+          for (let bagIndex = 0; bagIndex < totalBagCount; bagIndex++) {
+              insertedCoupons.forEach((coupon) => {
+                  bagRecords.push({
+                      campaign_id: request.body.campaignId,
+                      brand_id: brandId,
+                      coupon_id: coupon.id,
+                      bagName: `Bag${bagIndex + 1}`,
+                      productId: bagProductIds.length ? bagProductIds[bagIndex] : request.body.productId,
+                      expiryDate: request.body.expiryDate,
+                      startingDate: request.body.startingDate,
+                      status: false,
+                      is_expired: false,
+                  });
+              });
+          }
           console.log('DEBUG XLS: creating bagRecords sample', JSON.stringify(bagRecords.slice(0, 5), null, 2));
           await model.Bags.bulkCreate(bagRecords);
           if (request.body.campaignId) {

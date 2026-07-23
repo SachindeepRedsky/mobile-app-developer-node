@@ -276,9 +276,11 @@ module.exports = function (model) {
                     coupons = await model.Coupon.findAll({ where: { id: { [Op.in]: couponIds } }, raw: true });
                 }
 
-                let totalCoupons = coupons.length;
-                let usedCoupons = coupons.filter(c => c.status == "used").length;
-                let unUsedCoupons = coupons.filter(c => c.status != "used").length;
+                const usedCoupons = await model.Bags.count({ where: { campaign_id: campaignId },
+                    include: [{ model: model.Coupon, as: "couponDetails", where: { status: "used" }, required: true }]
+                });
+                const totalCoupons = await model.Bags.count({ where: { campaign_id: campaignId } });
+                const unUsedCoupons = totalCoupons - usedCoupons;
 
 
                 response.render('backend/campaign/campaignDetail', {
