@@ -142,10 +142,7 @@
         data: "coupons",
         render: function (data, type, row) {
           if (row.coupons.length) {
-            const unusedCoupons = row.coupons.filter(
-              (coupon) => coupon.status === "unused"
-            );
-            return unusedCoupons.length;
+            return row.coupons.filter((coupon) => coupon.status === "unused").length;
           } else {
             return 0;
           }
@@ -155,10 +152,7 @@
         data: "coupons",
         render: function (data, type, row) {
           if (row.coupons.length) {
-            const usedCoupons = row.coupons.filter(
-              (coupon) => coupon.status === "used"
-            );
-            return usedCoupons.length;
+            return row.coupons.filter((coupon) => coupon.status === "used").length;
           } else {
             return 0;
           }

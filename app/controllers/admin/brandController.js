@@ -59,22 +59,40 @@ module.exports = function (model) {
             model: model.Coupon,
           },
         ],
-        // raw : true,
         order: [["id", "DESC"]],
         offset: start,
-        limit: length /* raw: true */,
+        limit: length,
       });
-      //   await brand.map(async(i)=>{
-      //     if(i){
-      //         console.log("🚀 ~ awaitbrand.map ~ i:", i)
 
-      //     }
-      //   })
+      const brandWithCouponStatus = await Promise.all(
+        brand.map(async (brandItem) => {
+          if (!brandItem.coupons || !brandItem.coupons.length) {
+            return brandItem;
+          }
+
+          await Promise.all(
+            brandItem.coupons.map(async (coupon) => {
+              if (!coupon) {
+                return;
+              }
+              const usageRecord = await model.CouponRecords.findOne({
+                where: { couponId: coupon.id },
+                raw: true,
+              });
+              coupon.dataValues.status = usageRecord ? "used" : "unused";
+              coupon.status = usageRecord ? "used" : "unused";
+            })
+          );
+
+          return brandItem;
+        })
+      );
+
       let obj = {
         draw: request.query.draw,
         recordsTotal: brandCount,
         recordsFiltered: brandCount,
-        data: brand,
+        data: brandWithCouponStatus,
       };
       //   console.log("obj",JSON.stringify(obj));
       return response.send(JSON.stringify(obj));
@@ -256,20 +274,25 @@ module.exports = function (model) {
         });
         // console.log("brandDetail -->", brandDetail.coupons);
         let totalCoupons = brandDetail.coupons.length;
-        console.log("totalCoupons---", totalCoupons);
         let usedCoupons = 0;
         let unUsedCoupons = 0;
         if (brandDetail.coupons.length) {
-          brandDetail.coupons.forEach((coupon) => {
-            console.log("coupon --> ", coupon);
-            if (coupon) {
-              if (coupon.status == "used") {
+          await Promise.all(
+            brandDetail.coupons.map(async (coupon) => {
+              if (!coupon) {
+                return;
+              }
+              const usedRecord = await model.CouponRecords.findOne({
+                where: { couponId: coupon.id },
+                raw: true,
+              });
+              if (usedRecord) {
                 usedCoupons++;
               } else {
                 unUsedCoupons++;
               }
-            }
-          });
+            })
+          );
         }
         console.log("usedCoupons---", usedCoupons);
         console.log("unUsedCoupons---", unUsedCoupons);
@@ -336,7 +359,6 @@ module.exports = function (model) {
       let include = [
         {
           model: model.Coupon,
-          where: selectedValue ? { status: selectedValue } : {},
           required: false,
           offset: start,
           limit: length,
@@ -381,58 +403,60 @@ module.exports = function (model) {
         include: include,
         order: [["id", "DESC"]],
       });
-      await Promise.all(
-        await brandDetailWithCampaign.coupons.map(async (i) => {
-          // console.log("couponId",i.id);
-          if (i.id) {
-            // console.log("model",model);
-            let bag = await model.Bags.findOne({
-              where: { coupon_id: i.id, brand_id: i.brand_id },
-            });
-            if (bag && bag.campaign_id) {
-              let campaignDetailss = await model.Campaign.findOne({
-                where: { id: bag.campaign_id },
-              });
-              let Name = "-";
-              // console.log("--------------------------------------------------------i",i);
-              
-              if (i.dataValues.user_id) {
-                let userData = await model.User.findOne({
-                  where: { id: i.dataValues.user_id },raw:true
-                });
-                // console.log("userData",userData);
-                
-                if (userData) {
-                  i.dataValues.userName = `${userData.firstName || ""} ${userData.lastName || ""}`.trim();
-                }
-              }
-              i.dataValues.campaignName =
-                campaignDetailss && campaignDetailss.campaignName
-                  ? campaignDetailss.campaignName
-                  : "";
-                       }
+      const allCoupons = await Promise.all(
+        brandDetailWithCampaign.coupons.map(async (i) => {
+          if (!i.id) {
+            return i;
           }
+          let bag = await model.Bags.findOne({
+            where: { coupon_id: i.id, brand_id: i.brand_id },
+          });
+          if (bag && bag.campaign_id) {
+            let campaignDetailss = await model.Campaign.findOne({
+              where: { id: bag.campaign_id },
+            });
+            if (campaignDetailss) {
+              i.dataValues.campaignName = campaignDetailss.campaignName || "";
+            }
+          }
+
+          const usageRecord = await model.CouponRecords.findOne({
+            where: { couponId: i.id },
+            raw: true,
+          });
+          if (usageRecord) {
+            i.dataValues.status = "used";
+            if (usageRecord.userId) {
+              const userData = await model.User.findOne({
+                where: { id: usageRecord.userId },
+                raw: true,
+              });
+              if (userData) {
+                i.dataValues.userName = `${userData.firstName || ""} ${userData.lastName || ""}`.trim();
+              } else {
+                i.dataValues.userName = "-";
+              }
+            } else {
+              i.dataValues.userName = "-";
+            }
+          } else {
+            i.dataValues.status = "unused";
+            i.dataValues.userName = "-";
+          }
+          return i;
         })
       );
 
-      const brandCoupen = await model.Brand.findOne({
-        where: query,
-        include: [
-          {
-            model: model.Coupon,
-            where: selectedValue ? { status: selectedValue } : {},
-            required: false,
-          },
-        ],
-        order: [["id", "DESC"]],
-      });
-console.log("------------------------brandDetailWithCampaign.coupons",brandDetailWithCampaign.coupons);
+      let filteredCoupons = allCoupons;
+      if (selectedValue && selectedValue !== "all") {
+        filteredCoupons = allCoupons.filter((coupon) => coupon.dataValues.status === selectedValue);
+      }
 
       let obj = {
         draw: request.query.draw,
-        recordsTotal: brandCoupen.coupons.length,
-        recordsFiltered: brandCoupen.coupons.length,
-        data: brandDetailWithCampaign.coupons,
+        recordsTotal: filteredCoupons.length,
+        recordsFiltered: filteredCoupons.length,
+        data: filteredCoupons,
       };
       return response.send(JSON.stringify(obj));
     } catch (error) {

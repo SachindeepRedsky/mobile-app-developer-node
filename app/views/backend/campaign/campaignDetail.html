@@ -354,7 +354,7 @@ $(document).on("click", ".product-row", function () {
     $("#modalProductId").text(productId);
     let html = "";
     coupons.forEach(function(item, index){
-        const statusBadge = item.status === "unused" ? '<span class="badge badge-success">Unused</span>' : '<span class="badge badge-danger">Used</span>';
+        const statusBadge = item.status === "used" ? '<span class="badge badge-danger">Used</span>' : '<span class="badge badge-success">Unused</span>';
         const qr = item.qrCode ? ` <a href="javascript:void(0)">
             <img
                 src="${item.qrCode}"

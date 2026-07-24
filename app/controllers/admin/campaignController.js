@@ -276,11 +276,11 @@ module.exports = function (model) {
                     coupons = await model.Coupon.findAll({ where: { id: { [Op.in]: couponIds } }, raw: true });
                 }
 
-                const usedCoupons = await model.Bags.count({ where: { campaign_id: campaignId },
-                    include: [{ model: model.Coupon, as: "couponDetails", where: { status: "used" }, required: true }]
+                const totalCoupons = await model.Bags.count({ where: { campaign_id: campaignId } });
+                const usedCoupons = await model.CouponRecords.count({
+                    where: { couponId: { [Op.in]: couponIds } },
                 });
-                const totalCoupons = await model.Bags.count({ where: { campaign_id: campaignId } }); 
-                const unUsedCoupons = totalCoupons - usedCoupons;
+                const unUsedCoupons = Math.max(totalCoupons - usedCoupons, 0);
 
 
                 response.render('backend/campaign/campaignDetail', {
@@ -353,13 +353,22 @@ module.exports = function (model) {
             const mainArr = await Promise.all(
                 data.map(async (item) => {
                     const { coupon_id, brand_id, productId } = item.dataValues;
+                    const normalizedProductId = String(productId || "").trim();
 
                     // Fetch coupon details
                     const couponDetails = await model.Coupon.findOne({ where: { id: coupon_id } });
                     const couponCode = couponDetails ? couponDetails.couponCode : "-";
-                    const status = couponDetails ? couponDetails.status : "-";
+                    const usageRecords = couponDetails
+                        ? await model.CouponRecords.findAll({ where: { couponId: couponDetails.id }, raw: true })
+                        : [];
+                    const usageRecord = usageRecords.find((record) => String(record.productId || record.product_Id || "").trim() === normalizedProductId) || null;
+                    const status = usageRecord ? "used" : "unused";
                     const qrCode = couponDetails ? couponDetails.qrCode : "";
-                    const userName = couponDetails ? couponDetails.userName : "-";
+                    let userName = "-";
+                    if (usageRecord && usageRecord.userId) {
+                        const userDetail = await model.User.findOne({ where: { id: usageRecord.userId }, raw: true });
+                        userName = userDetail ? `${userDetail.firstName || ""} ${userDetail.lastName || ""}`.trim() : "-";
+                    }
                     const brandDetails = await model.Brand.findOne({ where: { id: brand_id } });
                     const brandName = brandDetails ? brandDetails.brandName : "-";
                     const campaignName = campaign ? campaign.campaignName : "-";

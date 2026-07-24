@@ -546,14 +546,10 @@
                     {
                         "data": "status",
                         render: function (data, type, row) {
-                            if (row.status !== undefined) {
-                                if (row.status === "used") {
-                                    return '<span style="color: green;">Used</span>';
-                                } else {
-                                    return '<span style="color: red;">UnUsed</span>';
-                                }
+                            if (row.status === "used") {
+                                return '<span style="color: green;">Used</span>';
                             } else {
-                                return '<span style="color: red;">UnUsed</span>';  // Default to red for undefined or any other status
+                                return '<span style="color: red;">Unused</span>';
                             }
                         }
                     },

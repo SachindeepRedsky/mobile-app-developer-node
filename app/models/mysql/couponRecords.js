@@ -17,7 +17,7 @@ module.exports = function(Sequelize, Schema) {
         },
         status: {
             type: Sequelize.ENUM,
-            values: ['active', 'used', 'expired'],
+            values: ['active', 'used', 'expired', 'assigned'],
             defaultValue: 'active',
         },
     }, {
