@@ -42,7 +42,7 @@ module.exports = function (Sequelize, Schema, User, Brand) {
             defaultValue: 'unassigned',
         },
         couponImage: {
-            type: Sequelize.STRING,
+            type: Sequelize.TEXT,
             allowNull: true,
             defaultValue: "",
         },

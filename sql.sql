@@ -1,0 +1,2 @@
+ALTER TABLE coupons
+MODIFY COLUMN coupon_image LONGTEXT NULL;
