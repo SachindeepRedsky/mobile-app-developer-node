@@ -23,56 +23,6 @@
     .respec-picture img {
         width: 100%;
     }
-    .qr-code-cell {
-        text-align: center;
-        cursor: pointer;
-        transition: all 0.3s ease;
-    }
-
-    .qr-code-cell img {
-        max-width: 80px;
-        max-height: 80px;
-        border: 2px solid #007bff;
-        border-radius: 5px;
-        padding: 3px;
-        background: white;
-        transition: transform 0.2s ease, box-shadow 0.2s ease;
-    }
-
-    .qr-code-cell img:hover {
-        transform: scale(1.1);
-        box-shadow: 0 0 10px rgba(0, 123, 255, 0.5);
-    }
-
-    .qr-code-badge {
-        display: inline-block;
-        background: #28a745;
-        color: white;
-        padding: 3px 8px;
-        border-radius: 3px;
-        font-size: 11px;
-        font-weight: bold;
-        margin-left: 5px;
-    }
-
-    .qr-modal-content {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        padding: 20px;
-    }
-
-    .qr-modal-img {
-        display: block;
-        margin: 20px auto;
-        max-width: 400px;
-        max-height: 400px;
-        border: 3px solid #007bff;
-        border-radius: 8px;
-        padding: 10px;
-        background: white;
-    }
 
     .coupon-info-box {
         background: #f8f9fa;
@@ -85,6 +35,184 @@
     .coupon-info-box p {
         margin: 5px 0;
         font-size: 14px;
+    }
+
+    .coupon-preview-table {
+        border-collapse: separate;
+        border-spacing: 0;
+        border-radius: 12px;
+        overflow: hidden;
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.06);
+        background: #fff;
+    }
+
+    .coupon-preview-table thead th {
+        background: linear-gradient(135deg, #f8f9fc 0%, #eef2ff 100%);
+        color: #4c4f69;
+        font-weight: 700;
+        border-bottom: 1px solid #e8ecf3;
+        position: sticky;
+        top: 0;
+        z-index: 2;
+    }
+
+    .coupon-preview-table tbody tr:nth-child(even) {
+        background: #fbfcff;
+    }
+
+    .coupon-preview-table tbody tr:hover {
+        background: #f4f7ff;
+    }
+
+    .coupon-preview-table td,
+    .coupon-preview-table th {
+        padding: 0.85rem 0.75rem;
+        vertical-align: middle;
+    }
+
+    .coupon-preview-thumb {
+        width: 100px;
+        height: 76px;
+        object-fit: cover;
+        border-radius: 10px;
+        border: 1px solid #e7ebf0;
+        background: #f5f7fb;
+        display: block;
+    }
+
+    .coupon-preview-placeholder {
+        width: 100px;
+        height: 76px;
+        border-radius: 10px;
+        border: 1px dashed #cbd5e1;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #94a3b8;
+        font-size: 0.8rem;
+        background: #f8fafc;
+    }
+
+    .manual-coupon-card {
+        border: 1px solid #e7ecf3;
+        border-radius: 14px;
+        background: #fff;
+        box-shadow: 0 8px 24px rgba(0,0,0,0.05);
+        overflow: hidden;
+    }
+
+    .manual-coupon-card .table-responsive {
+        max-height: 420px;
+        overflow-y: auto;
+    }
+
+    .manual-coupon-card .table thead th {
+        background: #f7f9fd;
+        color: #576074;
+        font-size: 0.9rem;
+        font-weight: 700;
+        position: sticky;
+        top: 0;
+        z-index: 1;
+    }
+
+    .manual-coupon-card .table tbody tr:nth-child(even) {
+        background: #fbfcff;
+    }
+
+    .manual-coupon-card .table tbody tr:hover {
+        background: #f3f6ff;
+    }
+
+    .manual-coupon-card .table td,
+    .manual-coupon-card .table th {
+        padding: 0.8rem 0.7rem;
+        vertical-align: middle;
+    }
+
+    .manual-coupon-image-box {
+        min-width: 110px;
+        display: flex;
+        flex-direction: column;
+        gap: 0.6rem;
+    }
+
+    .image-mode-toggle {
+        display: flex;
+        gap: 0.45rem;
+    }
+
+    .image-mode-btn {
+        flex: 1;
+        border-radius: 999px;
+        font-size: 0.8rem;
+        font-weight: 600;
+        padding: 0.4rem 0.65rem;
+        transition: all 0.2s ease;
+    }
+
+    .image-mode-btn.active {
+        box-shadow: 0 6px 14px rgba(79, 70, 229, 0.18);
+    }
+
+    .image-mode-btn:hover {
+        background: #f8fafc;
+        color: #334155;
+    }
+
+    .image-mode-btn.active:hover {
+        background: linear-gradient(135deg, #4338ca 0%, #4f46e5 100%);
+        color: #fff;
+    }
+
+    .image-mode-panel {
+        transition: all 0.2s ease;
+    }
+
+    .manual-coupon-image-box .coupon-image-preview {
+        width: 100px;
+        height: 76px;
+        object-fit: cover;
+        border-radius: 10px;
+        border: 1px solid #e7ebf0;
+        background: #f7f9fc;
+    }
+
+    .coupon-image-placeholder {
+        min-height: 76px;
+        border: 1px dashed #cbd5e1;
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: #f8fafc;
+        color: #64748b;
+        font-size: 0.8rem;
+        text-align: center;
+        padding: 0.5rem;
+    }
+
+    .manual-coupon-remove-btn {
+        border-radius: 999px;
+        width: 34px;
+        height: 34px;
+        padding: 0;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .manual-coupon-row .form-control,
+    .manual-coupon-row textarea {
+        border-radius: 10px;
+        border: 1px solid #e2e8f0;
+        font-size: 0.9rem;
+    }
+
+    .manual-coupon-row .form-control:focus,
+    .manual-coupon-row textarea:focus {
+        border-color: #4f46e5;
+        box-shadow: 0 0 0 0.15rem rgba(79, 70, 229, 0.15);
     }
 </style>
 {% endblock %}
@@ -237,7 +365,7 @@
 <!-- Modal -->
 <div class="modal fade" id="uploadCouponModal" tabindex="-1" role="dialog" aria-labelledby="uploadCouponModalLabel"
     aria-hidden="true">
-    <div class="modal-dialog" role="document">
+    <div class="modal-dialog modal-lg modal-dialog-scrollable" role="document">
         <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title" id="uploadCouponModalLabel">Add Coupon Codes</h5>
@@ -260,21 +388,24 @@
 
                 <div id="manualCouponSection" class="coupon-input-section">
                     <div class="d-flex justify-content-between align-items-center mb-2">
-                        <label class="mb-0">Coupon List</label>
+                        <label class="mb-0 font-weight-bold">Coupon List</label>
                         <button type="button" id="addManualCouponRow" class="btn btn-sm btn-success">Add Row</button>
                     </div>
-                    <div class="table-responsive">
-                        <table class="table table-bordered mb-0">
-                            <thead>
-                                <tr>
-                                    <th style="width: 32%">Coupon Code</th>
-                                    <th style="width: 25%">Title</th>
-                                    <th style="width: 35%">Description</th>
-                                    <th style="width: 8%">Action</th>
-                                </tr>
-                            </thead>
-                            <tbody id="manualCouponRows"></tbody>
-                        </table>
+                    <div class="manual-coupon-card">
+                        <div class="table-responsive">
+                            <table class="table table-bordered mb-0 coupon-preview-table">
+                                <thead>
+                                    <tr>
+                                        <th style="width: 22%">Coupon Code</th>
+                                        <th style="width: 20%">Title</th>
+                                        <th style="width: 35%">Coupon Image</th>
+                                        <th style="width: 18%">Description</th>
+                                        <th style="width: 5%">Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="manualCouponRows"></tbody>
+                            </table>
+                        </div>
                     </div>
                 </div>
                 <div id="csvCouponSection" class="coupon-input-section" style="display:none;">
@@ -291,6 +422,7 @@
                     <div id="uploadProgress" class="alert alert-info">Uploading...</div>
                     <div id="uploadError" class="alert alert-danger" style="display: none;">Error occurred while
                         uploading.</div>
+                    <div id="previewError" class="alert alert-danger" style="display:none;"></div>
                 </div>
             </div>
             <div class="modal-footer">
@@ -300,29 +432,42 @@
         </div>
     </div>
 </div>
-<div class="card-footer">
-    <div class="text-right">
-    <a href="/backend/brand" class="btn btn-danger">Back</a>
-    </div>  
-</div>
-<div class="modal fade" id="qrCodeModal" tabindex="-1" role="dialog" aria-labelledby="qrCodeModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered" role="document">
+<div class="modal fade" id="csvPreviewModal" tabindex="-1" role="dialog" aria-labelledby="csvPreviewModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-xl modal-dialog-centered" role="document">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title" id="qrCodeModalLabel">QR Code - <span id="modalCouponCode"></span></h5>
+                <h5 class="modal-title" id="csvPreviewModalLabel">Review CSV Coupons</h5>
                 <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                     <span aria-hidden="true">&times;</span>
                 </button>
             </div>
-            <div class="qr-modal-content">
-                <img  id="modalQrImage" class="qr-modal-img" src="" alt="QR Code" style="margin:0 0 0 20%;">
+            <div class="modal-body">
+                <div class="alert alert-info">Review and edit the data below before importing. You can update any cell directly.</div>
+                <div class="table-responsive" style="max-height: 420px; overflow-y: auto;">
+                    <table class="table table-bordered table-striped mb-0 coupon-preview-table">
+                        <thead>
+                            <tr>
+                                <th style="width: 60px;">#</th>
+                                <th>Coupon Code</th>
+                                <th>Title</th>
+                                <th>Description</th>
+                                <th>Coupon Image</th>
+                            </tr>
+                        </thead>
+                        <tbody id="csvPreviewBody"></tbody>
+                    </table>
+                </div>
             </div>
-            <div class="modal-footer justify-content-center">
-                <a id="downloadQrBtn" href="" download class="btn btn-success">
-                    <i class="fa fa-download"></i> Download QR Code
-                </a>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" id="importPreviewedCoupons">Import</button>
             </div>
         </div>
+    </div>
+</div>
+<div class="card-footer">
+    <div class="text-right">
+    <a href="/backend/brand" class="btn btn-danger">Back</a>
     </div>
 </div>
 <!-- /.content -->
@@ -335,15 +480,6 @@
     var host = window.location.origin;
     let brandId = '{{brandDetail.id}}'
     console.log("brandId----", brandId);
-    function openQrModal(qrCodePath, couponCode) {
-        $('#modalQrImage').attr('src', qrCodePath);
-        $('#modalCouponCode').text(couponCode);
-        $('#downloadQrBtn')
-            .attr('href', qrCodePath)
-            .attr('download', couponCode + '.png');
-        $('#qrCodeModal').modal('show');
-    }
-
     function showCouponSection(mode) {
         $('.coupon-input-section').hide();
         $('#' + mode + 'CouponSection').show();
@@ -355,8 +491,138 @@
         }
     }
 
+    function showPreviewModal(rows) {
+        const $body = $('#csvPreviewBody');
+        $body.empty();
+        if (!rows.length) {
+            $body.append('<tr><td colspan="5" class="text-center">No rows found.</td></tr>');
+            $('#csvPreviewModal').modal('show');
+            return;
+        }
+
+        rows.forEach(function (row, index) {
+            const imageUrl = row.couponImage || '';
+            const escapedImageUrl = imageUrl.replace(/"/g, '&quot;');
+            $body.append(`
+                <tr>
+                    <td>${index + 1}</td>
+                    <td><input type="text" class="form-control form-control-sm csv-preview-input" data-field="couponCode" value="${(row.couponCode || '').replace(/"/g, '&quot;')}"></td>
+                    <td><input type="text" class="form-control form-control-sm csv-preview-input" data-field="title" value="${(row.title || '').replace(/"/g, '&quot;')}"></td>
+                    <td><textarea class="form-control form-control-sm csv-preview-input" data-field="description" rows="1">${(row.description || '').replace(/"/g, '&quot;')}</textarea></td>
+                    <td>
+                        <input type="text" class="form-control form-control-sm csv-preview-input" data-field="couponImage" value="${escapedImageUrl}">
+                        <div class="mt-2">
+                            <img src="${imageUrl || ''}" class="coupon-preview-thumb" alt="Coupon preview" style="display:${imageUrl ? 'block' : 'none'};">
+                            <span class="coupon-preview-placeholder" style="display:${imageUrl ? 'none' : 'flex'}">No image</span>
+                        </div>
+                    </td>
+                </tr>
+            `);
+        });
+
+        $('#csvPreviewBody .csv-preview-input[data-field="couponImage"]').on('input', function () {
+            const url = $(this).val().trim();
+            const preview = $(this).closest('td').find('img.coupon-preview-thumb');
+            const placeholder = $(this).closest('td').find('.coupon-preview-placeholder');
+            if (!url) {
+                preview.removeAttr('src').hide();
+                placeholder.show();
+                return;
+            }
+            preview.attr('src', url).show();
+            placeholder.hide();
+        });
+
+        $('#csvPreviewModal').modal('show');
+    }
+
+    function collectPreviewRows() {
+        const rows = [];
+        $('#csvPreviewBody tr').each(function () {
+            const row = {};
+            $(this).find('.csv-preview-input').each(function () {
+                row[$(this).data('field')] = $(this).val().trim();
+            });
+            rows.push(row);
+        });
+        return rows;
+    }
+
+    function setImageMode($row, mode) {
+        $row
+          .find('.image-mode-btn')
+          .removeClass('active btn-primary btn-outline-primary')
+          .addClass('btn-outline-primary');
+        $row
+          .find(`.image-mode-btn[data-mode="${mode}"]`)
+          .addClass('active btn-primary')
+          .removeClass('btn-outline-primary');
+        $row.find('.image-type').val(mode);
+
+        if (mode === 'upload') {
+            $row.find('.upload-panel').show();
+            $row.find('.link-panel').hide();
+            $row.find('.coupon-image-link').val('');
+        } else {
+            $row.find('.upload-panel').hide();
+            $row.find('.link-panel').show();
+            $row.find('.coupon-image-file').val('');
+        }
+
+        const preview = $row.find('.coupon-image-preview');
+        const placeholder = $row.find('.coupon-image-placeholder');
+        preview.removeAttr('src').hide();
+        placeholder.show();
+    }
+
+    $(document).on('click', '.image-mode-btn', function (e) {
+        e.preventDefault();
+        const $row = $(this).closest('tr.manual-coupon-row');
+        setImageMode($row, $(this).data('mode'));
+    });
+
+    $(document).on('change', '.coupon-image-file', function () {
+        const file = this.files[0];
+        if (!file) {
+            const $row = $(this).closest('tr.manual-coupon-row');
+            $row.find('.coupon-image-preview').removeAttr('src').hide();
+            $row.find('.coupon-image-placeholder').show();
+            return;
+        }
+        const reader = new FileReader();
+        const $row = $(this).closest('tr.manual-coupon-row');
+        const preview = $row.find('.coupon-image-preview');
+        const placeholder = $row.find('.coupon-image-placeholder');
+        reader.onload = function (e) {
+            preview.attr('src', e.target.result).show();
+            placeholder.hide();
+        };
+        reader.onerror = function () {
+            preview.removeAttr('src').hide();
+            placeholder.show();
+        };
+        reader.readAsDataURL(file);
+    });
+
+    $(document).on('input', '.coupon-image-link', function () {
+        const url = $(this).val().trim();
+        const $row = $(this).closest('tr.manual-coupon-row');
+        const preview = $row.find('.coupon-image-preview');
+        const placeholder = $row.find('.coupon-image-placeholder');
+        if (!url) {
+            preview.removeAttr('src').hide();
+            placeholder.show();
+            return;
+        }
+        preview.off('error').on('error', function () {
+            preview.removeAttr('src').hide();
+            placeholder.show();
+        });
+        preview.attr('src', url).show();
+        placeholder.hide();
+    });
+
     function addManualCouponRow() {
-        const rowIndex = $('#manualCouponRows tr').length;
         $('#manualCouponRows').append(`
             <tr class="manual-coupon-row">
                 <td>
@@ -366,14 +632,79 @@
                     <input type="text" class="form-control form-control-sm manual-coupon-title" placeholder="Title">
                 </td>
                 <td>
+                    <div class="manual-coupon-image-box">
+                        <div class="image-mode-toggle btn-group btn-group-toggle w-100" data-toggle="buttons">
+                            <button type="button" class="btn btn-sm btn-primary image-mode-btn active" data-mode="upload">Upload</button>
+                            <button type="button" class="btn btn-sm btn-outline-primary image-mode-btn" data-mode="link">Link</button>
+                        </div>
+                        <input type="hidden" class="image-type" value="upload">
+                        <div class="image-mode-panel upload-panel">
+                            <input type="file" class="form-control-file coupon-image-file mt-2" accept="image/*">
+                        </div>
+                        <div class="image-mode-panel link-panel" style="display:none;">
+                            <input type="text" class="form-control form-control-sm coupon-image-link mt-2" placeholder="https://example.com/image.jpg">
+                        </div>
+                        <div class="mt-2">
+                            <img class="coupon-image-preview" style="display:none;" alt="Coupon preview">
+                            <div class="coupon-image-placeholder">No Image Available</div>
+                        </div>
+                    </div>
+                </td>
+                <td>
                     <textarea class="form-control form-control-sm manual-coupon-description" rows="1" placeholder="Description"></textarea>
                 </td>
                 <td class="text-center">
-                    <button type="button" class="btn btn-xs btn-danger remove-manual-row">X</button>
+                    <button type="button" class="btn btn-outline-danger btn-sm manual-coupon-remove-btn remove-manual-row" title="Remove">×</button>
                 </td>
             </tr>
         `);
     }
+
+    $(document).on('click', '#importPreviewedCoupons', function (e) {
+        e.preventDefault();
+        const previewRows = collectPreviewRows();
+        const validationErrors = [];
+        previewRows.forEach(function (row, index) {
+            if (!row.couponCode) {
+                validationErrors.push(`Row ${index + 1}: Coupon code is required.`);
+            }
+        });
+        if (validationErrors.length) {
+            $('#previewError').show().text(validationErrors[0]);
+            return;
+        }
+        $('#uploadStatus').show();
+        $('#uploadProgress').text('Importing edited coupons...');
+        $('#uploadError').hide();
+        $('#previewError').hide();
+        const formData = new FormData();
+        formData.set('bags', 1);
+        formData.set('coupons', previewRows.length);
+        formData.set('brandId', brandId);
+        formData.set('previewData', JSON.stringify(previewRows));
+        $.ajax({
+            url: `/backend/uploadCoupon?brandId=${brandId}`,
+            type: 'POST',
+            data: formData,
+            processData: false,
+            contentType: false,
+            success: function (response) {
+                if (response.success) {
+                    $('#uploadProgress').removeClass('alert-info alert-danger').addClass('alert-success').text(response.message || 'Upload successful!');
+                    setTimeout(() => {
+                        location.reload();
+                    }, 1000);
+                } else {
+                    $('#uploadProgress').removeClass('alert-info alert-success').addClass('alert-danger').text(response.message || 'Upload failed.');
+                    $('#previewError').show().text(response.message || 'Please review the rows and try again.');
+                }
+            },
+            error: function () {
+                $('#uploadProgress').removeClass('alert-info').addClass('alert-danger').text('Error occurred during upload.');
+                $('#uploadError').show().text('Error occurred during the upload.');
+            }
+        });
+    });
 
     $(document).ready(function () {
         fetchData(null)
@@ -404,42 +735,80 @@
             $('input[name="couponInputMode"][value="manual"]').prop('checked', true);
             showCouponSection('manual');
         });
-        $(document).on('click', '.qr-code-cell', function () {
-            const qrCodePath = $(this).data('qr');
-            const couponCode = $(this).data('code');
-            if (qrCodePath) {
-                openQrModal(qrCodePath, couponCode);
-            }
-        });
         $('#submitCouponAction').on('click', function (e) {
             e.preventDefault();
             const mode = $('input[name="couponInputMode"]:checked').val();
             if (mode === 'csv') {
+                if ($('#csvPreviewModal').hasClass('show')) {
+                    const previewRows = collectPreviewRows();
+                    const validationErrors = [];
+                    previewRows.forEach(function (row, index) {
+                        if (!row.couponCode) {
+                            validationErrors.push(`Row ${index + 1}: Coupon code is required.`);
+                        }
+                    });
+                    if (validationErrors.length) {
+                        $('#previewError').show().text(validationErrors[0]);
+                        return;
+                    }
+                    $('#uploadStatus').show();
+                    $('#uploadProgress').text('Importing edited coupons...');
+                    $('#uploadError').hide();
+                    $('#previewError').hide();
+                    const formData = new FormData();
+                    formData.set('bags', 1);
+                    formData.set('coupons', previewRows.length);
+                    formData.set('brandId', brandId);
+                    formData.set('previewData', JSON.stringify(previewRows));
+                    $.ajax({
+                        url: `/backend/uploadCoupon?brandId=${brandId}`,
+                        type: 'POST',
+                        data: formData,
+                        processData: false,
+                        contentType: false,
+                        success: function (response) {
+                            if (response.success) {
+                                $('#uploadProgress').removeClass('alert-info alert-danger').addClass('alert-success').text(response.message || 'Upload successful!');
+                                setTimeout(() => {
+                                    location.reload();
+                                }, 1000);
+                            } else {
+                                $('#uploadProgress').removeClass('alert-info alert-success').addClass('alert-danger').text(response.message || 'Upload failed.');
+                                $('#previewError').show().text(response.message || 'Please review the rows and try again.');
+                            }
+                        },
+                        error: function () {
+                            $('#uploadProgress').removeClass('alert-info').addClass('alert-danger').text('Error occurred during upload.');
+                            $('#uploadError').show().text('Error occurred during the upload.');
+                        }
+                    });
+                    return;
+                }
+
                 let formData = new FormData($('#uploadCouponForm')[0]);
                 $('#uploadStatus').show();
                 $('#uploadError').hide();
+                $('#previewError').hide();
+                $('#uploadProgress').text('Parsing CSV file...');
 
                 $.ajax({
-                    url: `/backend/uploadCoupon?brandId=${brandId}`,
+                    url: '/backend/previewCouponUpload',
                     type: 'POST',
                     data: formData,
                     processData: false,
                     contentType: false,
-                    beforeSend: function () {
-                        $('#uploadProgress').text('Uploading...');
-                    },
                     success: function (response) {
                         if (response.success) {
-                            $('#uploadProgress').removeClass('alert-info').addClass('alert-success').text('Upload successful!');
-                            setTimeout(() => {
-                                location.reload();
-                            }, 1000);
+                            showPreviewModal(response.previewRows || []);
+                            $('#uploadProgress').removeClass('alert-info alert-danger').addClass('alert-success').text('Preview ready. Review and import when you are ready.');
                         } else {
-                            $('#uploadProgress').removeClass('alert-info').addClass('alert-danger').text(response.message || 'Upload failed.');
+                            $('#uploadProgress').removeClass('alert-info alert-success').addClass('alert-danger').text(response.message || 'Unable to parse the file.');
+                            $('#uploadError').show().text(response.message || 'Unable to parse the file.');
                         }
                     },
                     error: function () {
-                        $('#uploadError').show().text('Error occurred during the upload.');
+                        $('#uploadProgress').removeClass('alert-info').addClass('alert-danger').text('Error occurred while parsing the file.');
+                        $('#uploadError').show().text('Error occurred while parsing the file.');
                     }
                 });
                 return;
@@ -562,19 +931,6 @@
                             } else {
                                 return "-";
                             }
-                        }
-                    },
-                    {
-                        "data": "qrCode",
-                        render: function (data, type, row) {
-                            if (row.qrCode) {
-                                const qrPath = String(row.qrCode).replace(/"/g, '&quot;');
-                                const couponCode = String(row.couponCode || '').replace(/"/g, '&quot;');
-                                return `<div class="qr-code-cell" data-qr="${qrPath}" data-code="${couponCode}">
-                                    <span class="qr-code-badge">QR Code</span>
-                                </div>`;
-                            }
-                            return "-";
                         }
                     },
                 ]

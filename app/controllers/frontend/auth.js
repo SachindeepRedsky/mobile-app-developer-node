@@ -692,17 +692,13 @@ module.exports = function (model, config) {
           });
 
           const existingCouponRecord = await model.CouponRecords.findOne({
-            where: { couponId: coupon_id },
+            where: {
+                couponId: coupon_id,
+                productId: normalizedProductId,
+                userId: userId,
+            },
             raw: true,
           });
-
-          const hasMatchingProductRecord = existingCouponRecord
-            ? String(existingCouponRecord.productId || existingCouponRecord.product_Id || "").trim() === normalizedProductId
-            : false;
-
-          if (hasMatchingProductRecord) {
-            return null;
-          }
 
           await model.CouponRecords.create({
             productId: normalizedProductId,
@@ -710,10 +706,6 @@ module.exports = function (model, config) {
             couponId: coupon_id,
             status: "used",
           });
-
-          if (existingCouponRecord) {
-            return null;
-          }
 
           await model.Bags.update({ status: true, }, {
             where: { productId, isExpired: false },
@@ -902,34 +894,44 @@ module.exports = function (model, config) {
 
       // Process coupon details
       const couponData = await Promise.all(
-        details.map(async (coupon) => {
-          const data = coupon.get({ plain: true });
+        recodrds.map(async (record) => {
 
-          const record = recodrds.find(r => r.coupon_id === data.id);
+            const coupon = await model.Coupon.findOne({
+                where: {
+                    id: record.coupon_id,
+                    isExpired: false
+                },
+                raw: true,
+            });
 
-          if (record) {
-            data.assignStatus = record.status;
-            data.productId = record.productId;
-          }
+            if (!coupon) return null;
 
-          const brandDetail = await model.Brand.findOne({
-            where: { id: data.brand_id },
-            raw: true,
-          });
+            coupon.assignStatus = record.status;
+            coupon.productId = record.productId;
 
-          if (brandDetail) {
-            data.brandLogo = brandDetail.brandLogo;
-            data.brandName = brandDetail.brandName;
-          }
+            const brandDetail = await model.Brand.findOne({
+                where: {
+                    id: coupon.brand_id
+                },
+                raw: true,
+            });
 
-          return data;
+            if (brandDetail) {
+                coupon.brandLogo = brandDetail.brandLogo;
+                coupon.brandName = brandDetail.brandName;
+            }
+
+            return coupon;
         })
-      );
-console.log("couponData", couponData);
-      // Return success response with data
-      return res
-        .status(200)
-        .send({ status: "success", message: "", data: couponData });
+    );
+
+    const validCoupons = couponData.filter(Boolean);
+
+    return res.status(200).send({
+        status: "success",
+        message: "",
+        data: validCoupons,
+    });
 
     } catch (error) {
       console.error("qrScan:::::::::::::::>>>>error: ", error);

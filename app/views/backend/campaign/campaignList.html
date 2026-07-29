@@ -57,6 +57,7 @@
                                 <!-- <th>Brand Name</th> -->
                                 <th>Campaign Name</th>
                                 <th>Total Number of Bags</th>
+                                <th>Qr Code</th>
                                 <th>Status</th>
                                 <th>Action</th>
                             </tr>
@@ -147,6 +148,24 @@
                 }
             },
             {
+                "data": "qrCode",
+                render: function (data, type, row) {
+                    if (!row.qrCode) { return "-"; }
+                    return `
+                        <a href="javascript:void(0)"
+                        class="qr-code-cell"
+                        data-qr="${row.qrCode}"
+                        data-code="${row.campaignName}">
+                            <img
+                                src="${row.qrCode}"
+                                width="50"
+                                height="50"
+                                style="cursor:pointer">
+                        </a>
+                    `;
+                }
+            },
+            {
                 "data": "status",
                 render: function (data, type, row) {
                     if (row.status !== undefined) {
@@ -179,5 +198,91 @@
         ]
 
     });
+
+    function openQrModal(qr, label) {
+        $("#modalQrImage").attr("src", qr);
+        $("#modalCouponCode").text(label);
+        $("#downloadQrBtn").attr("href", qr).attr("download", label + ".png");
+        $("#printQrBtn").data("qr", qr).data("label", label);
+        $("#qrCodeModal").modal("show");
+    }
+
+    $(document).on("click", ".qr-code-cell", function () {
+        const qr = $(this).data("qr");
+        const label = $(this).data("code");
+        openQrModal(qr, label);
+    });
+
+    $(document).on("click", "#printQrBtn", function () {
+        const qr = $(this).data("qr");
+        const label = $(this).data("label");
+        const win = window.open("", "_blank");
+        win.document.write(`
+            <html>
+                <head>
+                    <title>${label}</title>
+                    <style>
+                        body{
+                            text-align:center;
+                            font-family:Arial;
+                            padding:30px;
+                        }
+                        img{
+                            width:250px;
+                        }
+                    </style>
+                </head>
+                <body>
+                    <h2>${label}</h2>
+                    <img src="${qr}">
+                </body>
+            </html>
+        `);
+        win.document.close();
+        win.onload = function () {
+            win.print();
+            win.close();
+        };
+
+    });
 </script>
+<div class="modal fade" id="qrCodeModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    QR Code - <span id="modalCouponCode"></span>
+                </h5>
+                <button type="button" class="close" data-dismiss="modal">
+                    <span>&times;</span>
+                </button>
+            </div>
+            <div class="modal-body text-center">
+                <img
+                    id="modalQrImage"
+                    src=""
+                    style="max-width:100%;height:auto;"
+                >
+            </div>
+            <div class="modal-footer justify-content-center">
+                <a
+                    id="downloadQrBtn"
+                    class="btn btn-success"
+                    download
+                >
+                    <i class="fa fa-download"></i>
+                    Download
+                </a>
+
+                <button
+                    id="printQrBtn"
+                    class="btn btn-primary"
+                >
+                    <i class="fa fa-print"></i>
+                    Print
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
 {% endblock %}

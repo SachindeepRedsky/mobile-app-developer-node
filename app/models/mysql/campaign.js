@@ -63,6 +63,11 @@ module.exports = function (Sequelize, Schema) {
             type: Sequelize.STRING,
             allowNull: true,
         },
+        qrCode: {
+            type: Sequelize.STRING,
+            allowNull: true,
+            defaultValue: "",
+        },
     }, {
         underscored: true,
         timestamps: true, // Adds createdAt and updatedAt fields

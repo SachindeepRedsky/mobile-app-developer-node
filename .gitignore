@@ -5,3 +5,5 @@ env.js
 log/public/mobile-app-dev-cicd.php
 public/mobile-app-dev-cicd.php
 log/*
+public/dist/qr_codes
+public/dist/coupon_images

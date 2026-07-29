@@ -1,9 +1,7 @@
 const Sequelize = require("sequelize");
-const { isArray } = require("jquery");
-const { raw } = require("mysql");
-const { assign } = require("nodemailer/lib/shared");
-const { where } = require("sequelize");
-const { log } = require("winston");
+const fs = require("fs");
+const path = require("path");
+const QRCode = require("qrcode");
 let Op = Sequelize.Op
 
 
@@ -120,6 +118,11 @@ module.exports = function (model) {
                 expiryDate: expiryDate || null,
                 startingDate: startingDate || null,
             });
+            const qrLink = `${process.env.BASE_URL}/campaign/${createCampaign.campaignId}`;
+            const campaignQrCode = await generateCampaignQrPath(qrLink, createCampaign.campaignId);
+            console.log("campaignQrCode", campaignQrCode);
+            await createCampaign.update({ qrCode: campaignQrCode });
+            createCampaign.qrCode = campaignQrCode;
             if (!createCampaign) {
                 console.log("Campaign not created");
                 request.flash("error", "Something went wrong. Please try again.");
@@ -364,6 +367,7 @@ module.exports = function (model) {
                     const usageRecord = usageRecords.find((record) => String(record.productId || record.product_Id || "").trim() === normalizedProductId) || null;
                     const status = usageRecord ? "used" : "unused";
                     const qrCode = couponDetails ? couponDetails.qrCode : "";
+                    const couponImage = couponDetails ? couponDetails.couponImage : "";
                     let userName = "-";
                     if (usageRecord && usageRecord.userId) {
                         const userDetail = await model.User.findOne({ where: { id: usageRecord.userId }, raw: true });
@@ -380,6 +384,8 @@ module.exports = function (model) {
                         campaignName,
                         status,
                         qrCode,
+                        campaignQrCode: campaign?.qrCode || "",
+                        couponImage,
                         userName
                     };
                 })
@@ -390,6 +396,33 @@ module.exports = function (model) {
             return new Error('editCampaign Error', e);
         }
     };
+    module.openCampaign = async function (req, res) {
+        console.log("test run:::")
+        try {
+            const campaignId = req.params.campaignId;
+            const playStoreUrl = "https://play.google.com/store/apps/details?id=com.bagvertising";
+            const intentUrl = `intent://campaign/${campaignId}` + `#Intent;scheme=bagvertising;` + `package=com.bagvertising;` + `S.browser_fallback_url=${encodeURIComponent(playStoreUrl)};end`;
+            return res.redirect(intentUrl);
+        } catch (error) {
+            console.log(error);
+            return res.send("Invalid Campaign");
+        }
+    };
+
+    async function generateCampaignQrPath(qrContent, campaignId) {
+        const qrDirectory = path.join(__dirname, "../../../public/dist/qr_codes");
+        if (!fs.existsSync(qrDirectory)) {
+            fs.mkdirSync(qrDirectory, { recursive: true });
+        }
+        const fileName = `${Date.now()}_${campaignId}.png`;
+        const filePath = path.join(qrDirectory, fileName);
+        await QRCode.toFile(filePath, qrContent, {
+            type: "png",
+            width: 300,
+        });
+        return `/dist/qr_codes/${fileName}`;
+    }
+
     module.deleteCampaign = async function (request, response) {
         try {
             let campaign = await model.Campaign.findOne({ where: { id: request.params.id } });

@@ -48,11 +48,12 @@ module.exports = function (app, model, controller) {
     app.post('/backend/updateBrand/:id', middleware.admin.login, controller.brand.updateBrand)
     app.get('/backend/deleteBrand/:id', middleware.admin.login, controller.brand.deleteBrand)
     app.get('/backend/brandDetail/:id', middleware.admin.login, controller.brand.brandDetail);
+    app.post('/backend/previewCouponUpload', middleware.admin.login, controller.brand.previewCouponUpload)
     app.post('/backend/uploadCoupon', middleware.admin.login, controller.brand.uploadCoupon)
     app.post('/backend/addCoupon', middleware.admin.login, controller.brand.addCoupon)
     app.get('/backend/brandCouponDetail/', middleware.admin.login, controller.brand.brandCouponDetail);
     app.get('/backend/campaignCouponDetail', middleware.admin.login, controller.campaign.campaignCouponDetail);
-    app.get('/coupon/:couponCode', controller.brand.openCoupon);
+    app.get('/campaign/:campaignId', controller.campaign.openCampaign);
     app.post('/backend/addCampaignBagCoupon',middleware.admin.login, controller.campaign.addCampaignBagCoupon);
 
 

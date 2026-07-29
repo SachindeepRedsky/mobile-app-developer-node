@@ -4,7 +4,6 @@ let path = require("path");
 let fs = require("fs");
 const csv = require("csv-parser");
 const XLSX = require("xlsx");
-const QRCode = require("qrcode");
 const { log } = require("winston");
 const { stringify } = require("querystring");
 const { where, json } = require("sequelize");
@@ -463,6 +462,24 @@ module.exports = function (model) {
       console.log("error in get users", error);
     }
   };
+
+  function saveCouponImage(base64Image) {
+    if (!base64Image.startsWith("data:image")) {
+        return base64Image;
+    }
+    const matches = base64Image.match(/^data:image\/(\w+);base64,(.+)$/);
+    if (!matches) return "";
+    const ext = matches[1];
+    const data = matches[2];
+    const uploadDir = path.join(__dirname, "../../../public/dist/coupon_images");
+    if (!fs.existsSync(uploadDir)) {
+        fs.mkdirSync(uploadDir, { recursive: true });
+    }
+    const fileName = Date.now() + "." + ext;
+    const filePath = path.join(uploadDir, fileName);
+    fs.writeFileSync(filePath, Buffer.from(data, "base64"));
+    return "/dist/coupon_images/" + fileName;
+  }
   module.addCoupon = async function (request, response) {
     try {
       const brandId = request.body.brandId || request.query.brandId;
@@ -486,10 +503,12 @@ module.exports = function (model) {
           continue;
         }
         seen.add(key);
+        const imagePath = saveCouponImage(item.couponImage);
         uniqueCoupons.push({
           couponCode: normalizedCode,
           title: String(item.title || ""),
           description: String(item.description || ""),
+          couponImage: imagePath,
           brand_id: brandId,
           userId: null,
           assignStatus: "unassigned",
@@ -501,17 +520,11 @@ module.exports = function (model) {
       if (!uniqueCoupons.length) {
         return response.status(400).json({ success: false, message: "No valid or unique coupon codes were provided." });
       }
-      const updatedCoupons = await Promise.all(
-        uniqueCoupons.map(async (coupon) => {
-          const qrLink = `${process.env.BASE_URL}/coupon/${coupon.couponCode}`;
-          return {
-            ...coupon,
-            expiryDate: request.body.expiryDate,
-            startingDate: request.body.startingDate,
-            qrCode: await generateCouponQrPath(qrLink),
-          };
-        })
-      );
+      const updatedCoupons = uniqueCoupons.map((coupon) => ({
+        ...coupon,
+        expiryDate: request.body.expiryDate,
+        startingDate: request.body.startingDate,
+      }));
       const insertedCoupons = await model.Coupon.bulkCreate(updatedCoupons);
       const totalBagCount = Number(request.body.bags || request.body.bagsNo || 0);
       const bagProductIds = createBagProductIds(request.body.productId, totalBagCount);
@@ -553,21 +566,184 @@ module.exports = function (model) {
     }
   };
 
-  module.uploadCoupon = async function (request, response) {
+  module.previewCouponUpload = async function (request, response) {
     try {
-      // console.log("request.file----", request.files, request.query);
       const file = request.files;
-      if (!file) {
-        return response
-          .status(400)
-          .json({ success: false, message: "No file uploaded" });
+      if (!file || !file.file) {
+        return response.status(400).json({ success: false, message: "No file uploaded" });
       }
 
+      const brandId = request.body.brandId || request.query.brandId;
+      if (!brandId) {
+        return response.status(400).json({ success: false, message: "Brand id is required." });
+      }
+
+      const fileExtension = path.extname(file.file.name).toLowerCase();
+      if (fileExtension === ".csv") {
+        parseCSVFile(file, [], (error, result) => {
+          if (error) {
+            return response.json({ success: false, message: error.message });
+          }
+
+          const previewRows = (result.coupons || []).map((coupon) => ({
+            couponCode: coupon.couponCode || "",
+            title: coupon.title || "",
+            description: coupon.description || "",
+            couponImage: coupon.couponImage || "",
+          }));
+
+          return response.json({
+            success: true,
+            previewRows,
+            columns: ["couponCode", "title", "description", "couponImage"],
+          });
+        });
+        return;
+      }
+
+      if (fileExtension === ".xls" || fileExtension === ".xlsx") {
+        const couponbulk = parseExcelFile(file, []);
+        if (couponbulk.status === "success") {
+          const previewRows = (couponbulk.coupons || []).map((coupon) => ({
+            couponCode: coupon.couponCode || "",
+            title: coupon.title || "",
+            description: coupon.description || "",
+            couponImage: coupon.couponImage || "",
+          }));
+
+          return response.json({
+            success: true,
+            previewRows,
+            columns: ["couponCode", "title", "description", "couponImage"],
+          });
+        }
+        return response.json({ success: false, message: couponbulk.message });
+      }
+
+      return response.status(400).json({ success: false, message: "Format is Not Valid" });
+    } catch (error) {
+      console.log("Error while previewing coupon upload", error);
+      return response.status(500).json({ success: false, message: "Internal Server Error" });
+    }
+  };
+
+  module.uploadCoupon = async function (request, response) {
+    try {
+      const file = request.files;
       const brandId = request.body.brandId || request.query.brandId;
       if (!brandId) {
         return response
           .status(400)
           .json({ success: false, message: "Brand id is required." });
+      }
+
+      const previewData = request.body.previewData || request.body.rows || request.body.coupons;
+      if (previewData) {
+        let parsedRows = [];
+        if (Array.isArray(previewData)) {
+          parsedRows = previewData;
+        } else if (typeof previewData === "string") {
+          try {
+            const parsedPayload = JSON.parse(previewData);
+            if (Array.isArray(parsedPayload)) {
+              parsedRows = parsedPayload;
+            }
+          } catch (error) {
+            console.log("Invalid preview data payload", error);
+          }
+        }
+
+        if (!parsedRows.length) {
+          return response.json({ success: false, message: "No preview rows were provided." });
+        }
+
+        const expectedCount = Number(request.body.coupons || request.body.couponNo || 0);
+        const existingCoupons = await model.Coupon.findAll({
+          where: { brand_id: brandId },
+          attributes: ["couponCode"],
+          raw: true,
+        });
+        const existingSet = new Set(existingCoupons.map((coupon) => String(coupon.couponCode).toUpperCase()));
+
+        const normalizedCoupons = [];
+        const validationErrors = [];
+        const seenCodes = new Set();
+
+        parsedRows.forEach((row, index) => {
+          const normalizedCoupon = normalizeCouponEntry(row);
+          if (!normalizedCoupon || !normalizedCoupon.couponCode) {
+            validationErrors.push({ row: index + 1, message: "Coupon code is required." });
+            return;
+          }
+
+          const key = normalizedCoupon.couponCode.toUpperCase();
+         
+
+          seenCodes.add(key);
+          normalizedCoupons.push(normalizedCoupon);
+        });
+
+        if (validationErrors.length) {
+          return response.json({
+            success: false,
+            message: "Validation failed for the edited coupon data.",
+            errors: validationErrors,
+          });
+        }
+
+        if (expectedCount > 0 && normalizedCoupons.length !== expectedCount) {
+          return response.json({
+            success: false,
+            message: `Please upload exactly ${expectedCount} coupons. Found ${normalizedCoupons.length}.`,
+          });
+        }
+
+        const updatedCoupons = await Promise.all(
+          normalizedCoupons.map(async (coupon) => ({
+            ...coupon,
+            couponImage: saveCouponImage(coupon.couponImage),
+            brand_id: brandId,
+            expiryDate: request.body.expiryDate,
+            startingDate: request.body.startingDate,
+          }))
+        );
+
+        const insertedCoupons = await model.Coupon.bulkCreate(updatedCoupons);
+        const totalBagCount = Number(request.body.bags || request.body.bagsNo || 0);
+        const bagProductIds = createBagProductIds(request.body.productId, totalBagCount);
+        const bagRecords = [];
+        for (let bagIndex = 0; bagIndex < totalBagCount; bagIndex++) {
+          insertedCoupons.forEach((coupon) => {
+            bagRecords.push({
+              campaign_id: request.body.campaignId,
+              brand_id: brandId,
+              coupon_id: coupon.id,
+              bagName: `Bag${bagIndex + 1}`,
+              productId: bagProductIds.length ? bagProductIds[bagIndex] : request.body.productId,
+              expiryDate: request.body.expiryDate,
+              startingDate: request.body.startingDate,
+              status: false,
+              isExpired: false,
+            });
+          });
+        }
+        await model.Bags.bulkCreate(bagRecords);
+        if (request.body.campaignId) {
+          const campaignUpdate = { status: "published" };
+          const totalCouponCount = Number(request.body.coupons || request.body.couponNo || insertedCoupons.length);
+          if (totalBagCount > 0) campaignUpdate.bags = totalBagCount;
+          campaignUpdate.coupons = totalCouponCount;
+          if (request.body.expiryDate !== undefined) campaignUpdate.expiryDate = request.body.expiryDate;
+          if (request.body.startingDate !== undefined) campaignUpdate.startingDate = request.body.startingDate;
+          await model.Campaign.update(campaignUpdate, { where: { id: request.body.campaignId } });
+        }
+        return response.json({ success: true, message: `Added ${updatedCoupons.length} coupon(s).` });
+      }
+
+      if (!file) {
+        return response
+          .status(400)
+          .json({ success: false, message: "No file uploaded" });
       }
 
       const fileExtension = path.extname(file.file.name).toLowerCase();
@@ -590,13 +766,11 @@ module.exports = function (model) {
 
           const updatedCoupons = await Promise.all(
             parsedCoupons.map(async (coupon) => {
-              const qrLink = `${process.env.BASE_URL}/coupon/${coupon.couponCode}`;
               return {
                 ...coupon,
                 brand_id: brandId,
                 expiryDate: request.body.expiryDate,
                 startingDate: request.body.startingDate,
-                qrCode: await generateCouponQrPath(qrLink),
               };
             })
           );
@@ -606,27 +780,24 @@ module.exports = function (model) {
           const bagProductIds = createBagProductIds(request.body.productId, totalBagCount);
           const bagRecords = [];
           for (let bagIndex = 0; bagIndex < totalBagCount; bagIndex++) {
-              insertedCoupons.forEach((coupon) => {
-                  bagRecords.push({
-                      campaign_id: request.body.campaignId,
-                      brand_id: brandId,
-                      coupon_id: coupon.id,
-                      bagName: `Bag${bagIndex + 1}`,
-                      productId: bagProductIds.length
-                          ? bagProductIds[bagIndex]
-                          : request.body.productId,
-                      expiryDate: request.body.expiryDate,
-                      startingDate: request.body.startingDate,
-                      status: false,
-                      isExpired: false,
-                  });
+            insertedCoupons.forEach((coupon) => {
+              bagRecords.push({
+                campaign_id: request.body.campaignId,
+                brand_id: brandId,
+                coupon_id: coupon.id,
+                bagName: `Bag${bagIndex + 1}`,
+                productId: bagProductIds.length ? bagProductIds[bagIndex] : request.body.productId,
+                expiryDate: request.body.expiryDate,
+                startingDate: request.body.startingDate,
+                status: false,
+                isExpired: false,
               });
+            });
           }
           try {
             await model.Bags.bulkCreate(bagRecords);
             if (request.body.campaignId) {
-              const campaignUpdate = { status: 'published' };
-              const totalBagCount = Number(request.body.bags || request.body.bagsNo || 0);
+              const campaignUpdate = { status: "published" };
               const totalCouponCount = Number(request.body.coupons || request.body.couponNo || insertedCoupons.length);
               if (totalBagCount > 0) campaignUpdate.bags = totalBagCount;
               campaignUpdate.coupons = totalCouponCount;
@@ -640,9 +811,7 @@ module.exports = function (model) {
           return response.json({ success: true });
         });
       } else if (fileExtension === ".xls" || fileExtension === ".xlsx") {
-        // console.log("fileExtension--", fileExtension,);
         let couponbulk = await parseExcelFile(file, coupons);
-        // console.log("couponbulk -> ", couponbulk);
 
         if (couponbulk.status == "success") {
           const parsedCoupons = couponbulk.coupons || [];
@@ -671,25 +840,23 @@ module.exports = function (model) {
           const bagProductIds = createBagProductIds(request.body.productId, totalBagCount);
           const bagRecords = [];
           for (let bagIndex = 0; bagIndex < totalBagCount; bagIndex++) {
-              insertedCoupons.forEach((coupon) => {
-                  bagRecords.push({
-                      campaign_id: request.body.campaignId,
-                      brand_id: brandId,
-                      coupon_id: coupon.id,
-                      bagName: `Bag${bagIndex + 1}`,
-                      productId: bagProductIds.length ? bagProductIds[bagIndex] : request.body.productId,
-                      expiryDate: request.body.expiryDate,
-                      startingDate: request.body.startingDate,
-                      status: false,
-                      is_expired: false,
-                  });
+            insertedCoupons.forEach((coupon) => {
+              bagRecords.push({
+                campaign_id: request.body.campaignId,
+                brand_id: brandId,
+                coupon_id: coupon.id,
+                bagName: `Bag${bagIndex + 1}`,
+                productId: bagProductIds.length ? bagProductIds[bagIndex] : request.body.productId,
+                expiryDate: request.body.expiryDate,
+                startingDate: request.body.startingDate,
+                status: false,
+                is_expired: false,
               });
+            });
           }
-          console.log('DEBUG XLS: creating bagRecords sample', JSON.stringify(bagRecords.slice(0, 5), null, 2));
           await model.Bags.bulkCreate(bagRecords);
           if (request.body.campaignId) {
-            const campaignUpdate = { status: 'published' };
-            const totalBagCount = Number(request.body.bags || request.body.bagsNo || 0);
+            const campaignUpdate = { status: "published" };
             const totalCouponCount = Number(request.body.coupons || request.body.couponNo || insertedCoupons.length);
             if (totalBagCount > 0) campaignUpdate.bags = totalBagCount;
             campaignUpdate.coupons = totalCouponCount;
@@ -713,19 +880,6 @@ module.exports = function (model) {
       return response
         .status(500)
         .json({ success: false, message: "Internal Server Error" });
-    }
-  };
-
-
-  module.openCoupon = async function (req, res) {
-    try {
-      const couponCode = req.params.couponCode;
-      const playStoreUrl = "https://play.google.com/store/apps/details?id=com.bagvertising";
-      const intentUrl = `intent://coupon/${couponCode}` + `#Intent;scheme=bagvertising;` + `package=com.bagvertising;` + `S.browser_fallback_url=${encodeURIComponent(playStoreUrl)};end`;
-      return res.redirect(intentUrl);
-    } catch (error) {
-      console.log(error);
-      return res.send("Invalid Coupon");
     }
   };
 
@@ -755,19 +909,6 @@ function generateRandomNumericId(length = 8) {
   return result.slice(0, length);
 }
 
-async function generateCouponQrPath(couponCode) {
-  const qrDirectory = path.join(__dirname, "../../../public/dist/qr_codes");
-  if (!fs.existsSync(qrDirectory)) {
-    fs.mkdirSync(qrDirectory, { recursive: true });
-  }
-  const safeCouponCode = couponCode.toString().trim().replace(/[^a-zA-Z0-9-_\.]/g, "_").slice(0, 100);
-  const fileName = `${Date.now()}_${safeCouponCode}.png`;
-  const filePath = path.join(qrDirectory, fileName);
-  const publicPath = `/dist/qr_codes/${fileName}`;
-  await QRCode.toFile(filePath, couponCode, { type: "png", width: 300, });
-  return publicPath;
-}
-
 function normalizeCouponEntry(row) {
   const couponCode = String(
     row?.["Coupon Code"] || row?.couponCode || row?.["couponCode"] || ""
@@ -782,6 +923,9 @@ function normalizeCouponEntry(row) {
     title: String(row?.title || row?.["Title"] || row?.["title"] || "").trim(),
     description: String(
       row?.description || row?.["Description"] || row?.["description"] || ""
+    ).trim(),
+    couponImage: String(
+      row?.couponImage || row?.["CouponImage"] || row?.["couponImage"] || ""
     ).trim(),
   };
 }

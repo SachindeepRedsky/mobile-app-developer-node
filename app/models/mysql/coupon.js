@@ -41,10 +41,10 @@ module.exports = function (Sequelize, Schema, User, Brand) {
             values: ['assigned', 'unassigned'],
             defaultValue: 'unassigned',
         },
-        qrCode: {
+        couponImage: {
             type: Sequelize.STRING,
             allowNull: true,
-            defaultValue: ""
+            defaultValue: "",
         },
         userId:{
             type: Sequelize.INTEGER,
