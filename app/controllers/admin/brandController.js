@@ -547,7 +547,7 @@ module.exports = function (model) {
       }
       await model.Bags.bulkCreate(bagRecords);
       if (request.body.campaignId) {
-        const campaignUpdate = { status: 'published' };
+        const campaignUpdate = {};
         const totalBagCount = Number(request.body.bags || request.body.bagsNo || 0);
         const totalCouponCount = Number(request.body.coupons || request.body.couponNo || insertedCoupons.length);
         if (totalBagCount > 0) campaignUpdate.bags = totalBagCount;
@@ -734,7 +734,7 @@ module.exports = function (model) {
         }
         await model.Bags.bulkCreate(bagRecords);
         if (request.body.campaignId) {
-          const campaignUpdate = { status: 'published' };
+          const campaignUpdate = {};
           const totalCouponCount = Number(request.body.coupons || request.body.couponNo || insertedCoupons.length);
           if (totalBagCount > 0) campaignUpdate.bags = totalBagCount;
           campaignUpdate.coupons = totalCouponCount;
@@ -804,7 +804,7 @@ module.exports = function (model) {
           try {
             await model.Bags.bulkCreate(bagRecords);
             if (request.body.campaignId) {
-              const campaignUpdate = { status: 'published' };
+              const campaignUpdate = {};
               const totalCouponCount = Number(request.body.coupons || request.body.couponNo || insertedCoupons.length);
               if (totalBagCount > 0) campaignUpdate.bags = totalBagCount;
               campaignUpdate.coupons = totalCouponCount;
@@ -865,13 +865,15 @@ module.exports = function (model) {
           }
           await model.Bags.bulkCreate(bagRecords);
           if (request.body.campaignId) {
-            const campaignUpdate = { status: "published" };
+            const campaignUpdate = {};
             const totalCouponCount = Number(request.body.coupons || request.body.couponNo || insertedCoupons.length);
             if (totalBagCount > 0) campaignUpdate.bags = totalBagCount;
             campaignUpdate.coupons = totalCouponCount;
             if (request.body.expiryDate !== undefined) campaignUpdate.expiryDate = request.body.expiryDate;
             if (request.body.startingDate !== undefined) campaignUpdate.startingDate = request.body.startingDate;
-            await model.Campaign.update(campaignUpdate, { where: { id: request.body.campaignId } });
+            if (Object.keys(campaignUpdate).length) {
+              await model.Campaign.update(campaignUpdate, { where: { id: request.body.campaignId } });
+            }
           }
 
           return response.json({ success: true });
