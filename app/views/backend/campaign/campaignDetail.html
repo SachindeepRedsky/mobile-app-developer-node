@@ -258,6 +258,15 @@
                   Add Coupons
                 </button>
                 {% endif %}
+                {% if campaignDetail.status != 'published' %}
+                <button
+                  id="publishDraftCouponsBtn"
+                  type="button"
+                  class="btn btn-success ml-2"
+                >
+                  Publish
+                </button>
+                {% endif %}
               </div>
             </div>
             <div class="card-body">
@@ -545,6 +554,23 @@
       .show()
       .text(message);
   }
+
+  function hideAddCouponButtons() {
+    const $btn = $("#addCouponsBtn");
+    if ($btn.length) {
+      $btn.hide().prop("disabled", true);
+    }
+  }
+
+  function closeCouponModals(callback) {
+    $(".modal").modal("hide");
+    setTimeout(function () {
+      $("body").removeClass("modal-open");
+      $(".modal-backdrop").remove();
+      if (callback) callback();
+    }, 250);
+  }
+
     $(document).ready(function () {
     showCouponSection("manual");
     addManualCouponRow();
@@ -573,12 +599,17 @@
             .attr('href', qrCodePath)
             .attr('download', (label || 'campaign') + '.png');
         $("#printQrBtn").data("qr", qrCodePath).data("label", label || 'Campaign').data("campaignId", campaignId).data("product", window.currentProductId || "-");
-        $('#qrCodeModal').modal('show');
+        $('#qrCodeModal').appendTo('body').modal('show');
     }
 
+    $('#qrCodeModal').on('shown.bs.modal', function () {
+      $(this).css('z-index', 1061);
+      $('.modal-backdrop').last().css('z-index', 1060);
+    });
+
     $('#qrCodeModal').on('hidden.bs.modal', function () {
-      // Use Bootstrap API to show the product modal after QR modal is fully closed
-      $('#productCouponModal').modal('show');
+      $('body').removeClass('modal-open');
+      $('.modal-backdrop').remove();
     });
     $(document).on("click", "#printQrBtn", function (e) {
       e.preventDefault();
@@ -696,11 +727,15 @@
           };
 
       });
-    $(document).on('click', '.qr-code-cell', function () {
+    $(document).on('click', '.qr-code-cell', function (e) {
+        e.stopPropagation();
         const qrCodePath = $(this).data('qr');
         const label = $(this).data('code');
         if (qrCodePath) {
-            openQrModal(qrCodePath, label);
+            $('#productCouponModal').modal('hide');
+            setTimeout(function () {
+                openQrModal(qrCodePath, label);
+            }, 220);
         }
     });
     brandId = "{{ campaignBrandHistory[0].brand_id if campaignBrandHistory and campaignBrandHistory[0] else '' }}";
@@ -836,13 +871,10 @@ $(document).on("click", "#importPreviewedCoupons", function (e) {
             if (response.success) {
                 $('#uploadProgress').removeClass('alert-info alert-danger').addClass('alert-success').text(response.message || 'Upload successful!');
                 $('#uploadError').hide();
-                $('#addCouponsBtn').hide();
-                setTimeout(() => {
-                $('#csvPreviewModal').modal('hide');
-                $('#couponEntryModal').modal('hide');
-                $('#uploadCouponModal').modal('hide');
-                loadCouponTable(campaignId);
-              }, 1000);
+                hideAddCouponButtons();
+                closeCouponModals(function () {
+                    loadCouponTable(campaignId);
+                });
             } else {
                 $('#uploadProgress').removeClass('alert-info alert-success').addClass('alert-danger').text(response.message || 'Upload failed.');
                 $('#uploadError').hide();
@@ -854,6 +886,29 @@ $(document).on("click", "#importPreviewedCoupons", function (e) {
             $('#uploadError').show().text('Error occurred during the upload.');
         }
     });
+});
+
+$(document).on("click", "#publishDraftCouponsBtn", function () {
+  const button = $(this);
+  button.prop('disabled', true).text('Publishing...');
+  $.ajax({
+    url: '/backend/publishDraftCoupons',
+    type: 'POST',
+    data: { campaignId: campaignId },
+    success: function (response) {
+      if (response.success) {
+        hideAddCouponButtons();
+        Swal.fire({ icon: 'success', title: 'Published', text: response.message || 'All coupons were published.' });
+      } else {
+        Swal.fire({ icon: 'error', title: 'Unable to publish', text: response.message || 'Please try again.' });
+      }
+      button.prop('disabled', false).text('Publish');
+    },
+    error: function () {
+      button.prop('disabled', false).text('Publish');
+      Swal.fire({ icon: 'error', title: 'Unable to publish', text: 'Please try again.' });
+    }
+  });
 });
 
 $(document).on("click", ".product-row", function () {
@@ -900,53 +955,16 @@ $(document).on("click", ".product-row", function () {
   });
   $("#productCouponBody").html(html);
 
-  // If another modal is open, close it first and wait for it to finish closing.
-  const otherOpen = $('.modal.show').not('#productCouponModal');
-  console.log('otherOpen modals count:', otherOpen.length);
-  if (otherOpen.length) {
-    // Hide the first open modal and when it's fully hidden, show the product modal
-    otherOpen.first().one('hidden.bs.modal', function() {
-      console.log('previous modal hidden, showing product modal');
-      // show the product modal after previous modal fully hidden
-      $('#productCouponModal').modal('show');
-      // Small deferred check to verify Bootstrap actually displayed the modal
-      setTimeout(function() {
-        console.log('after modal show call -> exists:', $('#productCouponModal').length,
-          'hasClass show:', $('#productCouponModal').hasClass('show'),
-          'display:', $('#productCouponModal').css('display'),
-          'backdrop count:', $('.modal-backdrop').length);
-      }, 60);
-    }).modal('hide');
-  } else {
-    console.log('no other modals open, showing product modal');
-    // No conflicting modals; show
-    $('#productCouponModal').modal('show');
-    // Small deferred check to verify Bootstrap actually displayed the modal
-    setTimeout(function() {
-      console.log('after modal show call -> exists:', $('#productCouponModal').length,
-        'hasClass show:', $('#productCouponModal').hasClass('show'),
-        'display:', $('#productCouponModal').css('display'),
-        'backdrop count:', $('.modal-backdrop').length);
-    }, 60);
-  }
+  $('#productCouponModal').modal('show');
 });
 
-// Use delegated bindings so handlers attach even if element wasn't present when script ran
-$(document).on('show.bs.modal', '#productCouponModal', function() { console.log('productCouponModal show.bs.modal'); });
-$(document).on('shown.bs.modal', '#productCouponModal', function() { console.log('productCouponModal shown.bs.modal'); });
-$(document).on('hidden.bs.modal', '#productCouponModal', function() { console.log('productCouponModal hidden.bs.modal'); });
-// Defensive: ensure product modal is above any backdrop and attached to body
 $(document).on('shown.bs.modal', '#productCouponModal', function() {
   try {
-    const $m = $(this);
-    $m.appendTo('body');
-    $m.css('z-index', 1060);
+    $(this).appendTo('body').css('z-index', 1060);
     const $back = $('.modal-backdrop').last();
     if ($back.length) {
       $back.css('z-index', 1050);
-      $back.addClass('modal-stack-processed');
     }
-    console.log('productCouponModal adjusted z-index and attached to body');
   } catch (err) {
     console.error('Error adjusting productCouponModal z-index', err);
   }
@@ -1124,15 +1142,10 @@ $(document).on('shown.bs.modal', '#productCouponModal', function() {
                 success: function (response) {
                     if (response.success) {
                         manualStatus.removeClass('alert-info').addClass('alert-success').text(response.message || 'Coupons saved successfully.');
-                    $('#addCouponsBtn').hide();
-                            setTimeout(() => {
-                            $('#couponEntryModal').modal('hide');
-                            $('#couponEntryModal').one('hidden.bs.modal', function () {
-
-
-                              loadCouponTable(campaignId);
-                          });
-                                                  }, 1000);
+                        hideAddCouponButtons();
+                        closeCouponModals(function () {
+                            loadCouponTable(campaignId);
+                        });
                     } else {
                         manualStatus.removeClass('alert-info').addClass('alert-danger').text(response.message || 'Unable to save coupons.');
                     }

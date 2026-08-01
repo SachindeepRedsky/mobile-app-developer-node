@@ -51,8 +51,14 @@ module.exports = function (app, model, controller) {
     app.post('/backend/previewCouponUpload', middleware.admin.login, controller.brand.previewCouponUpload)
     app.post('/backend/uploadCoupon', middleware.admin.login, controller.brand.uploadCoupon)
     app.post('/backend/addCoupon', middleware.admin.login, controller.brand.addCoupon)
+    app.post('/campaign/previewCouponUpload', controller.brand.previewCouponUpload)
+    app.post('/campaign/uploadCoupon', controller.brand.uploadCoupon)
+    app.post('/campaign/addCoupon', controller.brand.addCoupon)
     app.get('/backend/brandCouponDetail/', middleware.admin.login, controller.brand.brandCouponDetail);
     app.get('/backend/campaignCouponDetail', middleware.admin.login, controller.campaign.campaignCouponDetail);
+    app.get('/campaign/campaignDetails', controller.campaign.publicCampaignDetails);
+    app.post('/campaign/validateCampaign', controller.campaign.validatePublicCampaign);
+    app.post('/campaign/getCampaignDetails', controller.campaign.getCampaingnDetais)
     app.get('/campaign/:campaignId', controller.campaign.openCampaign);
     app.post('/backend/addCampaignBagCoupon',middleware.admin.login, controller.campaign.addCampaignBagCoupon);
 
@@ -69,4 +75,5 @@ module.exports = function (app, model, controller) {
     app.post('/backend/getCampaingnDetais', middleware.admin.login, controller.campaign.getCampaingnDetais)
     app.get('/backend/deleteCampaign/:id', middleware.admin.login, controller.campaign.deleteCampaign)
     app.get("/backend/getCamaignCoupon", middleware.admin.login, controller.campaign.getCamaignCoupon)
+    app.post('/backend/publishDraftCoupons', middleware.admin.login, controller.campaign.publishDraftCoupons)
 } 

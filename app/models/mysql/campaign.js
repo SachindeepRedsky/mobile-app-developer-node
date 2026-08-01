@@ -47,7 +47,7 @@ module.exports = function (Sequelize, Schema) {
         },
         status: {
             type: Sequelize.ENUM,
-            values: ['published', 'unpublished'],
+            values: ['published', 'unpublished', 'draft'],
             defaultValue: 'unpublished',
             allowNull: false, // Ensures status is always set
         },

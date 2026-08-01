@@ -39,8 +39,8 @@ require('./config/logconfig.js');
 
 global.config = require('./config/constants.js');
 
-app.use(bodyParser.json());
-app.use(bodyParser.urlencoded({ extended: true }));
+app.use(bodyParser.json({ limit: '50mb' }));
+app.use(bodyParser.urlencoded({ extended: true, limit: '50mb' }));
 app.use(cookieParser());
 
 app.use(express.static(path.join(__dirname, 'public')));
@@ -63,7 +63,10 @@ app.use(cookieSession({
 }));
 
 app.use(flash());
-app.use(fileUpload());
+app.use(fileUpload({
+  limits: { fileSize: 50 * 1024 * 1024 },
+  abortOnLimit: true,
+}));
 
 var model = require('./app/models/mysql/index')(Sequelize, sequelizeDB);
 var controllers = require('./app/controllers/index')(model);

@@ -243,6 +243,72 @@ module.exports = function (model) {
             response.send({ status: "failed", message: "Something went wrong." })
         }
     }
+    module.publicCampaignDetails = async function (request, response) {
+        try {
+            response.render('backend/campaign/publicCampaignDetails', {
+                title: 'Campaign Details',
+                error: request.flash("error"),
+                success: request.flash("success"),
+                vErrors: request.flash("vErrors"),
+                user: request.session.admin,
+                campaignManagement: "active",
+                currentDate: new Date().toISOString().split('T')[0]
+            });
+        } catch (error) {
+            console.log('publicCampaignDetails error ->', error);
+            request.flash('error', 'Something went wrong. Please try again.');
+            response.redirect('/');
+        }
+    };
+
+    module.validatePublicCampaign = async function (request, response) {
+        try {
+            const brandId = String(request.body.brandId || '').trim();
+            const campaignInput = String(request.body.campaignId || '').trim();
+            if (!brandId || !campaignInput) {
+                return response.json({ success: false, message: 'Brand ID and Campaign ID are required.' });
+            }
+
+            const brand = await model.Brand.findOne({ where: { id: brandId }, raw: true });
+            if (!brand) {
+                return response.json({ success: false, message: 'Brand ID not found.' });
+            }
+
+            const campaign = await model.Campaign.findOne({
+                where: {
+                    [Op.or]: [{ id: campaignInput }, { campaignId: campaignInput }]
+                },
+                raw: true,
+            });
+
+            if (!campaign) {
+                return response.json({ success: false, message: 'Campaign ID not found.' });
+            }
+
+            const linkedCampaign = await model.CampaignBrandHistory.findOne({
+                where: { campaign_id: campaign.id, brand_id: brand.id },
+                raw: true,
+            });
+
+            if (!linkedCampaign) {
+                return response.json({ success: false, message: 'The selected campaign does not belong to the selected brand.' });
+            }
+
+            return response.json({
+                success: true,
+                message: 'Campaign validated successfully.',
+                brandId: brand.id,
+                campaignId: campaign.id,
+                campaignCode: campaign.campaignId,
+                brandName: brand.brandName,
+                campaignName: campaign.campaignName,
+            });
+        } catch (error) {
+            console.log('validatePublicCampaign error ->', error);
+            return response.status(500).json({ success: false, message: 'Something went wrong. Please try again.' });
+        }
+    };
+
     module.campaignDetail = async function (request, response) {
         let campaignId = request.params.id;
         if (campaignId != "" && campaignId != 0) {
@@ -438,6 +504,37 @@ module.exports = function (model) {
         } catch (error) {
             request.flash('error', 'Something went wrong')
             response.redirect('/backend/campaign');
+        }
+    };
+
+    module.publishDraftCoupons = async function (req, res) {
+        try {
+            const campaignId = req.body.campaignId || req.query.campaignId;
+            if (!campaignId) {
+                return res.json({ success: false, message: 'Campaign ID is required.' });
+            }
+            const campaign = await model.Campaign.findOne({
+                where: {
+                    [Op.or]: [{ id: campaignId }, { campaignId: campaignId }]
+                },
+                raw: true,
+            });
+            if (!campaign) {
+                return res.json({ success: false, message: 'Campaign not found.' });
+            }
+            const bagRecords = await model.Bags.findAll({ where: { campaign_id: campaign.id }, raw: true });
+            const couponIds = bagRecords.map((bag) => bag.coupon_id).filter(Boolean);
+            if (!couponIds.length) {
+                return res.json({ success: true, message: 'No draft coupons found for this campaign.' });
+            }
+            await model.Campaign.update(
+                { status: 'published' },
+                { where: { id: campaign.id } }
+            );
+            return res.json({ success: true, message: '' });
+        } catch (error) {
+            console.log('publishDraftCoupons error ->', error);
+            return res.status(500).json({ success: false, message: 'Something went wrong.' });
         }
     };
 

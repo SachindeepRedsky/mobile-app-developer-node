@@ -84,18 +84,20 @@
 }
 
 </style>
-<body class="hold-transition sidebar-mini layout-fixed">
+<body class="hold-transition sidebar-mini layout-fixed{% if hideSidebar %} public-campaign-page{% endif %}">
   <div class="wrapper">
 
     <!-- Navbar -->
+    {% if not hideSidebar %}
     {% include "backend/auth_partials/header.html" %}
     <!-- /.navbar -->
 
     <!-- Main Sidebar Container -->
     {% include "backend/auth_partials/navigation.html" %}
+    {% endif %}
 
     <!-- Content Wrapper. Contains page content -->
-    <div class="content-wrapper">
+    <div class="{% if not hideSidebar %} content-wrapper{% endif %}">
       {% block body %}
 
       {% endblock %}

@@ -1,0 +1,1121 @@
+{% extends "backend/auth_partials/layout.html" %}
+{% set hideSidebar = true %}
+
+{% block style %}
+<style>
+    .unpublished {
+        color: red;
+    }
+
+    .coupon-preview-table {
+        border-collapse: separate;
+        border-spacing: 0;
+        border-radius: 12px;
+        overflow: hidden;
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.06);
+        background: #fff;
+    }
+
+    .coupon-preview-table thead th {
+        background: linear-gradient(135deg, #f8f9fc 0%, #eef2ff 100%);
+        color: #4c4f69;
+        font-weight: 700;
+        border-bottom: 1px solid #e8ecf3;
+        position: sticky;
+        top: 0;
+        z-index: 2;
+    }
+
+    .coupon-preview-table tbody tr:nth-child(even) {
+        background: #fbfcff;
+    }
+
+    .coupon-preview-table tbody tr:hover {
+        background: #f4f7ff;
+    }
+
+    .coupon-preview-table td,
+    .coupon-preview-table th {
+        padding: 0.85rem 0.75rem;
+        vertical-align: middle;
+    }
+
+    .coupon-preview-thumb {
+        width: 76px;
+        height: 76px;
+        object-fit: cover;
+        border-radius: 10px;
+        border: 1px solid #e7ebf0;
+        background: #f5f7fb;
+        display: block;
+    }
+
+    .coupon-preview-placeholder {
+        width: 76px;
+        height:76px;
+        border-radius: 10px;
+        border: 1px dashed #cbd5e1;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #94a3b8;
+        font-size: 0.8rem;
+        background: #f8fafc;
+    }
+
+    .manual-coupon-card {
+        border: 1px solid #e7ecf3;
+        border-radius: 14px;
+        background: #fff;
+        box-shadow: 0 8px 24px rgba(0,0,0,0.05);
+        overflow: hidden;
+    }
+
+    .manual-coupon-card .table-responsive {
+        max-height: 420px;
+        overflow-y: auto;
+    }
+
+    .manual-coupon-card .table thead th {
+        background: #f7f9fd;
+        color: #576074;
+        font-size: 0.9rem;
+        font-weight: 700;
+        position: sticky;
+        top: 0;
+        z-index: 1;
+    }
+
+    .manual-coupon-card .table tbody tr:nth-child(even) {
+        background: #fbfcff;
+    }
+
+    .manual-coupon-card .table tbody tr:hover {
+        background: #f3f6ff;
+    }
+
+    .manual-coupon-card .table td,
+    .manual-coupon-card .table th {
+        padding: 0.8rem 0.7rem;
+        vertical-align: middle;
+    }
+
+    .manual-coupon-image-box {
+        min-width: 110px;
+        display: flex;
+        flex-direction: column;
+        gap: 0.6rem;
+    }
+
+    .image-mode-toggle {
+        display: flex;
+        gap: 0.45rem;
+    }
+
+    .image-mode-btn {
+        flex: 1;
+        border-radius: 999px;
+        font-size: 0.8rem;
+        font-weight: 600;
+        padding: 0.4rem 0.65rem;
+        transition: all 0.2s ease;
+    }
+
+    .image-mode-btn.active {
+        box-shadow: 0 6px 14px rgba(79, 70, 229, 0.18);
+    }
+
+    .image-mode-btn:hover {
+        background: #f8fafc;
+        color: #334155;
+    }
+
+    .image-mode-btn.active:hover {
+        background: linear-gradient(135deg, #4338ca 0%, #4f46e5 100%);
+        color: #fff;
+    }
+
+    .image-mode-panel {
+        transition: all 0.2s ease;
+    }
+
+    .manual-coupon-image-box .coupon-image-preview {
+        width: 100px;
+        height: 76px;
+        object-fit: cover;
+        border-radius: 10px;
+        border: 1px solid #e7ebf0;
+        background: #f7f9fc;
+    }
+
+    .coupon-image-placeholder {
+        min-height: 76px;
+        border: 1px dashed #cbd5e1;
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: #f8fafc;
+        color: #64748b;
+        font-size: 0.8rem;
+        text-align: center;
+        padding: 0.5rem;
+    }
+
+    .manual-coupon-remove-btn {
+        border-radius: 999px;
+        width: 34px;
+        height: 34px;
+        padding: 0;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .manual-coupon-row .form-control,
+    .manual-coupon-row textarea {
+        border-radius: 10px;
+        border: 1px solid #e2e8f0;
+        font-size: 0.9rem;
+    }
+
+    .manual-coupon-row .form-control:focus,
+    .manual-coupon-row textarea:focus {
+        border-color: #4f46e5;
+        box-shadow: 0 0 0 0.15rem rgba(79, 70, 229, 0.15);
+    }
+
+    body.public-campaign-page .main-sidebar,
+    body.public-campaign-page .main-header,
+    body.public-campaign-page .control-sidebar,
+    body.public-campaign-page .main-footer {
+        display: none !important;
+    }
+
+    body.public-campaign-page .wrapper {
+        min-height: 100vh;
+        width: 100%;
+        background: #f8fafc;
+    }
+
+    body.public-campaign-page .content-wrapper {
+        margin-left: 0 !important;
+        padding: 0 !important;
+        min-height: 100vh;
+        background: #f8fafc;
+    }
+
+    body.public-campaign-page .content {
+        padding: 1.5rem 0;
+    }
+
+    body.public-campaign-page .container {
+        max-width: 100% !important;
+        padding-left: 1rem;
+        padding-right: 1rem;
+    }
+
+    body.public-campaign-page .card {
+        border: none;
+        box-shadow: none;
+    }
+</style>
+{% endblock %}
+
+{% block body %}
+<div class="container mt-5">
+  <div class="card shadow-sm">
+    <div class="card-header bg-primary text-white">
+      <h4 class="mb-0">Public Campaign Details</h4>
+    </div>
+    <div class="card-body">
+      {% if error and error|length %}
+      <div class="alert alert-danger">{{ error }}</div>
+      {% endif %}
+      {% if success and success|length %}
+      <div class="alert alert-success">{{ success }}</div>
+      {% endif %}
+
+      <form id="publicCampaignValidateForm">
+        <div class="row">
+          <div class="col-md-6 form-group">
+            <label for="brandId">Brand ID</label>
+            <input type="text" class="form-control" id="brandId" name="brandId" required>
+          </div>
+          <div class="col-md-6 form-group">
+            <label for="campaignId">Campaign ID</label>
+            <input type="text" class="form-control" id="campaignId" name="campaignId" required>
+          </div>
+        </div>
+        <div id="validationMessage" class="alert" style="display:none;"></div>
+        <button type="submit" class="btn btn-primary">Continue</button>
+      </form>
+
+      <div id="couponInventorySection" class="mt-4" style="display:none;">
+        <div class="card">
+          <div class="card-header d-flex justify-content-between align-items-center">
+            <h6 class="card-title mb-0">Coupon Inventory</h6>
+            {% if couponInventory and couponInventory|length %}
+            <button id="addCouponsBtn" type="button" class="btn btn-primary" data-toggle="modal" data-target="#uploadCouponModal">Add Coupon</button>
+            {% endif %}
+          </div>
+          <div class="card-body">
+            <table id="campaignTable" class="table table-bordered table-striped">
+              <thead>
+                <tr>
+                  <th>Sr. No.</th>
+                  <th>Product ID</th>
+                  <th>Number Of Coupons</th>
+                </tr>
+              </thead>
+              <tbody id="couponTableBody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block Jscript %}
+<script>
+    var brandId = '';
+    var campaignId = '';
+    var grouped = {};
+
+    function generateNumbr(length) {
+        const characters = '1234567890';
+        let result = '';
+        for (let i = 0; i < length; i++) {
+            const randomIndex = Math.floor(Math.random() * characters.length);
+            result += characters.charAt(randomIndex);
+        }
+        return result;
+    }
+
+    function showCouponSection(mode) {
+        $('.coupon-input-section').hide();
+        $('#' + mode + 'CouponSection').show();
+        if (mode === 'csv') {
+            $('#submitCouponAction').text('Upload');
+        } else {
+            $('#submitCouponAction').text('Save Coupons');
+        }
+    }
+
+    function showPreviewModal(rows) {
+        const $body = $('#csvPreviewBody');
+        $body.empty();
+        if (!rows.length) {
+            $body.append('<tr><td colspan="5" class="text-center">No rows found.</td></tr>');
+            $('#csvPreviewModal').modal('show');
+            return;
+        }
+
+        rows.forEach(function (row, index) {
+            const imageUrl = row.couponImage || '';
+            const escapedImageUrl = imageUrl.replace(/"/g, '&quot;');
+            $body.append(`
+                <tr>
+                    <td>${index + 1}</td>
+                    <td><input type="text" class="form-control form-control-sm csv-preview-input" data-field="couponCode" value="${(row.couponCode || '').replace(/"/g, '&quot;')}"></td>
+                    <td><input type="text" class="form-control form-control-sm csv-preview-input" data-field="title" value="${(row.title || '').replace(/"/g, '&quot;')}"></td>
+                    <td><textarea class="form-control form-control-sm csv-preview-input" data-field="description" rows="1">${(row.description || '').replace(/"/g, '&quot;')}</textarea></td>
+                    <td>
+                        <input type="text" class="form-control form-control-sm csv-preview-input" data-field="couponImage" value="${escapedImageUrl}">
+                        <div class="mt-2">
+                            <img src="${imageUrl || ''}" style="object-fit: contain;" class="coupon-preview-thumb" alt="Coupon preview" onerror="this.onerror=null;this.src=''; this.className='coupon-preview-placeholder'; this.innerHTML='No image';">
+                        </div>
+                    </td>
+                </tr>
+            `);
+        });
+
+        $('#csvPreviewBody .csv-preview-input[data-field="couponImage"]').on('input', function () {
+            const url = $(this).val().trim();
+            const preview = $(this).closest('td').find('img.coupon-preview-thumb, .coupon-preview-placeholder');
+            if (!url) {
+                preview.attr('src', '').removeClass('coupon-preview-thumb').addClass('coupon-preview-placeholder').text('No image');
+                return;
+            }
+            preview.attr('src', url).removeClass('coupon-preview-placeholder').addClass('coupon-preview-thumb').css('display', 'block');
+        });
+
+        $('#csvPreviewModal').modal('show');
+    }
+
+    function collectPreviewRows() {
+        const rows = [];
+        $('#csvPreviewBody tr').each(function () {
+            const row = {};
+            $(this).find('.csv-preview-input').each(function () {
+                row[$(this).data('field')] = $(this).val().trim();
+            });
+            rows.push(row);
+        });
+        return rows;
+    }
+
+    function setImageMode($row, mode) {
+        $row.find('.image-mode-btn').removeClass('active btn-primary btn-outline-primary').addClass('btn-outline-primary');
+        $row.find('.image-mode-btn[data-mode="' + mode + '"]').addClass('active btn-primary').removeClass('btn-outline-primary');
+        $row.find('.image-type').val(mode);
+
+        if (mode === 'upload') {
+            $row.find('.upload-panel').show();
+            $row.find('.link-panel').hide();
+            $row.find('.coupon-image-link').val('');
+        } else {
+            $row.find('.upload-panel').hide();
+            $row.find('.link-panel').show();
+            $row.find('.coupon-image-file').val('');
+        }
+
+        const preview = $row.find('.coupon-image-preview');
+        const placeholder = $row.find('.coupon-image-placeholder');
+        preview.removeAttr('src').hide();
+        placeholder.show();
+    }
+
+    $(document).on('click', '.image-mode-btn', function (e) {
+        e.preventDefault();
+        const $row = $(this).closest('tr.manual-coupon-row');
+        setImageMode($row, $(this).data('mode'));
+    });
+
+    $(document).on('change', '.coupon-image-file', function () {
+        const file = this.files[0];
+        if (!file) {
+            const preview = $(this).closest('td').find('.coupon-image-preview');
+            const placeholder = $(this).closest('td').find('.coupon-image-placeholder');
+            preview.removeAttr('src').hide();
+            placeholder.show();
+            return;
+        }
+        const reader = new FileReader();
+        const $row = $(this).closest('tr.manual-coupon-row');
+        const preview = $row.find('.coupon-image-preview');
+        const placeholder = $row.find('.coupon-image-placeholder');
+        reader.onload = function (e) {
+            preview.attr('src', e.target.result).show();
+            placeholder.hide();
+        };
+        reader.onerror = function () {
+            preview.removeAttr('src').hide();
+            placeholder.show();
+        };
+        reader.readAsDataURL(file);
+    });
+
+    $(document).on('input', '.coupon-image-link', function () {
+        const url = $(this).val().trim();
+        const $row = $(this).closest('tr.manual-coupon-row');
+        const preview = $row.find('.coupon-image-preview');
+        const placeholder = $row.find('.coupon-image-placeholder');
+        if (url === '') {
+            preview.removeAttr('src').hide();
+            placeholder.show();
+            return;
+        }
+        preview.off('error').on('error', function () {
+            preview.removeAttr('src').hide();
+            placeholder.show();
+        });
+        preview.attr('src', url).show();
+        placeholder.hide();
+    });
+
+    function addManualCouponRow() {
+        $('#manualCouponRows').append(`
+            <tr class="manual-coupon-row">
+                <td>
+                    <input type="text" class="form-control form-control-sm manual-coupon-code" placeholder="Coupon code">
+                </td>
+                <td>
+                    <input type="text" class="form-control form-control-sm manual-coupon-title" placeholder="Title">
+                </td>
+                <td>
+                    <div class="manual-coupon-image-box">
+                        <div class="image-mode-toggle btn-group btn-group-toggle w-100" data-toggle="buttons">
+                            <button type="button" class="btn btn-sm btn-primary image-mode-btn active" data-mode="upload">Upload</button>
+                            <button type="button" class="btn btn-sm btn-outline-primary image-mode-btn" data-mode="link">Link</button>
+                        </div>
+                        <input type="hidden" class="image-type" value="upload">
+                        <div class="image-mode-panel upload-panel">
+                            <input type="file" class="form-control-file coupon-image-file mt-2" accept="image/*">
+                        </div>
+                        <div class="image-mode-panel link-panel" style="display:none;">
+                            <input type="text" class="form-control form-control-sm coupon-image-link mt-2" placeholder="https://example.com/image.jpg">
+                        </div>
+                        <div class="mt-2">
+                            <img class="coupon-image-preview" style="display:none;" alt="Coupon preview">
+                            <div class="coupon-image-placeholder">No Image Available</div>
+                        </div>
+                    </div>
+                </td>
+                <td>
+                    <textarea class="form-control form-control-sm manual-coupon-description" rows="1" placeholder="Description"></textarea>
+                </td>
+                <td class="text-center">
+                    <button type="button" class="btn btn-outline-danger btn-sm manual-coupon-remove-btn remove-manual-row" title="Remove">×</button>
+                </td>
+            </tr>
+        `);
+    }
+
+    function loadCouponTable(campaignId) {
+        $.ajax({
+            url: `/campaign/getCampaignDetails?campaignId=${campaignId}`,
+            type: 'POST',
+            success: function (response) {
+                const tbody = $('#couponTableBody');
+                tbody.empty();
+                if (response.status !== 'success' || !response.result || response.result.length === 0) {
+                    tbody.append('<tr><td colspan="3" class="text-center">No coupons found.</td></tr>');
+                    return;
+                }
+                grouped = {};
+                response.result.forEach(function(item) {
+                    if (!grouped[item.productId]) {
+                        grouped[item.productId] = [];
+                    }
+                    grouped[item.productId].push(item);
+                });
+
+                Object.keys(grouped).forEach(function(productId, index) {
+                    const coupons = grouped[productId];
+                    tbody.append(`<tr class="product-row" data-product="${productId}"><td>${index + 1}</td><td>${productId}</td><td>${coupons.length}</td></tr>`);
+                });
+                if ($.fn.dataTable.isDataTable('#campaignTable')) {
+                    $('#campaignTable').DataTable().destroy();
+                }
+                $('#campaignTable').DataTable({ pageLength: 10, lengthMenu: [10, 25, 50, 100], paging: true, searching: true, ordering: true });
+            },
+            error: function () {
+                $('#couponTableBody').html('<tr><td colspan="3" class="text-center text-danger">Failed to load coupons.</td></tr>');
+            }
+        });
+    }
+
+    function showMessage(type, message) {
+        $('#manualStatus').removeClass('alert-success alert-danger alert-info').addClass(type).show().text(message);
+    }
+
+    function hideAddCouponButtons() {
+        $('#addCouponsBtn').hide().prop('disabled', true);
+    }
+
+    function closeCouponModals(callback) {
+        $('.modal').modal('hide');
+        setTimeout(function () {
+            $('body').removeClass('modal-open');
+            $('.modal-backdrop').remove();
+            if (callback) callback();
+        }, 250);
+    }
+
+    $(document).ready(function () {
+        $('body').addClass('public-campaign-page');
+        showCouponSection('manual');
+        addManualCouponRow();
+
+        $('input[name="couponInputMode"]').on('change', function () {
+            showCouponSection($(this).val());
+        });
+
+        $('#addManualCouponRow').click(function () {
+            addManualCouponRow();
+        });
+
+        $(document).on('click', '.remove-manual-row', function () {
+            if ($('#manualCouponRows tr').length > 1) {
+                $(this).closest('tr').remove();
+            }
+        });
+
+        $('#publicCampaignValidateForm').on('submit', function (e) {
+            e.preventDefault();
+            const brandValue = $('#brandId').val().trim();
+            const campaignValue = $('#campaignId').val().trim();
+            if (!brandValue || !campaignValue) {
+                setValidationMessage('alert-danger', 'Please enter both Brand ID and Campaign ID.');
+                return;
+            }
+            $.ajax({
+                url: '/campaign/validateCampaign',
+                type: 'POST',
+                data: { brandId: brandValue, campaignId: campaignValue },
+                success: function (response) {
+                    if (response.success) {
+                        brandId = response.brandId;
+                        campaignId = response.campaignId;
+                        $('#validatedBrandId').val(brandId);
+                        $('#validatedCampaignId').val(campaignId);
+                        $('#validatedCampaignName').text(response.campaignName || response.campaignCode || 'Campaign');
+                        $('#couponInventorySection').show();
+                        loadCouponTable(campaignId);
+                        setValidationMessage('alert-success', response.message || 'Campaign validated successfully.');
+                    } else {
+                        $('#couponInventorySection').hide();
+                        setValidationMessage('alert-danger', response.message || 'Unable to validate campaign.');
+                    }
+                },
+                error: function () {
+                    $('#couponInventorySection').hide();
+                    setValidationMessage('alert-danger', 'Unable to validate campaign. Please try again.');
+                }
+            });
+        });
+
+        $('#addCouponsBtn').click(function () {
+            $('#uploadCouponModal').modal('show');
+        });
+
+        $(document).on('click', '.product-row', function () {
+            const productId = $(this).data('product');
+            const coupons = grouped[productId] || [];
+            $('#modalProductId').text(productId);
+            let html = '';
+            coupons.forEach(function (item, index) {
+                const statusBadge = item.status === 'used' ? '<span class="badge badge-danger">Used</span>' : '<span class="badge badge-success">Unused</span>';
+                let imagePath = '';
+                if (item.couponImage) {
+                    if (item.couponImage.startsWith('/dist/')) {
+                        imagePath = item.couponImage;
+                    } else if (item.couponImage.startsWith('http://') || item.couponImage.startsWith('https://')) {
+                        imagePath = item.couponImage;
+                    }
+                }
+                const qr = imagePath ? `<a href="javascript:void(0)"><img src="${imagePath}" width="60" class="qr-code-cell" data-qr="${imagePath}" data-code="${item.campaignName || 'Campaign'}" style="cursor:pointer"></a>` : '-';
+                html += `<tr><td>${index + 1}</td><td>${item.campaignName || '-'}</td><td>${item.couponCode}</td><td>${statusBadge}</td><td>${item.userName || '-'}</td><td>${qr}</td></tr>`;
+            });
+            $('#productCouponBody').html(html);
+            $('#productCouponModal').modal('show');
+        });
+
+        $(document).on('click', '.qr-code-cell', function (e) {
+            e.stopPropagation();
+            $('#productCouponModal').modal('hide');
+            setTimeout(function () {
+                $('#modalQrImage').attr('src', $(this).data('qr'));
+                $('#modalCouponCode').text($(this).data('code') || 'Coupon');
+                $('#downloadQrBtn').attr('href', $(this).data('qr')).attr('download', 'coupon.png');
+                $('#qrCodeModal').modal('show');
+            }.bind(this), 220);
+        });
+
+        $('#addBagCouponBtn').click(function () {
+            clearCampaignSetupValidation();
+            let bags = $('#bagsNo').val();
+            let coupons = $('#couponNo').val();
+            let expiryDate = $('#expiryDate').val();
+            let startingDate = $('#startingDate').val();
+            let isValid = true;
+            if (!bags || Number(bags) <= 0) {
+                setCampaignSetupError('#bagsNo', '#bagsError', 'Enter a valid number of bags.');
+                isValid = false;
+            }
+            if (!coupons || Number(coupons) <= 0) {
+                setCampaignSetupError('#couponNo', '#couponsError', 'Enter a valid number of coupons.');
+                isValid = false;
+            }
+            if (!expiryDate) {
+                setCampaignSetupError('#expiryDate', '#expiryError', 'Select an expiry date.');
+                isValid = false;
+            }
+            if (!startingDate) {
+                setCampaignSetupError('#startingDate', '#startingError', 'Select a starting date.');
+                isValid = false;
+            }
+            if (!isValid) {
+                return;
+            }
+            $('#couponSummary').html(`You have entered <b>${bags}</b> bags and <b>${coupons}</b> coupons per bag. You only need to add <b>${coupons}</b> unique coupon codes. These coupon codes will be used for every bag.`);
+            $('#bagsNo').val(bags);
+            $('#couponNo').val(coupons);
+            $('#expiryDate').val(expiryDate);
+            $('#startingDate').val(startingDate);
+            $('#uploadCouponModal').modal('hide');
+            setTimeout(function () {
+                $('#couponEntryModal').modal('show');
+            }, 300);
+        });
+
+        $('#editBagCouponBtn').click(function () {
+            clearCampaignSetupValidation();
+            $('#uploadCouponModal').modal('show');
+            $('#couponEntryModal').modal('hide');
+        });
+    });
+
+    function setValidationMessage(type, message) {
+        const $message = $('#validationMessage');
+
+        clearTimeout($message.data('timer'));
+
+        $message
+            .removeClass('alert-danger alert-success alert-info')
+            .addClass(type)
+            .text(message)
+            .show();
+
+        const timer = setTimeout(function () {
+            $message.fadeOut();
+        }, 2000);
+
+        $message.data('timer', timer);
+    }
+
+    function clearCampaignSetupValidation() {
+        $('#campaignSetupError').hide().text('');
+        $('#bagsNo, #couponNo, #expiryDate, #startingDate').removeClass('is-invalid');
+        $('#bagsError').text('');
+        $('#couponsError').text('');
+        $('#expiryError').text('');
+        $('#startingError').text('');
+    }
+
+    function setCampaignSetupError(inputId, errorId, message) {
+        $(inputId).addClass('is-invalid');
+        $(errorId).text(message);
+    }
+
+    async function fileToBase64(file) {
+        return new Promise((resolve) => {
+            if (!file) { resolve(''); return; }
+            const reader = new FileReader();
+            reader.onload = function (e) {
+                resolve(e.target.result || '');
+            };
+            reader.onerror = function () {
+                resolve('');
+            };
+            reader.readAsDataURL(file);
+        });
+    }
+
+    $(document).on('click', '#importPreviewedCoupons', function (e) {
+        e.preventDefault();
+        const expectedCount = Number($('#couponNo').val());
+        const previewRows = collectPreviewRows();
+        const validationErrors = [];
+        previewRows.forEach(function (row, index) {
+            if (!row.couponCode) {
+                validationErrors.push(`Row ${index + 1}: Coupon code is required.`);
+            }
+        });
+        if (validationErrors.length) {
+            $('#previewError').show().text(validationErrors[0]);
+            return;
+        }
+        if (expectedCount > 0 && previewRows.length !== expectedCount) {
+            $('#previewError').show().text(`Expected ${expectedCount} coupon rows, found ${previewRows.length}.`);
+            return;
+        }
+        $('#uploadStatus').show();
+        $('#uploadProgress').text('Importing edited coupons...');
+        $('#uploadError').hide();
+        $('#previewError').hide();
+        const formData = new FormData();
+        formData.set('bags', $('#bagsNo').val());
+        formData.set('coupons', $('#couponNo').val());
+        formData.set('expiryDate', $('#expiryDate').val());
+        formData.set('startingDate', $('#startingDate').val());
+        formData.set('productId', $('#csvProductId').val() || generateNumbr(8));
+        formData.set('brandId', brandId);
+        formData.set('campaignId', campaignId);
+        formData.set('previewData', JSON.stringify(previewRows));
+        $.ajax({
+            url: '/campaign/uploadCoupon',
+            type: 'POST',
+            data: formData,
+            processData: false,
+            contentType: false,
+            success: function (response) {
+                if (response.success) {
+                    $('#uploadProgress').removeClass('alert-info alert-danger').addClass('alert-success').text(response.message || 'Upload successful!');
+                    $('#uploadError').hide();
+                    hideAddCouponButtons();
+                    setTimeout(function () {
+                        $('#csvPreviewModal').modal('hide');
+                        $('#couponEntryModal').modal('hide');
+                        $('#uploadCouponModal').modal('hide');
+                        loadCouponTable(campaignId);
+                    }, 1000);
+                } else {
+                    $('#uploadProgress').removeClass('alert-info alert-success').addClass('alert-danger').text(response.message || 'Upload failed.');
+                    $('#uploadError').hide();
+                    $('#previewError').show().text(response.message || 'Please review the rows and try again.');
+                }
+            },
+            error: function () {
+                $('#uploadProgress').removeClass('alert-info').addClass('alert-danger').text('Error occurred during upload.');
+                $('#uploadError').show().text('Error occurred during the upload.');
+            }
+        });
+    });
+
+    $(document).on('click', '#submitCouponAction', async function (e) {
+        e.preventDefault();
+        const mode = $('input[name="couponInputMode"]:checked').val();
+        if (mode === 'csv') {
+            const expectedCount = Number($('#couponNo').val());
+            if (!expectedCount || expectedCount <= 0) {
+                $('#uploadError').show().text('Please fill bags and coupon counts first.');
+                return;
+            }
+            if (!$('#couponFile').val()) {
+                $('#uploadError').show().text('Please select a CSV or Excel file.');
+                return;
+            }
+            if ($('#csvPreviewModal').hasClass('show')) {
+                const previewRows = collectPreviewRows();
+                const validationErrors = [];
+                previewRows.forEach(function (row, index) {
+                    if (!row.couponCode) {
+                        validationErrors.push(`Row ${index + 1}: Coupon code is required.`);
+                    }
+                });
+                if (validationErrors.length) {
+                    $('#previewError').show().text(validationErrors[0]);
+                    return;
+                }
+                $('#uploadStatus').show();
+                $('#uploadProgress').text('Importing edited coupons...');
+                $('#uploadError').hide();
+                $('#previewError').hide();
+                const formData = new FormData();
+                formData.set('bags', $('#bagsNo').val());
+                formData.set('coupons', $('#couponNo').val());
+                formData.set('expiryDate', $('#expiryDate').val());
+                formData.set('startingDate', $('#startingDate').val());
+                formData.set('productId', $('#csvProductId').val() || generateNumbr(8));
+                formData.set('brandId', brandId);
+                formData.set('campaignId', campaignId);
+                formData.set('previewData', JSON.stringify(previewRows));
+                $.ajax({
+                    url: '/campaign/uploadCoupon',
+                    type: 'POST',
+                    data: formData,
+                    processData: false,
+                    contentType: false,
+                    success: function (response) {
+                        if (response.success) {
+                            $('#uploadProgress').removeClass('alert-info alert-danger').addClass('alert-success').text(response.message || 'Upload successful!');
+                            $('#uploadError').hide();
+                            hideAddCouponButtons();
+                            setTimeout(function () {
+                                $('#csvPreviewModal').modal('hide');
+                                $('#couponEntryModal').modal('hide');
+                                $('#uploadCouponModal').modal('hide');
+                                loadCouponTable(campaignId);
+                            }, 1000);
+                        } else {
+                            $('#uploadProgress').removeClass('alert-info alert-success').addClass('alert-danger').text(response.message || 'Upload failed.');
+                            $('#uploadError').hide();
+                            $('#previewError').show().text(response.message || 'Please review the rows and try again.');
+                        }
+                    },
+                    error: function () {
+                        $('#uploadProgress').removeClass('alert-info').addClass('alert-danger').text('Error occurred during upload.');
+                        $('#uploadError').show().text('Error occurred during the upload.');
+                    }
+                });
+                return;
+            }
+            $('#csvExpiryDate').val($('#expiryDate').val());
+            $('#csvStartingDate').val($('#startingDate').val());
+            if (!$('#csvProductId').val()) {
+                $('#csvProductId').val(generateNumbr(8));
+            }
+            let formData = new FormData(document.getElementById('uploadCouponForm'));
+            formData.set('bags', $('#bagsNo').val());
+            formData.set('coupons', $('#couponNo').val());
+            formData.set('expiryDate', $('#expiryDate').val());
+            formData.set('startingDate', $('#startingDate').val());
+            formData.set('productId', $('#csvProductId').val());
+            formData.set('brandId', brandId);
+            formData.set('campaignId', campaignId);
+            $('#uploadStatus').show();
+            $('#uploadProgress').text('Parsing CSV file...');
+            $('#uploadError').hide();
+            $('#previewError').hide();
+            $.ajax({
+                url: '/campaign/previewCouponUpload',
+                type: 'POST',
+                data: formData,
+                processData: false,
+                contentType: false,
+                success: function (response) {
+                    if (response.success) {
+                        showPreviewModal(response.previewRows || []);
+                        $('#uploadProgress').removeClass('alert-info alert-danger').addClass('alert-success').text('Preview ready. Review and import when you are ready.');
+                    } else {
+                        $('#uploadProgress').removeClass('alert-info alert-success').addClass('alert-danger').text(response.message || 'Unable to parse the file.');
+                        $('#uploadError').show().text(response.message || 'Unable to parse the file.');
+                    }
+                },
+                error: function () {
+                    $('#uploadProgress').removeClass('alert-info').addClass('alert-danger').text('Error occurred while parsing the file.');
+                    $('#uploadError').show().text('Error occurred while parsing the file.');
+                }
+            });
+            return;
+        }
+
+        const manualStatus = $('#manualStatus');
+        manualStatus.removeClass('alert-success alert-danger').addClass('alert-info').show().text('Saving coupons...');
+        const coupons = [];
+        for (const row of $('#manualCouponRows tr').toArray()) {
+            const $row = $(row);
+            const code = $row.find('.manual-coupon-code').val().trim();
+            const title = $row.find('.manual-coupon-title').val().trim();
+            const description = $row.find('.manual-coupon-description').val().trim();
+            if (code) {
+                const imageType = $row.find('.image-type').val();
+                let couponImage = '';
+                if (imageType === 'link') {
+                    couponImage = $row.find('.coupon-image-link').val().trim();
+                } else {
+                    const file = $row.find('.coupon-image-file')[0].files[0];
+                    couponImage = await fileToBase64(file);
+                }
+                coupons.push({ couponCode: code, title, description, imageType, couponImage });
+            }
+        }
+        const expectedCount = Number($('#couponNo').val());
+        if (!coupons.length) {
+            manualStatus.removeClass('alert-info').addClass('alert-danger').text('Please add at least one coupon code.');
+            return;
+        }
+        if (expectedCount > 0 && coupons.length !== expectedCount) {
+            manualStatus.removeClass('alert-info').addClass('alert-danger').text(
+                coupons.length < expectedCount
+                    ? `Too few coupons: expected ${expectedCount}, got ${coupons.length}. Please add ${expectedCount - coupons.length} more.`
+                    : `Too many coupons: expected ${expectedCount}, got ${coupons.length}. Please remove ${coupons.length - expectedCount}.`
+            );
+            return;
+        }
+        const payload = {
+            campaignId,
+            brandId,
+            mode: 'manual',
+            bags: Number($('#bagsNo').val()),
+            couponNo: Number($('#couponNo').val()),
+            coupons,
+            productId: generateNumbr(8),
+            expiryDate: $('#expiryDate').val(),
+            startingDate: $('#startingDate').val(),
+        };
+        $.ajax({
+            url: '/campaign/addCoupon',
+            type: 'POST',
+            contentType: 'application/json',
+            data: JSON.stringify(payload),
+            success: function (response) {
+                if (response.success) {
+                    manualStatus.removeClass('alert-info').addClass('alert-success').text(response.message || 'Coupons saved successfully.');
+                    hideAddCouponButtons();
+                    closeCouponModals(function () {
+                        loadCouponTable(campaignId);
+                    });
+                } else {
+                    manualStatus.removeClass('alert-info').addClass('alert-danger').text(response.message || 'Unable to save coupons.');
+                }
+            },
+            error: function () {
+                manualStatus.removeClass('alert-info').addClass('alert-danger').text('Something went wrong while saving coupons.');
+            }
+        });
+    });
+</script>
+<div class="modal fade" id="uploadCouponModal" tabindex="-1" role="dialog" aria-labelledby="uploadCouponModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg modal-dialog-scrollable" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="uploadCouponModalLabel">Add Coupon Codes</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+      </div>
+      <div class="modal-body">
+        <div id="campaignSetupError" class="alert alert-danger" style="display:none;"></div>
+        <div class="form-group">
+          <label>Number of Bags</label>
+          <input type="number" class="form-control" id="bagsNo" placeholder="Enter Number of Bags" />
+          <div id="bagsError" class="invalid-feedback" style="font-weight: bold;"></div>
+        </div>
+        <div class="form-group">
+          <label>Number of Coupons</label>
+          <input type="number" class="form-control" id="couponNo" placeholder="Enter Number of Coupons" />
+          <div id="couponsError" class="invalid-feedback" style="font-weight: bold;"></div>
+        </div>
+        <div class="form-group">
+          <label>Starting Date</label>
+          <input type="date" class="form-control" id="startingDate" min="{{currentDate}}" />
+          <div id="startingError" class="invalid-feedback" style="font-weight: bold;"></div>
+        </div>
+        <div class="form-group">
+          <label>Expiry Date</label>
+          <input type="date" class="form-control" id="expiryDate" min="{{currentDate}}" />
+          <div id="expiryError" class="invalid-feedback" style="font-weight: bold;"></div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-success" id="addBagCouponBtn">Add</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal fade" id="couponEntryModal" tabindex="-1" role="dialog" aria-labelledby="couponEntryModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg modal-dialog-scrollable" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="couponEntryModalLabel">Choose how to add coupons</h5>
+        <button type="button" class="close" data-dismiss="modal"><span>&times;</span></button>
+      </div>
+      <div class="modal-body p-0">
+        <div class="modal-body-scroll" style="max-height: calc(100vh - 220px); overflow-y: auto; padding: 1rem;">
+          <div class="alert alert-info d-flex justify-content-between align-items-center">
+            <div id="couponSummary">You have entered <b>0</b> bags and <b>0</b> coupons.</div>
+            <button type="button" class="btn btn-primary btn-sm" id="editBagCouponBtn">Edit</button>
+          </div>
+          <div class="form-group">
+            <label>Choose how to add coupons</label>
+            <div class="btn-group btn-group-toggle w-100" data-toggle="buttons">
+              <label class="btn btn-outline-primary active">
+                <input type="radio" name="couponInputMode" value="manual" checked /> Manual Entry
+              </label>
+              <label class="btn btn-outline-primary">
+                <input type="radio" name="couponInputMode" value="csv" /> CSV / Excel
+              </label>
+            </div>
+          </div>
+          <div id="manualCouponSection" class="coupon-input-section">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+              <label class="mb-0 font-weight-bold">Coupon List</label>
+              <button type="button" id="addManualCouponRow" class="btn btn-success btn-sm">Add Row</button>
+            </div>
+            <div class="manual-coupon-card">
+              <div class="table-responsive">
+                <table class="table table-bordered mb-0 coupon-preview-table">
+                  <thead>
+                    <tr>
+                      <th>Coupon Code</th>
+                      <th>Title</th>
+                      <th>Coupon Image</th>
+                      <th>Description</th>
+                      <th>Action</th>
+                    </tr>
+                  </thead>
+                  <tbody id="manualCouponRows"></tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+          <div id="csvCouponSection" class="coupon-input-section" style="display:none;">
+            <form id="uploadCouponForm" enctype="multipart/form-data">
+              <input type="hidden" name="campaignId" id="validatedCampaignId" />
+              <input type="hidden" name="brandId" id="validatedBrandId" />
+              <input type="hidden" name="expiryDate" id="csvExpiryDate" />
+              <input type="hidden" name="startingDate" id="csvStartingDate" />
+              <input type="hidden" name="productId" id="csvProductId" value="" />
+              <div class="form-group">
+                <label>Choose CSV or Excel File</label>
+                <input type="file" class="form-control-file" id="couponFile" name="file" accept=".csv,.xls,.xlsx" />
+              </div>
+            </form>
+          </div>
+          <div id="manualStatus" class="alert" style="display:none;"></div>
+          <div id="uploadStatus" style="display:none;">
+            <div id="uploadProgress" class="alert alert-info">Uploading...</div>
+            <div id="uploadError" class="alert alert-danger" style="display:none;">Error occurred while uploading.</div>
+            <div id="previewError" class="alert alert-danger" style="display:none;"></div>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+        <button type="button" class="btn btn-primary" id="submitCouponAction">Save Coupon</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal fade" id="csvPreviewModal" tabindex="-1" role="dialog" aria-labelledby="csvPreviewModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-xl modal-dialog-centered" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="csvPreviewModalLabel">Review CSV Coupons</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+      </div>
+      <div class="modal-body">
+        <div class="alert alert-info">Review and edit the data below before importing. You can update any cell directly.</div>
+        <div class="table-responsive" style="max-height: 420px; overflow-y: auto;">
+          <table class="table table-bordered table-striped mb-0">
+            <thead>
+              <tr>
+                <th style="width: 60px;">#</th>
+                <th>Coupon Code</th>
+                <th>Title</th>
+                <th>Description</th>
+                <th>Coupon Image</th>
+              </tr>
+            </thead>
+            <tbody id="csvPreviewBody"></tbody>
+          </table>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+        <button type="button" class="btn btn-primary" id="importPreviewedCoupons">Import</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal fade" id="productCouponModal" tabindex="-1">
+  <div class="modal-dialog modal-xl modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Coupons for Product : <span id="modalProductId"></span></h5>
+        <button type="button" class="close" data-dismiss="modal"><span>&times;</span></button>
+      </div>
+      <div class="modal-body">
+        <div class="table-responsive">
+          <table class="table table-bordered table-striped">
+            <thead>
+              <tr>
+                <th>Sr.</th>
+                <th>Campaign</th>
+                <th>Coupon Code</th>
+                <th>Status</th>
+                <th>User</th>
+                <th>Coupon Image</th>
+              </tr>
+            </thead>
+            <tbody id="productCouponBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal fade" id="qrCodeModal" tabindex="-1" role="dialog" aria-labelledby="qrCodeModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="qrCodeModalLabel">Coupon - <span id="modalCouponCode"></span></h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+      </div>
+      <div class="modal-body text-center">
+        <img id="modalQrImage" class="qr-modal-img" src="" alt="Coupon Image" style="max-width:100%;height:auto;" />
+      </div>
+      <div class="modal-footer justify-content-center">
+        <a id="downloadQrBtn" href="" download class="btn btn-success"><i class="fa fa-download"></i> Download Coupon</a>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
