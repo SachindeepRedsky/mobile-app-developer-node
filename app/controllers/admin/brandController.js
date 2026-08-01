@@ -804,7 +804,6 @@ module.exports = function (model) {
           try {
             await model.Bags.bulkCreate(bagRecords);
             if (request.body.campaignId) {
-              const campaignUpdate = {};
               const campaignUpdate = { status: 'published' };
               const totalCouponCount = Number(request.body.coupons || request.body.couponNo || insertedCoupons.length);
               if (totalBagCount > 0) campaignUpdate.bags = totalBagCount;
