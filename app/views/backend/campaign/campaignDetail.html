@@ -247,7 +247,6 @@
                  Coupon Inventory
               </h6>
               <div class="text-right">
-                {% if campaignDetail.status != 'published' %}
                 <button
                   id="addCouponsBtn"
                   type="button"
@@ -257,7 +256,6 @@
                 >
                   Add Coupons
                 </button>
-                {% endif %}
                 {% if campaignDetail.status != 'published' %}
                 <button
                   id="publishDraftCouponsBtn"
@@ -495,6 +493,7 @@
                     !response.result ||
                     response.result.length === 0
                 ) {
+                  $("#addCouponsBtn").show();
                     tbody.append(`
                         <tr>
                             <td colspan="3" class="text-center">
@@ -504,6 +503,7 @@
                     `);
                     return;
                 }
+                $("#addCouponsBtn").hide();
                 grouped = {};
                 response.result.forEach(function(item) {
                     if (!grouped[item.productId]) {

@@ -471,8 +471,10 @@
                 tbody.empty();
                 if (response.status !== 'success' || !response.result || response.result.length === 0) {
                     tbody.append('<tr><td colspan="3" class="text-center">No coupons found.</td></tr>');
+                     $('#addCouponsBtn').show(); 
                     return;
                 }
+                $('#addCouponsBtn').hide();
                 grouped = {};
                 response.result.forEach(function(item) {
                     if (!grouped[item.productId]) {

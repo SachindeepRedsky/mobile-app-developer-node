@@ -55,6 +55,7 @@
             <thead>
               <tr>
                 <th>Sr. No.</th>
+                <th>Brand ID</th>
                 <th>Brand Logo</th>
                 <th>Brand Name</th>
                 <th>Total Number of Coupons</th>
@@ -102,6 +103,16 @@
         data: "No",
         render: function (data, type, full, meta) {
           return meta.row + 1;
+        },
+      },
+      {
+        data: "brandId",
+        render: function (data, type, row) {
+          if (row.id != undefined) {
+            return row.id;
+          } else {
+            return "-";
+          }
         },
       },
       {
