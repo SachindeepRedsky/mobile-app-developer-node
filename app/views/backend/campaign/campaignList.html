@@ -56,8 +56,7 @@
                                 <th>Campaign ID</th>
                                 <!-- <th>Brand Name</th> -->
                                 <th>Campaign Name</th>
-                                <th>Total Number of Bags</th>
-                                <th>Qr Code</th>
+<th>Total Number of Bags</th>
                                 <th>Status</th>
                                 <th>Action</th>
                             </tr>
@@ -147,25 +146,7 @@
                     }
                 }
             },
-            {
-                "data": "qrCode",
-                render: function (data, type, row) {
-                    if (!row.qrCode) { return "-"; }
-                    return `
-                        <a href="javascript:void(0)"
-                        class="qr-code-cell"
-                        data-qr="${row.qrCode}"
-                        data-code="${row.campaignName}">
-                            <img
-                                src="${row.qrCode}"
-                                width="50"
-                                height="50"
-                                style="cursor:pointer">
-                        </a>
-                    `;
-                }
-            },
-            {
+{
                 "data": "status",
                 render: function (data, type, row) {
                     if (row.status !== undefined) {

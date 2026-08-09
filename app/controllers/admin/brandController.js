@@ -463,6 +463,22 @@ module.exports = function (model) {
     }
   };
 
+async function generateProductQrPath(qrContent, productId) {
+    const QRCode = require("qrcode");
+    const qrDirectory = path.join(__dirname, "../../../public/dist/qr_codes");
+    if (!fs.existsSync(qrDirectory)) {
+      fs.mkdirSync(qrDirectory, { recursive: true });
+    }
+    const safeProductId = String(productId).replace(/[^a-zA-Z0-9_-]/g, "_");
+    const fileName = `${Date.now()}_product_${safeProductId}.png`;
+    const filePath = path.join(qrDirectory, fileName);
+    await QRCode.toFile(filePath, qrContent, {
+      type: "png",
+      width: 300,
+    });
+    return `/dist/qr_codes/${fileName}`;
+  }
+
   function saveCouponImage(base64Image) {
     if (!base64Image.startsWith("data:image")) {
         return base64Image;
@@ -531,13 +547,17 @@ module.exports = function (model) {
       const bagProductIds = createBagProductIds(request.body.productId, totalBagCount);
       const bagRecords = [];
       for (let bagIndex = 0; bagIndex < totalBagCount; bagIndex++) {
+          const productId = bagProductIds.length ? bagProductIds[bagIndex] : request.body.productId;
+          const qrLink = `${process.env.BASE_URL}/coupon/${productId}`;
+          const productQrCode = await generateProductQrPath(qrLink, productId);
           insertedCoupons.forEach((coupon) => {
               bagRecords.push({
                   campaign_id: request.body.campaignId,
                   brand_id: brandId,
                   coupon_id: coupon.id,
                   bagName: `Bag${bagIndex + 1}`,
-                  productId: bagProductIds.length? bagProductIds[bagIndex]: request.body.productId,
+                  productId: productId,
+                  qrCode: productQrCode,
                   expiryDate: request.body.expiryDate,
                   startingDate: request.body.startingDate,
                   status: 0,
@@ -718,13 +738,17 @@ module.exports = function (model) {
         const bagProductIds = createBagProductIds(request.body.productId, totalBagCount);
         const bagRecords = [];
         for (let bagIndex = 0; bagIndex < totalBagCount; bagIndex++) {
+          const productId = bagProductIds.length ? bagProductIds[bagIndex] : request.body.productId;
+          const qrLink = `${process.env.BASE_URL}/coupon/${productId}`;
+          const productQrCode = await generateProductQrPath(qrLink, productId);
           insertedCoupons.forEach((coupon) => {
             bagRecords.push({
               campaign_id: request.body.campaignId,
               brand_id: brandId,
               coupon_id: coupon.id,
               bagName: `Bag${bagIndex + 1}`,
-              productId: bagProductIds.length ? bagProductIds[bagIndex] : request.body.productId,
+              productId: productId,
+              qrCode: productQrCode,
               expiryDate: request.body.expiryDate,
               startingDate: request.body.startingDate,
               status: false,
@@ -782,18 +806,22 @@ module.exports = function (model) {
             })
           );
 
-          const insertedCoupons = await model.Coupon.bulkCreate(updatedCoupons);
+        const insertedCoupons = await model.Coupon.bulkCreate(updatedCoupons);
           const totalBagCount = Number(request.body.bags || request.body.bagsNo || 0);
           const bagProductIds = createBagProductIds(request.body.productId, totalBagCount);
           const bagRecords = [];
           for (let bagIndex = 0; bagIndex < totalBagCount; bagIndex++) {
+            const productId = bagProductIds.length ? bagProductIds[bagIndex] : request.body.productId;
+            const qrLink = `${process.env.BASE_URL}/coupon/${productId}`;
+            const productQrCode = await generateProductQrPath(qrLink, productId);
             insertedCoupons.forEach((coupon) => {
               bagRecords.push({
                 campaign_id: request.body.campaignId,
                 brand_id: brandId,
                 coupon_id: coupon.id,
                 bagName: `Bag${bagIndex + 1}`,
-                productId: bagProductIds.length ? bagProductIds[bagIndex] : request.body.productId,
+                productId: productId,
+                qrCode: productQrCode,
                 expiryDate: request.body.expiryDate,
                 startingDate: request.body.startingDate,
                 status: false,
@@ -833,29 +861,31 @@ module.exports = function (model) {
           }
           const updatedCoupons = await Promise.all(
             parsedCoupons.map(async (coupon) => {
-              const qrLink = `${process.env.BASE_URL}/coupon/${coupon.couponCode}`;
               return {
                 ...coupon,
                 brand_id: brandId,
                 expiryDate: request.body.expiryDate,
                 startingDate: request.body.startingDate,
-                qrCode: await generateCouponQrPath(qrLink),
               };
             })
           );
 
-          const insertedCoupons = await model.Coupon.bulkCreate(updatedCoupons);
+        const insertedCoupons = await model.Coupon.bulkCreate(updatedCoupons);
           const totalBagCount = Number(request.body.bags || request.body.bagsNo || 0);
           const bagProductIds = createBagProductIds(request.body.productId, totalBagCount);
           const bagRecords = [];
           for (let bagIndex = 0; bagIndex < totalBagCount; bagIndex++) {
+            const productId = bagProductIds.length ? bagProductIds[bagIndex] : request.body.productId;
+            const qrLink = `${process.env.BASE_URL}/coupon/${productId}`;
+            const productQrCode = await generateProductQrPath(qrLink, productId);
             insertedCoupons.forEach((coupon) => {
               bagRecords.push({
                 campaign_id: request.body.campaignId,
                 brand_id: brandId,
                 coupon_id: coupon.id,
                 bagName: `Bag${bagIndex + 1}`,
-                productId: bagProductIds.length ? bagProductIds[bagIndex] : request.body.productId,
+                productId: productId,
+                qrCode: productQrCode,
                 expiryDate: request.body.expiryDate,
                 startingDate: request.body.startingDate,
                 status: false,

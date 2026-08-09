@@ -263,6 +263,7 @@
                 <tr>
                   <th>Sr. No.</th>
                   <th>Product ID</th>
+                  <th>QR Code</th>
                   <th>Number Of Coupons</th>
                 </tr>
               </thead>
@@ -470,7 +471,7 @@
                 const tbody = $('#couponTableBody');
                 tbody.empty();
                 if (response.status !== 'success' || !response.result || response.result.length === 0) {
-                    tbody.append('<tr><td colspan="3" class="text-center">No coupons found.</td></tr>');
+                    tbody.append('<tr><td colspan="4" class="text-center">No coupons found.</td></tr>');
                      $('#addCouponsBtn').show(); 
                     return;
                 }
@@ -485,7 +486,7 @@
 
                 Object.keys(grouped).forEach(function(productId, index) {
                     const coupons = grouped[productId];
-                    tbody.append(`<tr class="product-row" data-product="${productId}"><td>${index + 1}</td><td>${productId}</td><td>${coupons.length}</td></tr>`);
+                    tbody.append(`<tr class="product-row" data-product="${productId}"><td>${index + 1}</td><td>${productId}</td><td><img src="${response.result.find(c => c.productId === productId)?.campaignQrCode || ''}" alt="QR Code" width="60" class="product-qr-cell" data-qr="${response.result.find(c => c.productId === productId)?.campaignQrCode || ''}" data-code="${response.result.find(c => c.productId === productId)?.campaignName || 'Campaign'}" data-product="${productId}" style="cursor:pointer;"></td><td>${coupons.length}</td></tr>`);
                 });
                 if ($.fn.dataTable.isDataTable('#campaignTable')) {
                     $('#campaignTable').DataTable().destroy();
@@ -578,7 +579,7 @@
             $('#modalProductId').text(productId);
             let html = '';
             coupons.forEach(function (item, index) {
-                const statusBadge = item.status === 'used' ? '<span class="badge badge-danger">Used</span>' : '<span class="badge badge-success">Unused</span>';
+const statusBadge = item.status === 'used' ? '<span class="badge badge-danger">Used</span>' : '<span class="badge badge-success">Unused</span>';
                 let imagePath = '';
                 if (item.couponImage) {
                     if (item.couponImage.startsWith('/dist/')) {
@@ -588,13 +589,14 @@
                     }
                 }
                 const qr = imagePath ? `<a href="javascript:void(0)"><img src="${imagePath}" width="60" class="qr-code-cell" data-qr="${imagePath}" data-code="${item.campaignName || 'Campaign'}" style="cursor:pointer"></a>` : '-';
-                html += `<tr><td>${index + 1}</td><td>${item.campaignName || '-'}</td><td>${item.couponCode}</td><td>${statusBadge}</td><td>${item.userName || '-'}</td><td>${qr}</td></tr>`;
+                const productQr = item.productQrCode ? `<a href="javascript:void(0)" class="product-qr-cell" data-qr="${item.productQrCode}" data-code="${item.campaignName || 'Campaign'}" data-product="${item.productId}"><img src="${item.productQrCode}" width="60" style="cursor:pointer"></a>` : '-';
+                html += `<tr><td>${index + 1}</td><td>${item.campaignName || '-'}</td><td>${item.couponCode}</td><td>${statusBadge}</td><td>${productQr}</td><td>${item.userName || '-'}</td><td>${qr}</td></tr>`;
             });
             $('#productCouponBody').html(html);
             $('#productCouponModal').modal('show');
         });
 
-        $(document).on('click', '.qr-code-cell', function (e) {
+$(document).on('click', '.qr-code-cell', function (e) {
             e.stopPropagation();
             $('#productCouponModal').modal('hide');
             setTimeout(function () {
@@ -603,6 +605,19 @@
                 $('#downloadQrBtn').attr('href', $(this).data('qr')).attr('download', 'coupon.png');
                 $('#qrCodeModal').modal('show');
             }.bind(this), 220);
+        });
+
+        $(document).on('click', '.product-qr-cell', function (e) {
+            e.stopPropagation();
+            const qrCodePath = $(this).data('qr');
+            const label = $(this).data('code');
+            $('#productCouponModal').modal('hide');
+            setTimeout(function () {
+                $('#modalQrImage').attr('src', qrCodePath);
+                $('#modalCouponCode').text(label || 'Coupon');
+                $('#downloadQrBtn').attr('href', qrCodePath).attr('download', 'coupon.png');
+                $('#qrCodeModal').modal('show');
+            }, 220);
         });
 
         $('#addBagCouponBtn').click(function () {
@@ -1086,10 +1101,11 @@
           <table class="table table-bordered table-striped">
             <thead>
               <tr>
-                <th>Sr.</th>
+<th>Sr.</th>
                 <th>Campaign</th>
                 <th>Coupon Code</th>
                 <th>Status</th>
+                <th>QR Code</th>
                 <th>User</th>
                 <th>Coupon Image</th>
               </tr>

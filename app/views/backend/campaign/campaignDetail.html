@@ -199,6 +199,7 @@
                 </div>
             </div>
         </div>
+<div id="campaignPrintData" data-qr="{{ campaignDetail.qrCode }}" data-bags="{{ campaignDetail.bags if campaignDetail.bags is not none else 0 }}" data-name="{{ campaignDetail.campaignName }}" style="display:none"></div>
         <div class="col-md-6">
             <div class="card text-center">
                 <div class="card-body">
@@ -273,6 +274,7 @@
                   <tr>
                     <th>Sr. No.</th>
                     <th>Product ID</th>
+                    <th>Campaign QR</th>
                     <th>Number Of Coupons</th>
                   </tr>
                 </thead>
@@ -484,7 +486,7 @@
             url: `/backend/getCampaingnDetais?campaignId=${campaignId}`,
             type: "POST",
             success: function (response) {
-
+console.log("response", response);
                 let tbody = $("#couponTableBody");
                 tbody.empty();
 
@@ -496,7 +498,7 @@
                   $("#addCouponsBtn").show();
                     tbody.append(`
                         <tr>
-                            <td colspan="3" class="text-center">
+                            <td colspan="4" class="text-center">
                                 No coupons found.
                             </td>
                         </tr>
@@ -504,6 +506,7 @@
                     return;
                 }
                 $("#addCouponsBtn").hide();
+                const campaignBagCount = parseInt($('#campaignPrintData').data('bags'), 10) || 0;
                 grouped = {};
                 response.result.forEach(function(item) {
                     if (!grouped[item.productId]) {
@@ -514,12 +517,20 @@
 
                 Object.keys(grouped).forEach(function(productId, index) {
                     const coupons = grouped[productId];
+                    const productInfo = response.result.find(c => c.productId === productId) || {};
+                    const productQr = productInfo.productQrCode || '';
+                    const campaignQr = productInfo.campaignQrCode || '';
+                    const campaignName = productInfo.campaignName || 'Campaign';
+                    const qrCopies = coupons.length;
 
                     tbody.append(`
                         <tr class="product-row" data-product="${productId}">
                             <td>${index + 1}</td>
                             <td>${productId}</td>
-                            <td>${coupons.length}</td>
+                            <td>
+                                ${campaignQr ? `<a href="javascript:void(0)" class="product-qr-cell" data-qr="${campaignQr}" data-copy-type="campaign" data-copies="${campaignBagCount}" data-code="${campaignName}" data-product="${productId}"><img src="${campaignQr}" width="60" style="cursor:pointer"></a>` : '-'}
+                            </td>
+                            <td>${qrCopies}</td>
                         </tr>
                     `);
 
@@ -538,7 +549,7 @@
             error: function () {
                 $("#couponTableBody").html(`
                     <tr>
-                        <td colspan="3" class="text-center text-danger">
+                        <td colspan="6" class="text-center text-danger">
                             Failed to load coupons.
                         </td>
                     </tr>
@@ -592,13 +603,19 @@
       }
     });
     campaignId = "{{ campaignDetail.id }}";
-    function openQrModal(qrCodePath, label) {
+    function openQrModal(qrCodePath, label, copyType = 'single', copies = 1) {
         $('#modalQrImage').attr('src', qrCodePath);
         $('#modalCouponCode').text(label || 'Campaign');
         $('#downloadQrBtn')
             .attr('href', qrCodePath)
             .attr('download', (label || 'campaign') + '.png');
-        $("#printQrBtn").data("qr", qrCodePath).data("label", label || 'Campaign').data("campaignId", campaignId).data("product", window.currentProductId || "-");
+        $("#printQrBtn")
+            .data("qr", qrCodePath)
+            .data("label", label || 'Campaign')
+            .data("campaignId", campaignId)
+            .data("product", window.currentProductId || "-")
+            .data("copyType", copyType)
+            .data("copies", copies);
         $('#qrCodeModal').appendTo('body').modal('show');
     }
 
@@ -611,122 +628,141 @@
       $('body').removeClass('modal-open');
       $('.modal-backdrop').remove();
     });
-    $(document).on("click", "#printQrBtn", function (e) {
-      e.preventDefault();
-          const qr = $(this).data("qr");
-          const label = $(this).data("label") || 'Campaign';
-          const product = $(this).data("product");
-          const printWindow = window.open("", "_blank");
-          printWindow.document.write(`
-          <html>
-          <head>
-              <title>Coupon QR</title>
-              <style>
-                  *{
-                      box-sizing:border-box;
-                      font-family:Arial,Helvetica,sans-serif;
-                  }
-                  body{
-                      margin:0;
-                      padding:25px;
-                      background:#f5f5f5;
-                  }
-                  .card{
-                      width:420px;
-                      margin:auto;
-                      background:#fff;
-                      border:1px solid #ddd;
-                      border-radius:10px;
-                      padding:25px;
-                  }
-                  h2{
-                      margin:0 0 20px;
-                      text-align:center;
-                      color:#222;
-                      border-bottom:2px solid #eee;
-                      padding-bottom:12px;
-                  }
-                  .qr{
-                      text-align:center;
-                      margin-bottom:20px;
-                  }
-                  .qr img{
-                      width:220px;
-                      height:220px;
-                      border:1px solid #ddd;
-                      padding:8px;
-                  }
-                  table{
-                      width:100%;
-                      border-collapse:collapse;
-                      margin-top:15px;
-                  }
-                  table td{
-                      border:1px solid #ddd;
-                      padding:10px;
-                      font-size:14px;
-                  }
-                  table td:first-child{
-                      font-weight:bold;
-                      width:40%;
-                      background:#f7f7f7;
-                  }
-                  .footer{
-                      margin-top:25px;
-                      text-align:center;
-                      color:#777;
-                      font-size:12px;
-                  }
-                  @media print{
-                      body{
-                          background:#fff;
-                          padding:0;
-                      }
+    function escapeHtml(text) {
+      if (!text) return '';
+      return String(text)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+    }
 
-                      .card{
-                          border:none;
-                          box-shadow:none;
-                          width:100%;
-                      }
-                  }
-              </style>
-          </head>
-          <body>
-          <div class="card">
-              <h2>Campaign QR</h2>
-              <div class="qr">
-                  <img src="${qr}">
-              </div>
-              <table>
-                  <tr>
-                      <td>Product ID</td>
-                      <td>${product}</td>
-                  </tr>
-                  <tr>
-                      <td>Campaign Name</td>
-                      <td>${label}</td>
-                  </tr>
-                  <tr>
-                      <td>Starting Date</td>
-                      <td>{{ campaignDetail.startingDate }}</td>
-                  </tr>
-                  <tr>
-                      <td>Expiry Date</td>
-                      <td>{{ campaignDetail.expiryDate }}</td>
-                  </tr>
-              </table>
+    function buildPrintSheet(items, title) {
+      const cards = items.map(function(item) {
+        return `
+          <div class="label-card">
+            <div class="label-header">${escapeHtml(title)}</div>
+            <div class="label-body">
+              <img src="${escapeHtml(item.qr)}" alt="QR Code" />
+            </div>
+            <div class="label-footer">
+              <div><strong>${escapeHtml(item.name)}</strong></div>
+              <div>${escapeHtml(item.extra)}</div>
+            </div>
           </div>
-          </body>
-          </html>
-          `);
-          printWindow.document.close();
-          printWindow.onload = function () {
-              printWindow.focus();
-              printWindow.print();
-              printWindow.close();
-          };
+        `;
+      }).join('');
 
+      return `
+        <html>
+        <head>
+          <title>${escapeHtml(title)}</title>
+          <style>
+            body {
+              margin: 0;
+              padding: 10px;
+              font-family: Arial, Helvetica, sans-serif;
+              background: #fff;
+            }
+            .page {
+              width: 100%;
+              display: flex;
+              flex-wrap: wrap;
+              justify-content: space-between;
+            }
+            .label-card {
+              box-sizing: border-box;
+              width: 2.2in;
+              min-height: 2.2in;
+              margin: 5px;
+              padding: 8px;
+              border: 1px solid #ccc;
+              border-radius: 6px;
+              background: #fff;
+              page-break-inside: avoid;
+              display: flex;
+              flex-direction: column;
+              justify-content: space-between;
+            }
+            .label-header {
+              font-size: 11px;
+              font-weight: 700;
+              margin-bottom: 6px;
+              text-align: center;
+            }
+            .label-body {
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              height: 1.4in;
+              margin-bottom: 6px;
+            }
+            .label-body img {
+              max-width: 100%;
+              max-height: 100%;
+            }
+            .label-footer {
+              font-size: 11px;
+              line-height: 1.3;
+              text-align: center;
+            }
+            @media print {
+              body { padding: 0; }
+              .label-card { border-color: #999; }
+            }
+          </style>
+        </head>
+        <body>
+          <div class="page">
+            ${cards}
+          </div>
+        </body>
+        </html>
+      `;
+    }
+
+    function printSheet(cards, title) {
+      if (!cards || cards.length === 0) {
+        Swal.fire('Nothing to print', 'No QR labels available for printing.', 'info');
+        return;
+      }
+      const printWindow = window.open('', '_blank');
+      if (!printWindow) {
+        Swal.fire('Popup blocked', 'Please allow popups to print QR labels.', 'warning');
+        return;
+      }
+      printWindow.document.write(buildPrintSheet(cards, title));
+      printWindow.document.close();
+      printWindow.onload = function () {
+        printWindow.focus();
+        printWindow.print();
+        printWindow.close();
+      };
+    }
+
+    $(document).on('click', '#printQrBtn', function (e) {
+      e.preventDefault();
+      const qr = $(this).data('qr');
+      const label = $(this).data('label') || 'Campaign';
+      const product = $(this).data('product') || '';
+      const copyType = $(this).data('copyType') || 'single';
+      const copies = parseInt($(this).data('copies'), 10) || 1;
+      if (!qr || copies <= 0) {
+        Swal.fire('Cannot print', 'QR code or copy count is invalid.', 'error');
+        return;
+      }
+      const cards = Array.from({ length: copies }, function () {
+        return {
+          qr: qr,
+          name: copyType === 'campaign' ? label : `${label}${product ? ' - ' + product : ''}`,
+          extra: copyType === 'campaign' ? 'Campaign QR Label' : 'Product QR Label'
+        };
       });
+      const title = copyType === 'campaign' ? 'Campaign QR Labels' : 'Product QR Labels';
+      printSheet(cards, title);
+    });
+
     $(document).on('click', '.qr-code-cell', function (e) {
         e.stopPropagation();
         const qrCodePath = $(this).data('qr');
@@ -734,7 +770,22 @@
         if (qrCodePath) {
             $('#productCouponModal').modal('hide');
             setTimeout(function () {
-                openQrModal(qrCodePath, label);
+                openQrModal(qrCodePath, label, 'single', 1);
+            }, 220);
+        }
+    });
+    $(document).on('click', '.product-qr-cell', function (e) {
+        e.stopPropagation();
+        const qrCodePath = $(this).data('qr');
+        const label = $(this).data('code');
+        const product = $(this).data('product');
+        const copyType = $(this).data('copyType') || 'single';
+        const copies = parseInt($(this).data('copies'), 10) || 1;
+        if (qrCodePath) {
+            $('#productCouponModal').modal('hide');
+            window.currentProductId = product;
+            setTimeout(function () {
+                openQrModal(qrCodePath, label, copyType, copies);
             }, 220);
         }
     });
@@ -915,11 +966,12 @@ $(document).on("click", ".product-row", function () {
   const productId = $(this).data("product");
   window.currentProductId = productId;
   const coupons = grouped[productId] || [];
+  const productQrCopies = coupons.length;
   console.log('product-row clicked ->', productId, 'coupons:', coupons.length);
   $("#modalProductId").text(productId);
   let html = "";
   coupons.forEach(function(item, index){
-    const statusBadge = item.status === "used" ? '<span class="badge badge-danger">Used</span>' : '<span class="badge badge-success">Unused</span>';
+const statusBadge = item.status === "used" ? '<span class="badge badge-danger">Used</span>' : '<span class="badge badge-success">Unused</span>';
     let imagePath = "";
     if (item.couponImage) {
       if (item.couponImage.startsWith("/dist/")) {
@@ -942,12 +994,16 @@ $(document).on("click", ".product-row", function () {
       >
     </a>
     ` : "-";
+    const productQr = item.productQrCode ? `<a href="javascript:void(0)" class="product-qr-cell" data-qr="${item.productQrCode}" data-copy-type="product" data-copies="${productQrCopies}" data-code="${item.campaignName || 'Campaign'}" data-product="${item.productId}">
+      <img src="${item.productQrCode}" width="60" style="cursor:pointer">
+    </a>` : "-";
     html += `
       <tr>
         <td>${index + 1}</td>
         <td>${item.campaignName || "-"}</td>
         <td>${item.couponCode}</td>
         <td>${statusBadge}</td>
+        <td>${productQr}</td>
         <td>${item.userName || "-"}</td>
         <td>${qr}</td>
       </tr>
@@ -1464,10 +1520,11 @@ $(document).on('shown.bs.modal', '#productCouponModal', function() {
                 <table class="table table-bordered table-striped">
                     <thead>
                         <tr>
-                            <th>Sr.</th>
+<th>Sr.</th>
                             <th>Campaign</th>
                             <th>Coupon Code</th>
                             <th>Status</th>
+                            <th>QR Code</th>
                             <th>User</th>
                             <th>Coupon Image</th>
                         </tr>

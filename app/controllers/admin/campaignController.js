@@ -443,7 +443,7 @@ module.exports = function (model) {
                     const brandName = brandDetails ? brandDetails.brandName : "-";
                     const campaignName = campaign ? campaign.campaignName : "-";
 
-                    return {
+return {
                         couponCode,
                         productId,
                         brandName,
@@ -451,6 +451,7 @@ module.exports = function (model) {
                         status,
                         qrCode,
                         campaignQrCode: campaign?.qrCode || "",
+                        productQrCode: item.dataValues.qrCode || "",
                         couponImage,
                         userName
                     };

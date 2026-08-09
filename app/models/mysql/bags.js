@@ -40,6 +40,11 @@ module.exports = function (Sequelize, Schema, Campaign, Brand, Coupon) {
         isExpired: {
             type: Sequelize.BOOLEAN,
             defaultValue: false
+        },
+        qrCode: {
+            type: Sequelize.STRING,
+            allowNull: true,
+            defaultValue: ""
         }
     }, {
         underscored: true,
