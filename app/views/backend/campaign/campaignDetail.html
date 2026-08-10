@@ -257,6 +257,21 @@
                 >
                   Add Coupons
                 </button>
+                <button
+                  id="printCampaignQrBtn"
+                  type="button"
+                  class="btn btn-primary ml-2"
+                >
+                  Print All Campaign QR
+                </button>
+                <button
+                  id="printProductQrBtn"
+                  type="button"
+                  class="btn btn-primary ml-2"
+                >
+                  Print All Product QR
+                </button>
+
                 {% if campaignDetail.status != 'published' %}
                 <button
                   id="publishDraftCouponsBtn"
@@ -275,6 +290,7 @@
                     <th>Sr. No.</th>
                     <th>Product ID</th>
                     <th>Campaign QR</th>
+                    <th>Product QR</th>
                     <th>Number Of Coupons</th>
                   </tr>
                 </thead>
@@ -498,7 +514,7 @@ console.log("response", response);
                   $("#addCouponsBtn").show();
                     tbody.append(`
                         <tr>
-                            <td colspan="4" class="text-center">
+                            <td colspan="5" class="text-center">
                                 No coupons found.
                             </td>
                         </tr>
@@ -506,6 +522,8 @@ console.log("response", response);
                     return;
                 }
                 $("#addCouponsBtn").hide();
+                $("#printCampaignQrBtn").show();
+                $("#printProductQrBtn").show();
                 const campaignBagCount = parseInt($('#campaignPrintData').data('bags'), 10) || 0;
                 grouped = {};
                 response.result.forEach(function(item) {
@@ -529,6 +547,9 @@ console.log("response", response);
                             <td>${productId}</td>
                             <td>
                                 ${campaignQr ? `<a href="javascript:void(0)" class="product-qr-cell" data-qr="${campaignQr}" data-copy-type="campaign" data-copies="${campaignBagCount}" data-code="${campaignName}" data-product="${productId}"><img src="${campaignQr}" width="60" style="cursor:pointer"></a>` : '-'}
+                            </td>
+                            <td>
+                                ${productQr ? `<a href="javascript:void(0)" class="product-qr-cell" data-qr="${productQr}" data-copy-type="product" data-copies="${campaignBagCount}" data-code="${campaignName}" data-product="${productId}"><img src="${productQr}" width="60" style="cursor:pointer"></a>` : '-'}
                             </td>
                             <td>${qrCopies}</td>
                         </tr>
@@ -740,6 +761,63 @@ console.log("response", response);
         printWindow.close();
       };
     }
+
+    function buildQrCards(qr, label, extra, copies) {
+      const cards = [];
+      for (let i = 0; i < copies; i += 1) {
+        cards.push({ qr: qr, name: label, extra: extra });
+      }
+      return cards;
+    }
+
+    function getCampaignQrCards() {
+      const campaignQr = $('#campaignPrintData').data('qr');
+      const campaignName = $('#campaignPrintData').data('name') || 'Campaign';
+      const copies = parseInt($('#campaignPrintData').data('bags'), 10) || 0;
+      if (!campaignQr || copies <= 0) {
+        return [];
+      }
+      return buildQrCards(campaignQr, campaignName, 'Campaign QR Label', copies);
+    }
+
+    function getProductQrCards() {
+      const copies = parseInt($('#campaignPrintData').data('bags'), 10) || 0;
+      if (copies <= 0) {
+        return [];
+      }
+      const cards = [];
+      Object.keys(grouped).forEach(function (productId) {
+        const entry = grouped[productId] && grouped[productId][0];
+        const productQr = entry ? entry.productQrCode : '';
+        const campaignName = entry ? entry.campaignName || 'Campaign' : 'Campaign';
+        if (!productQr) {
+          return;
+        }
+        const label = `${campaignName} - ${productId}`;
+        cards.push(...buildQrCards(productQr, label, 'Product QR Label', copies));
+      });
+      return cards;
+    }
+
+    $(document).on('click', '#printCampaignQrBtn', function (e) {
+      e.preventDefault();
+      const cards = getCampaignQrCards();
+      if (!cards.length) {
+        Swal.fire('Nothing to print', 'No campaign QR codes or bag count available.', 'info');
+        return;
+      }
+      printSheet(cards, 'Campaign QR Labels');
+    });
+
+    $(document).on('click', '#printProductQrBtn', function (e) {
+      e.preventDefault();
+      const cards = getProductQrCards();
+      if (!cards.length) {
+        Swal.fire('Nothing to print', 'No product QR codes or bag count available.', 'info');
+        return;
+      }
+      printSheet(cards, 'Product QR Labels');
+    });
 
     $(document).on('click', '#printQrBtn', function (e) {
       e.preventDefault();
@@ -966,7 +1044,8 @@ $(document).on("click", ".product-row", function () {
   const productId = $(this).data("product");
   window.currentProductId = productId;
   const coupons = grouped[productId] || [];
-  const productQrCopies = coupons.length;
+  // const productQrCopies = coupons.length;
+  const productQrCopies = parseInt($('#campaignPrintData').data('bags'), 10) || 0;
   console.log('product-row clicked ->', productId, 'coupons:', coupons.length);
   $("#modalProductId").text(productId);
   let html = "";

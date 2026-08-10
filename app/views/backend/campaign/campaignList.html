@@ -54,9 +54,9 @@
                             <tr>
                                 <th>Sr. No.</th>
                                 <th>Campaign ID</th>
-                                <!-- <th>Brand Name</th> -->
+                                <th>Brand ID</th>
                                 <th>Campaign Name</th>
-<th>Total Number of Bags</th>
+                                <th>Total Number of Bags</th>
                                 <th>Status</th>
                                 <th>Action</th>
                             </tr>
@@ -114,16 +114,16 @@
                     }
                 }
             },
-            // {
-            //     "data": "brandName",
-            //     render: function (data, type, row) {
-            //         if (row.brandDetails.brandName != undefined) {
-            //             return row.brandDetails.brandName;
-            //         } else {
-            //             return "-";
-            //         }
-            //     }
-            // },
+            {
+                "data": "brandId",
+                render: function (data, type, row) {
+                    if (row.brand_id != undefined) {
+                        return row.brand_id;
+                    } else {
+                        return "-";
+                    }
+                }
+            },
             {
                 "data": "campaignName",
                 render: function (data, type, row) {

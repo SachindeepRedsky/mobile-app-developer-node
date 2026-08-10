@@ -51,6 +51,20 @@ module.exports = function (model) {
                 offset: start,
                 limit: length, /* raw: true */
             });
+            //add brand id in campaign
+            let campaignWithBrand = await Promise.all(campaign.map(async (camp) => {
+                let campaignBrandHistory = await model.CampaignBrandHistory.findOne({
+                    where: { campaign_id: camp.id },
+                    raw: true
+                });
+                if (campaignBrandHistory) {
+                    camp.dataValues.brand_id = campaignBrandHistory.brand_id;
+                } else {
+                    camp.dataValues.brand_id = null;
+                }
+                return camp;
+            }));
+            campaign = campaignWithBrand;
 
 
             let obj = {
