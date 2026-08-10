@@ -781,22 +781,28 @@ console.log("response", response);
     }
 
     function getProductQrCards() {
-      const copies = parseInt($('#campaignPrintData').data('bags'), 10) || 0;
-      if (copies <= 0) {
-        return [];
-      }
-      const cards = [];
-      Object.keys(grouped).forEach(function (productId) {
-        const entry = grouped[productId] && grouped[productId][0];
-        const productQr = entry ? entry.productQrCode : '';
-        const campaignName = entry ? entry.campaignName || 'Campaign' : 'Campaign';
-        if (!productQr) {
-          return;
+        const copies = parseInt($('#campaignPrintData').data('bags'), 10) || 0;
+
+        if (copies <= 0) {
+            return [];
         }
-        const label = `${campaignName} - ${productId}`;
-        cards.push(...buildQrCards(productQr, label, 'Product QR Label', copies));
-      });
-      return cards;
+
+        // Get only one product QR
+        const productId = Object.keys(grouped)[0];
+        const entry = grouped[productId] && grouped[productId][0];
+
+        if (!entry || !entry.productQrCode) {
+            return [];
+        }
+
+        const label = `${entry.campaignName || 'Campaign'} - ${productId}`;
+
+        return buildQrCards(
+            entry.productQrCode,
+            label,
+            'Product QR Label',
+            copies
+        );
     }
 
     $(document).on('click', '#printCampaignQrBtn', function (e) {
