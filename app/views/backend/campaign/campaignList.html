@@ -57,6 +57,8 @@
                                 <th>Brand ID</th>
                                 <th>Campaign Name</th>
                                 <th>Total Number of Bags</th>
+                                <th>Starting Date</th>
+                                <th>Expiry Date</th>
                                 <th>Status</th>
                                 <th>Action</th>
                             </tr>
@@ -143,6 +145,26 @@
                         return row.bags;
                     } else {
                         return 0;
+                    }
+                }
+            },
+            {
+                "data": "startDate",
+                render: function (data, type, row) {
+                    if (row.startingDate != undefined) {
+                        return row.startingDate;
+                    } else {
+                        return "-";
+                    }
+                }
+            },
+            {
+                "data": "endDate",
+                render: function (data, type, row) {
+                    if (row.expiryDate != undefined) {
+                        return row.expiryDate;
+                    } else {
+                        return "-";
                     }
                 }
             },
