@@ -5,10 +5,10 @@
   "main": "app.js",
   "scripts": {
     "build": "echo build",
-    "start": "NODE_ENV=production node --max-old-space-size=4096 app.js",
-    "local": "NODE_ENV=production nodemon --max-old-space-size=4096 app.js",
-    "dev": "NODE_ENV=production node --max-old-space-size=4096 app.js",
-    "prod": "NODE_ENV=production node --max-old-space-size=4096 app.js"
+    "start": "NODE_ENV=production node --max-old-space-size=8192 app.js",
+    "local": "NODE_ENV=production nodemon --max-old-space-size=8192 app.js",
+    "dev": "NODE_ENV=production node --max-old-space-size=8192 app.js",
+    "prod": "NODE_ENV=production node --max-old-space-size=8192 app.js"
   },
   "dependencies": {
     "axios": "^1.7.3",

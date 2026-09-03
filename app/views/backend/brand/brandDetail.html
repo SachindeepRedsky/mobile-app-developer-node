@@ -673,6 +673,18 @@
             $('#previewError').show().text(validationErrors[0]);
             return;
         }
+        const $importButton = $('#importPreviewedCoupons');
+        const totalCoupons = previewRows.length;
+        let uploadedCouponNumber = 1;
+        const updateImportButton = function () {
+            $importButton.text(`Uploading coupon ${uploadedCouponNumber} of ${totalCoupons}...`);
+        };
+        updateImportButton();
+        const importLoadingTimer = setInterval(function () {
+            uploadedCouponNumber += 1;
+            updateImportButton();
+        }, 500);
+        $importButton.prop('disabled', true);
         $('#uploadStatus').show();
         $('#uploadProgress').text('Importing edited coupons...');
         $('#uploadError').hide();
@@ -695,11 +707,15 @@
                         location.reload();
                     }, 1000);
                 } else {
+                    clearInterval(importLoadingTimer);
+                    $importButton.prop('disabled', false).text('Import');
                     $('#uploadProgress').removeClass('alert-info alert-success').addClass('alert-danger').text(response.message || 'Upload failed.');
                     $('#previewError').show().text(response.message || 'Please review the rows and try again.');
                 }
             },
             error: function () {
+                clearInterval(importLoadingTimer);
+                $importButton.prop('disabled', false).text('Import');
                 $('#uploadProgress').removeClass('alert-info').addClass('alert-danger').text('Error occurred during upload.');
                 $('#uploadError').show().text('Error occurred during the upload.');
             }

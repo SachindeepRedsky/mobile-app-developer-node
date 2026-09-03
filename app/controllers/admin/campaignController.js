@@ -431,49 +431,63 @@ module.exports = function (model) {
                 ]
             })
             // Fetch all bags for the campaign
-            const data = await model.Bags.findAll({ where: { campaign_id: campaignId } });
-            const mainArr = await Promise.all(
-                data.map(async (item) => {
-                    const { coupon_id, brand_id, productId } = item.dataValues;
-                    const normalizedProductId = String(productId || "").trim();
+            const data = await model.Bags.findAll({ where: { campaign_id: campaignId }, raw: true });
+            const couponIds = [...new Set(data.map((item) => item.coupon_id).filter(Boolean))];
+            const brandIds = [...new Set(data.map((item) => item.brand_id).filter(Boolean))];
 
-                    // Fetch coupon details
-                    const couponDetails = await model.Coupon.findOne({ where: { id: coupon_id } });
-                    const couponCode = couponDetails ? couponDetails.couponCode : "-";
-                    const usageRecords = couponDetails
-                        ? await model.CouponRecords.findAll({ where: { couponId: couponDetails.id }, raw: true })
-                        : [];
-                    const usageRecord = usageRecords.find((record) => String(record.productId || record.product_Id || "").trim() === normalizedProductId) || null;
-                    const status = usageRecord ? "used" : "unused";
-                    const qrCode = couponDetails ? couponDetails.qrCode : "";
-                    const couponImage = couponDetails ? couponDetails.couponImage : "";
-                    let userName = "-";
-                    if (usageRecord && usageRecord.userId) {
-                        const userDetail = await model.User.findOne({ where: { id: usageRecord.userId }, raw: true });
-                        userName = userDetail ? `${userDetail.firstName || ""} ${userDetail.lastName || ""}`.trim() : "-";
-                    }
-                    const brandDetails = await model.Brand.findOne({ where: { id: brand_id } });
-                    const brandName = brandDetails ? brandDetails.brandName : "-";
-                    const campaignName = campaign ? campaign.campaignName : "-";
+            const [couponDetails, usageRecords, brandDetails] = await Promise.all([
+                couponIds.length
+                    ? model.Coupon.findAll({ where: { id: { [Op.in]: couponIds } }, raw: true })
+                    : [],
+                couponIds.length
+                    ? model.CouponRecords.findAll({ where: { couponId: { [Op.in]: couponIds } }, raw: true })
+                    : [],
+                brandIds.length
+                    ? model.Brand.findAll({ where: { id: { [Op.in]: brandIds } }, raw: true })
+                    : []
+            ]);
 
-return {
-                        couponCode,
-                        productId,
-                        brandName,
-                        campaignName,
-                        status,
-                        qrCode,
-                        campaignQrCode: campaign?.qrCode || "",
-                        productQrCode: item.dataValues.qrCode || "",
-                        couponImage,
-                        userName
-                    };
-                })
+            const couponsById = new Map(couponDetails.map((coupon) => [String(coupon.id), coupon]));
+            const brandsById = new Map(brandDetails.map((brand) => [String(brand.id), brand]));
+            const usageByCouponAndProduct = new Map(
+                usageRecords.map((record) => [
+                    `${record.couponId}:${String(record.productId || record.product_Id || "").trim()}`,
+                    record
+                ])
             );
-            campaignDetail ? response.send({ status: "success", result: mainArr }) : response.send({ status: "failed", result: null })
+            const userIds = [...new Set(usageRecords.map((record) => record.userId).filter(Boolean))];
+            const users = userIds.length
+                ? await model.User.findAll({ where: { id: { [Op.in]: userIds } }, raw: true })
+                : [];
+            const usersById = new Map(users.map((user) => [String(user.id), user]));
+            const campaignName = campaign ? campaign.campaignName : "-";
+
+            const mainArr = data.map((item) => {
+                const couponDetails = couponsById.get(String(item.coupon_id));
+                const normalizedProductId = String(item.productId || "").trim();
+                const usageRecord = usageByCouponAndProduct.get(`${item.coupon_id}:${normalizedProductId}`);
+                const userDetail = usageRecord ? usersById.get(String(usageRecord.userId)) : null;
+                const brandDetail = brandsById.get(String(item.brand_id));
+
+                return {
+                    couponCode: couponDetails ? couponDetails.couponCode : "-",
+                    productId: item.productId,
+                    brandName: brandDetail ? brandDetail.brandName : "-",
+                    campaignName,
+                    status: usageRecord ? "used" : "unused",
+                    qrCode: couponDetails ? couponDetails.qrCode : "",
+                    campaignQrCode: campaign?.qrCode || "",
+                    productQrCode: item.qrCode || "",
+                    couponImage: couponDetails ? couponDetails.couponImage : "",
+                    userName: userDetail
+                        ? `${userDetail.firstName || ""} ${userDetail.lastName || ""}`.trim()
+                        : "-"
+                };
+            });
+            return response.send({ status: "success", result: mainArr });
         } catch (e) {
             console.log("getCampaingnDetais  Error", e);
-            return new Error('editCampaign Error', e);
+            return response.status(500).send({ status: "failed", result: null, message: "Unable to load campaign coupons." });
         }
     };
     module.openCampaign = async function (req, res) {

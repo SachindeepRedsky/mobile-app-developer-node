@@ -464,6 +464,11 @@
     }
 
     function loadCouponTable(campaignId) {
+        const $couponTableBody = $('#couponTableBody');
+        if ($.fn.dataTable.isDataTable('#campaignTable')) {
+            $('#campaignTable').DataTable().destroy();
+        }
+        $couponTableBody.html('<tr><td colspan="4" class="text-center">Waiting for coupons to load...</td></tr>');
         $.ajax({
             url: `/campaign/getCampaignDetails?campaignId=${campaignId}`,
             type: 'POST',
@@ -728,6 +733,18 @@ $(document).on('click', '.qr-code-cell', function (e) {
             $('#previewError').show().text(`Expected ${expectedCount} coupon rows, found ${previewRows.length}.`);
             return;
         }
+        const $importButton = $('#importPreviewedCoupons');
+        const totalCoupons = previewRows.length;
+        let uploadedCouponNumber = 1;
+        const updateImportButton = function () {
+            $importButton.text(`Uploading coupon ${uploadedCouponNumber} of ${totalCoupons}...`);
+        };
+        updateImportButton();
+        const importLoadingTimer = setInterval(function () {
+            uploadedCouponNumber += 1;
+            updateImportButton();
+        }, 500);
+        $importButton.prop('disabled', true);
         $('#uploadStatus').show();
         $('#uploadProgress').text('Importing edited coupons...');
         $('#uploadError').hide();
@@ -759,12 +776,16 @@ $(document).on('click', '.qr-code-cell', function (e) {
                         loadCouponTable(campaignId);
                     }, 1000);
                 } else {
+                    clearInterval(importLoadingTimer);
+                    $importButton.prop('disabled', false).text('Import');
                     $('#uploadProgress').removeClass('alert-info alert-success').addClass('alert-danger').text(response.message || 'Upload failed.');
                     $('#uploadError').hide();
                     $('#previewError').show().text(response.message || 'Please review the rows and try again.');
                 }
             },
             error: function () {
+                clearInterval(importLoadingTimer);
+                $importButton.prop('disabled', false).text('Import');
                 $('#uploadProgress').removeClass('alert-info').addClass('alert-danger').text('Error occurred during upload.');
                 $('#uploadError').show().text('Error occurred during the upload.');
             }
