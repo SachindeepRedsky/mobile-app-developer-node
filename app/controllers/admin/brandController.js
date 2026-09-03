@@ -544,28 +544,17 @@ async function generateProductQrPath(qrContent, productId) {
       }));
       const insertedCoupons = await model.Coupon.bulkCreate(updatedCoupons);
       const totalBagCount = Number(request.body.bags || request.body.bagsNo || 0);
-      const bagProductIds = createBagProductIds(request.body.productId, totalBagCount);
-      const bagRecords = [];
-      for (let bagIndex = 0; bagIndex < totalBagCount; bagIndex++) {
-          const productId = bagProductIds.length ? bagProductIds[bagIndex] : request.body.productId;
-          const qrLink = `${process.env.BASE_URL}/coupon/${productId}`;
-          const productQrCode = await generateProductQrPath(qrLink, productId);
-          insertedCoupons.forEach((coupon) => {
-              bagRecords.push({
-                  campaign_id: request.body.campaignId,
-                  brand_id: brandId,
-                  coupon_id: coupon.id,
-                  bagName: `Bag${bagIndex + 1}`,
-                  productId: productId,
-                  qrCode: productQrCode,
-                  expiryDate: request.body.expiryDate,
-                  startingDate: request.body.startingDate,
-                  status: 0,
-                  isExpired: 0,
-              });
-          });
-      }
-      await model.Bags.bulkCreate(bagRecords);
+        await createAndInsertBagRecords({
+        model,
+        insertedCoupons,
+        totalBagCount,
+        generateProductQrPath,
+        productId: request.body.productId,
+        campaignId: request.body.campaignId,
+        brandId,
+        expiryDate: request.body.expiryDate,
+        startingDate: request.body.startingDate,
+        });
       if (request.body.campaignId) {
         const campaignUpdate = {};
         const totalBagCount = Number(request.body.bags || request.body.bagsNo || 0);
@@ -655,6 +644,14 @@ async function generateProductQrPath(qrContent, productId) {
       const file = request.files;
       const brandId = request.body.brandId || request.query.brandId;
       const couponStatus = String(request.body.couponStatus || request.body.status || "unused").trim() || "unused";
+      console.log("[uploadCoupon] started", {
+        brandId,
+        campaignId: request.body.campaignId,
+        bags: request.body.bags || request.body.bagsNo,
+        coupons: request.body.coupons || request.body.couponNo,
+        hasPreviewData: Boolean(request.body.previewData),
+        fileName: file?.file?.name || null,
+      });
       if (!brandId) {
         return response
           .status(400)
@@ -735,28 +732,21 @@ async function generateProductQrPath(qrContent, productId) {
 
         const insertedCoupons = await model.Coupon.bulkCreate(updatedCoupons);
         const totalBagCount = Number(request.body.bags || request.body.bagsNo || 0);
-        const bagProductIds = createBagProductIds(request.body.productId, totalBagCount);
-        const bagRecords = [];
-        for (let bagIndex = 0; bagIndex < totalBagCount; bagIndex++) {
-          const productId = bagProductIds.length ? bagProductIds[bagIndex] : request.body.productId;
-          const qrLink = `${process.env.BASE_URL}/coupon/${productId}`;
-          const productQrCode = await generateProductQrPath(qrLink, productId);
-          insertedCoupons.forEach((coupon) => {
-            bagRecords.push({
-              campaign_id: request.body.campaignId,
-              brand_id: brandId,
-              coupon_id: coupon.id,
-              bagName: `Bag${bagIndex + 1}`,
-              productId: productId,
-              qrCode: productQrCode,
-              expiryDate: request.body.expiryDate,
-              startingDate: request.body.startingDate,
-              status: false,
-              isExpired: false,
-            });
-          });
-        }
-        await model.Bags.bulkCreate(bagRecords);
+        console.log("[uploadCoupon] preview rows inserted", {
+          couponCount: insertedCoupons.length,
+          totalBagCount,
+        });
+        await createAndInsertBagRecords({
+          model,
+          insertedCoupons,
+          totalBagCount,
+          generateProductQrPath,
+          productId: request.body.productId,
+          campaignId: request.body.campaignId,
+          brandId,
+          expiryDate: request.body.expiryDate,
+          startingDate: request.body.startingDate,
+        });
         if (request.body.campaignId) {
           const campaignUpdate = {};
           const totalCouponCount = Number(request.body.coupons || request.body.couponNo || insertedCoupons.length);
@@ -768,6 +758,7 @@ async function generateProductQrPath(qrContent, productId) {
             await model.Campaign.update(campaignUpdate, { where: { id: request.body.campaignId } });
           }
         }
+        console.log("[uploadCoupon] completed", { couponCount: updatedCoupons.length, totalBagCount });
         return response.json({ success: true, message: `Added ${updatedCoupons.length} coupon(s).` });
       }
 
@@ -782,6 +773,7 @@ async function generateProductQrPath(qrContent, productId) {
 
       if (fileExtension === ".csv") {
         parseCSVFile(file, [], async (error, result) => {
+          try {
           if (error) {
             return response.json({ success: false, message: error.message });
           }
@@ -808,29 +800,18 @@ async function generateProductQrPath(qrContent, productId) {
 
         const insertedCoupons = await model.Coupon.bulkCreate(updatedCoupons);
           const totalBagCount = Number(request.body.bags || request.body.bagsNo || 0);
-          const bagProductIds = createBagProductIds(request.body.productId, totalBagCount);
-          const bagRecords = [];
-          for (let bagIndex = 0; bagIndex < totalBagCount; bagIndex++) {
-            const productId = bagProductIds.length ? bagProductIds[bagIndex] : request.body.productId;
-            const qrLink = `${process.env.BASE_URL}/coupon/${productId}`;
-            const productQrCode = await generateProductQrPath(qrLink, productId);
-            insertedCoupons.forEach((coupon) => {
-              bagRecords.push({
-                campaign_id: request.body.campaignId,
-                brand_id: brandId,
-                coupon_id: coupon.id,
-                bagName: `Bag${bagIndex + 1}`,
-                productId: productId,
-                qrCode: productQrCode,
-                expiryDate: request.body.expiryDate,
-                startingDate: request.body.startingDate,
-                status: false,
-                isExpired: false,
-              });
-            });
-          }
+          await createAndInsertBagRecords({
+            model,
+            insertedCoupons,
+            totalBagCount,
+            generateProductQrPath,
+            productId: request.body.productId,
+            campaignId: request.body.campaignId,
+            brandId,
+            expiryDate: request.body.expiryDate,
+            startingDate: request.body.startingDate,
+          });
           try {
-            await model.Bags.bulkCreate(bagRecords);
             if (request.body.campaignId) {
               const campaignUpdate = {};
               const totalCouponCount = Number(request.body.coupons || request.body.couponNo || insertedCoupons.length);
@@ -846,6 +827,10 @@ async function generateProductQrPath(qrContent, productId) {
             return response.json({ success: false, message: "Error inserting bag records." });
           }
           return response.json({ success: true });
+          } catch (error) {
+            console.log("[uploadCoupon] CSV processing failed", error);
+            return response.status(500).json({ success: false, message: "Error processing coupon upload." });
+          }
         });
       } else if (fileExtension === ".xls" || fileExtension === ".xlsx") {
         let couponbulk = await parseExcelFile(file, coupons);
@@ -872,28 +857,16 @@ async function generateProductQrPath(qrContent, productId) {
 
         const insertedCoupons = await model.Coupon.bulkCreate(updatedCoupons);
           const totalBagCount = Number(request.body.bags || request.body.bagsNo || 0);
-          const bagProductIds = createBagProductIds(request.body.productId, totalBagCount);
-          const bagRecords = [];
-          for (let bagIndex = 0; bagIndex < totalBagCount; bagIndex++) {
-            const productId = bagProductIds.length ? bagProductIds[bagIndex] : request.body.productId;
-            const qrLink = `${process.env.BASE_URL}/coupon/${productId}`;
-            const productQrCode = await generateProductQrPath(qrLink, productId);
-            insertedCoupons.forEach((coupon) => {
-              bagRecords.push({
-                campaign_id: request.body.campaignId,
-                brand_id: brandId,
-                coupon_id: coupon.id,
-                bagName: `Bag${bagIndex + 1}`,
-                productId: productId,
-                qrCode: productQrCode,
-                expiryDate: request.body.expiryDate,
-                startingDate: request.body.startingDate,
-                status: false,
-                is_expired: false,
-              });
-            });
-          }
-          await model.Bags.bulkCreate(bagRecords);
+          await createAndInsertBagRecords({
+            model,
+            insertedCoupons,
+            totalBagCount,
+            productId: request.body.productId,
+            campaignId: request.body.campaignId,
+            brandId,
+            expiryDate: request.body.expiryDate,
+            startingDate: request.body.startingDate,
+          });
           if (request.body.campaignId) {
             const campaignUpdate = {};
             const totalCouponCount = Number(request.body.coupons || request.body.couponNo || insertedCoupons.length);
@@ -926,6 +899,70 @@ async function generateProductQrPath(qrContent, productId) {
 
   return module;
 };
+
+async function createAndInsertBagRecords({
+  model,
+  insertedCoupons,
+  totalBagCount,
+  generateProductQrPath,
+  productId,
+  campaignId,
+  brandId,
+  expiryDate,
+  startingDate,
+}) {
+  const bagProductIds = createBagProductIds(productId, totalBagCount);
+  const batchSize = 500;
+  let bagRecords = [];
+  const startedAt = Date.now();
+
+  console.log("[uploadCoupon] bag creation started", {
+    totalBagCount,
+    couponCount: insertedCoupons.length,
+    totalRows: totalBagCount * insertedCoupons.length,
+    batchSize,
+  });
+
+  for (let bagIndex = 0; bagIndex < totalBagCount; bagIndex += 1) {
+    const currentProductId = bagProductIds.length
+      ? bagProductIds[bagIndex]
+      : productId;
+    const qrLink = `${process.env.BASE_URL}/coupon/${currentProductId}`;
+    const productQrCode = await generateProductQrPath(qrLink, currentProductId);
+
+    insertedCoupons.forEach((coupon) => {
+      bagRecords.push({
+        campaign_id: campaignId,
+        brand_id: brandId,
+        coupon_id: coupon.id,
+        bagName: `Bag${bagIndex + 1}`,
+        productId: currentProductId,
+        qrCode: productQrCode,
+        expiryDate,
+        startingDate,
+        status: false,
+        isExpired: false,
+      });
+    });
+
+    if (bagRecords.length >= batchSize || bagIndex === totalBagCount - 1) {
+      const rowsInBatch = bagRecords.length;
+      await model.Bags.bulkCreate(bagRecords);
+      bagRecords = [];
+      console.log("[uploadCoupon] bag batch inserted", {
+        bagsCompleted: bagIndex + 1,
+        totalBagCount,
+        rowsInBatch,
+        elapsedMs: Date.now() - startedAt,
+      });
+    }
+  }
+
+  console.log("[uploadCoupon] bag creation completed", {
+    totalBagCount,
+    elapsedMs: Date.now() - startedAt,
+  });
+}
 
 function createBagProductIds(baseProductId, bagCount) {
   const count = Number(bagCount) || 0;
