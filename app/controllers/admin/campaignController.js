@@ -51,15 +51,21 @@ module.exports = function (model) {
                 offset: start,
                 limit: length, /* raw: true */
             });
+            let brandData;
             let campaignWithBrand = await Promise.all(campaign.map(async (camp) => {
                 let campaignBrandHistory = await model.CampaignBrandHistory.findOne({
                     where: { campaign_id: camp.id },
                     raw: true
                 });
+                console.log("campaignBrandHistory", campaignBrandHistory);
                 if (campaignBrandHistory) {
                     camp.dataValues.brand_id = campaignBrandHistory.brand_id;
+                    brandData = await model.Brand.findOne({ where: { id: campaignBrandHistory.brand_id }, raw: true });
+                    console.log("brandData", brandData);
+                    camp.dataValues.brand_name = brandData.brandName;
                 } else {
                     camp.dataValues.brand_id = null;
+                    camp.dataValues.brand_name = null;
                 }
                 return camp;
             }));

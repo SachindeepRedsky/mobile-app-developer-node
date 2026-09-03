@@ -55,6 +55,7 @@
                                 <th>Sr. No.</th>
                                 <th>Campaign ID</th>
                                 <th>Brand ID</th>
+                                <th>Brand Name</th>
                                 <th>Campaign Name</th>
                                 <th>Total Number of Bags</th>
                                 <th>Starting Date</th>
@@ -121,6 +122,17 @@
                 render: function (data, type, row) {
                     if (row.brand_id != undefined) {
                         return row.brand_id;
+                    } else {
+                        return "-";
+                    }
+                }
+            },
+            {
+                "data": "brandName",
+                render: function (data, type, row) {
+                    console.log("row---", row);
+                    if (row.brand_name != undefined) {
+                        return row.brand_name;
                     } else {
                         return "-";
                     }
