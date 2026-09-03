@@ -464,42 +464,36 @@
     }
 
     function loadCouponTable(campaignId) {
-        const $couponTableBody = $('#couponTableBody');
         if ($.fn.dataTable.isDataTable('#campaignTable')) {
             $('#campaignTable').DataTable().destroy();
         }
-        $couponTableBody.html('<tr><td colspan="4" class="text-center">Waiting for coupons to load...</td></tr>');
-        $.ajax({
-            url: `/campaign/getCampaignDetails?campaignId=${campaignId}`,
-            type: 'POST',
-            success: function (response) {
-                const tbody = $('#couponTableBody');
-                tbody.empty();
-                if (response.status !== 'success' || !response.result || response.result.length === 0) {
-                    tbody.append('<tr><td colspan="4" class="text-center">No coupons found.</td></tr>');
-                     $('#addCouponsBtn').show(); 
-                    return;
-                }
-                $('#addCouponsBtn').hide();
-                grouped = {};
-                response.result.forEach(function(item) {
-                    if (!grouped[item.productId]) {
-                        grouped[item.productId] = [];
+        $('#campaignTable').DataTable({
+            processing: true,
+            serverSide: true,
+            pageLength: 10,
+            lengthMenu: [10, 25, 50, 100],
+            ajax: {
+                url: `/campaign/getCampaignDetails?campaignId=${campaignId}`,
+                type: 'POST',
+                dataSrc: function (response) {
+                    if (response.status !== 'success') {
+                        $('#couponTableBody').html('<tr><td colspan="4" class="text-center text-danger">Failed to load coupons.</td></tr>');
+                        return [];
                     }
-                    grouped[item.productId].push(item);
-                });
-
-                Object.keys(grouped).forEach(function(productId, index) {
-                    const coupons = grouped[productId];
-                    tbody.append(`<tr class="product-row" data-product="${productId}"><td>${index + 1}</td><td>${productId}</td><td><img src="${response.result.find(c => c.productId === productId)?.campaignQrCode || ''}" alt="QR Code" width="60" class="product-qr-cell" data-qr="${response.result.find(c => c.productId === productId)?.campaignQrCode || ''}" data-code="${response.result.find(c => c.productId === productId)?.campaignName || 'Campaign'}" data-product="${productId}" style="cursor:pointer;"></td><td>${coupons.length}</td></tr>`);
-                });
-                if ($.fn.dataTable.isDataTable('#campaignTable')) {
-                    $('#campaignTable').DataTable().destroy();
+                    $('#addCouponsBtn').toggle(response.recordsTotal === 0);
+                    return response.result || [];
                 }
-                $('#campaignTable').DataTable({ pageLength: 10, lengthMenu: [10, 25, 50, 100], paging: true, searching: true, ordering: true });
             },
-            error: function () {
-                $('#couponTableBody').html('<tr><td colspan="3" class="text-center text-danger">Failed to load coupons.</td></tr>');
+            columns: [
+                { data: null, render: function (data, type, row, meta) { return meta.row + meta.settings._iDisplayStart + 1; } },
+                { data: 'productId' },
+                { data: 'campaignQrCode', render: function (data, type, row) {
+                    return data ? `<a href="javascript:void(0)" class="product-qr-cell" data-qr="${data}" data-code="${row.campaignName || 'Campaign'}" data-product="${row.productId}"><img src="${data}" width="60" style="cursor:pointer"></a>` : '-';
+                } },
+                { data: 'couponCount' }
+            ],
+            createdRow: function (row, data) {
+                $(row).addClass('product-row').attr('data-product', data.productId);
             }
         });
     }
@@ -580,8 +574,20 @@
 
         $(document).on('click', '.product-row', function () {
             const productId = $(this).data('product');
-            const coupons = grouped[productId] || [];
+            const $couponBody = $('#productCouponBody');
             $('#modalProductId').text(productId);
+            $couponBody.html('<tr><td colspan="7" class="text-center">Loading coupons...</td></tr>');
+            $('#productCouponModal').modal('show');
+            $.ajax({
+                url: `/campaign/getCampaignDetails?campaignId=${campaignId}&productId=${encodeURIComponent(productId)}`,
+                type: 'POST',
+                success: function (response) {
+                    if (response.status !== 'success' || !response.result) {
+                        $couponBody.html('<tr><td colspan="7" class="text-center text-danger">Failed to load coupons.</td></tr>');
+                        return;
+                    }
+                    grouped[productId] = response.result;
+                    const coupons = response.result;
             let html = '';
             coupons.forEach(function (item, index) {
 const statusBadge = item.status === 'used' ? '<span class="badge badge-danger">Used</span>' : '<span class="badge badge-success">Unused</span>';
@@ -597,8 +603,12 @@ const statusBadge = item.status === 'used' ? '<span class="badge badge-danger">U
                 const productQr = item.productQrCode ? `<a href="javascript:void(0)" class="product-qr-cell" data-qr="${item.productQrCode}" data-code="${item.campaignName || 'Campaign'}" data-product="${item.productId}"><img src="${item.productQrCode}" width="60" style="cursor:pointer"></a>` : '-';
                 html += `<tr><td>${index + 1}</td><td>${item.campaignName || '-'}</td><td>${item.couponCode}</td><td>${statusBadge}</td><td>${productQr}</td><td>${item.userName || '-'}</td><td>${qr}</td></tr>`;
             });
-            $('#productCouponBody').html(html);
-            $('#productCouponModal').modal('show');
+                    $couponBody.html(html);
+                },
+                error: function () {
+                    $couponBody.html('<tr><td colspan="7" class="text-center text-danger">Failed to load coupons.</td></tr>');
+                }
+            });
         });
 
 $(document).on('click', '.qr-code-cell', function (e) {
@@ -737,14 +747,12 @@ $(document).on('click', '.qr-code-cell', function (e) {
         const totalCoupons = previewRows.length;
         let uploadedCouponNumber = 1;
         const updateImportButton = function () {
-            $importButton.text(`Uploading coupon ${uploadedCouponNumber} ...`);
+            $importButton.html(`Uploading coupon <span class="spinner-border spinner-border-sm mr-2" role="status" aria-hidden="true"></span>`);
         };
         updateImportButton();
         const importLoadingTimer = setInterval(function () {
             uploadedCouponNumber += 1;
-            if (uploadedCouponNumber <= totalCoupons) {
-                updateImportButton();
-            }
+            updateImportButton();
         }, 1000);
         $importButton.prop('disabled', true);
         $('#uploadStatus').show();

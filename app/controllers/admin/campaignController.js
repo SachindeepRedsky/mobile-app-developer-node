@@ -436,10 +436,56 @@ module.exports = function (model) {
                     },
                 ]
             })
-            // Fetch all bags for the campaign
-            const data = await model.Bags.findAll({ where: { campaign_id: campaignId }, raw: true });
-            const couponIds = [...new Set(data.map((item) => item.coupon_id).filter(Boolean))];
-            const brandIds = [...new Set(data.map((item) => item.brand_id).filter(Boolean))];
+            const requestedProductId = String(request.query.productId || '').trim();
+            if (!requestedProductId) {
+                const start = Math.max(Number.parseInt(request.body?.start || request.query.start, 10) || 0, 0);
+                const length = Math.min(Math.max(Number.parseInt(request.body?.length || request.query.length, 10) || 10, 1), 100);
+                const [products, productCount] = await Promise.all([
+                    model.Bags.findAll({
+                    attributes: [
+                        'productId',
+                        'qrCode',
+                        [Sequelize.fn('COUNT', Sequelize.col('id')), 'couponCount'],
+                    ],
+                    where: { campaign_id: campaignId },
+                    group: ['productId', 'qrCode'],
+                    limit: length,
+                    offset: start,
+                    order: [['productId', 'ASC']],
+                    raw: true,
+                    }),
+                    model.Bags.count({
+                        distinct: true,
+                        col: 'productId',
+                        where: { campaign_id: campaignId },
+                    }),
+                ]);
+                return response.send({
+                    status: 'success',
+                    draw: Number(request.body?.draw || request.query.draw) || 0,
+                    recordsTotal: productCount,
+                    recordsFiltered: productCount,
+                    result: products.map((product) => ({
+                        productId: product.productId,
+                        productQrCode: product.qrCode || '',
+                        campaignQrCode: campaign?.qrCode || '',
+                        campaignName: campaign ? campaign.campaignName : '-',
+                        couponCount: Number(product.couponCount) || 0,
+                    })),
+                });
+            }
+
+            const data = await model.Bags.findAll({
+                where: { campaign_id: campaignId, productId: requestedProductId },
+                raw: true,
+            });
+            const productData = data;
+            if (!productData.length) {
+                return response.status(404).send({ status: 'failed', result: null, message: 'Product not found.' });
+            }
+            const dataForDetails = productData;
+            const couponIds = [...new Set(dataForDetails.map((item) => item.coupon_id).filter(Boolean))];
+            const brandIds = [...new Set(dataForDetails.map((item) => item.brand_id).filter(Boolean))];
 
             const [couponDetails, usageRecords, brandDetails] = await Promise.all([
                 couponIds.length
@@ -468,7 +514,7 @@ module.exports = function (model) {
             const usersById = new Map(users.map((user) => [String(user.id), user]));
             const campaignName = campaign ? campaign.campaignName : "-";
 
-            const mainArr = data.map((item) => {
+            const mainArr = dataForDetails.map((item) => {
                 const couponDetails = couponsById.get(String(item.coupon_id));
                 const normalizedProductId = String(item.productId || "").trim();
                 const usageRecord = usageByCouponAndProduct.get(`${item.coupon_id}:${normalizedProductId}`);
@@ -497,7 +543,6 @@ module.exports = function (model) {
         }
     };
     module.openCampaign = async function (req, res) {
-        console.log("test run:::")
         try {
             const campaignId = req.params.campaignId;
             const playStoreUrl = "https://play.google.com/store/apps/details?id=com.bagvertising";

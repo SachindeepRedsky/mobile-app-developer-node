@@ -677,14 +677,12 @@
         const totalCoupons = previewRows.length;
         let uploadedCouponNumber = 1;
         const updateImportButton = function () {
-            $importButton.text(`Uploading coupon ${uploadedCouponNumber} ...`);
+            $importButton.html(`Uploading coupon <span class="spinner-border spinner-border-sm mr-2" role="status" aria-hidden="true"></span>`);
         };
         updateImportButton();
         const importLoadingTimer = setInterval(function () {
             uploadedCouponNumber += 1;
-            if (uploadedCouponNumber <= totalCoupons) {
-                updateImportButton();
-            }
+            updateImportButton();
         }, 1000);
         $importButton.prop('disabled', true);
         $('#uploadStatus').show();

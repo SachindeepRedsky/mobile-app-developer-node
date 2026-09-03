@@ -498,90 +498,44 @@
     }
 
     function loadCouponTable(campaignId) {
-      const $couponTableBody = $('#couponTableBody');
       if ($.fn.dataTable.isDataTable('#campaignTable')) {
         $('#campaignTable').DataTable().destroy();
       }
-      $couponTableBody.html('<tr><td colspan="5" class="text-center">Waiting for coupons to load...</td></tr>');
-        $.ajax({
-            url: `/backend/getCampaingnDetais?campaignId=${campaignId}`,
-            type: "POST",
-            success: function (response) {
-console.log("response", response);
-                let tbody = $("#couponTableBody");
-                tbody.empty();
-
-                if (
-                    response.status !== "success" ||
-                    !response.result ||
-                    response.result.length === 0
-                ) {
-                  $("#addCouponsBtn").show();
-                    tbody.append(`
-                        <tr>
-                            <td colspan="5" class="text-center">
-                                No coupons found.
-                            </td>
-                        </tr>
-                    `);
-                    return;
-                }
-                $("#addCouponsBtn").hide();
-                $("#printCampaignQrBtn").show();
-                $("#printProductQrBtn").show();
-                const campaignBagCount = parseInt($('#campaignPrintData').data('bags'), 10) || 0;
-                grouped = {};
-                response.result.forEach(function(item) {
-                    if (!grouped[item.productId]) {
-                        grouped[item.productId] = [];
-                    }
-                    grouped[item.productId].push(item);
-                });
-
-                Object.keys(grouped).forEach(function(productId, index) {
-                    const coupons = grouped[productId];
-                    const productInfo = response.result.find(c => c.productId === productId) || {};
-                    const productQr = productInfo.productQrCode || '';
-                    const campaignQr = productInfo.campaignQrCode || '';
-                    const campaignName = productInfo.campaignName || 'Campaign';
-                    const qrCopies = coupons.length;
-
-                    tbody.append(`
-                        <tr class="product-row" data-product="${productId}">
-                            <td>${index + 1}</td>
-                            <td>${productId}</td>
-                            <td>
-                                ${campaignQr ? `<a href="javascript:void(0)" class="product-qr-cell" data-qr="${campaignQr}" data-copy-type="campaign" data-copies="${campaignBagCount}" data-code="${campaignName}" data-product="${productId}"><img src="${campaignQr}" width="60" style="cursor:pointer"></a>` : '-'}
-                            </td>
-                            <td>
-                                ${productQr ? `<a href="javascript:void(0)" class="product-qr-cell" data-qr="${productQr}" data-copy-type="product" data-copies="${campaignBagCount}" data-code="${campaignName}" data-product="${productId}"><img src="${productQr}" width="60" style="cursor:pointer"></a>` : '-'}
-                            </td>
-                            <td>${qrCopies}</td>
-                        </tr>
-                    `);
-
-                });
-                if ($.fn.dataTable.isDataTable('#campaignTable')) {
-                    $('#campaignTable').DataTable().destroy();
-                }
-                $('#campaignTable').DataTable({
-                    pageLength: 10,
-                    lengthMenu: [10, 25, 50, 100],
-                    paging: true,
-                    searching: true,
-                    ordering: true
-                });
-            },
-            error: function () {
-                $("#couponTableBody").html(`
-                    <tr>
-                        <td colspan="6" class="text-center text-danger">
-                            Failed to load coupons.
-                        </td>
-                    </tr>
-                `);
+      $('#campaignTable').DataTable({
+        processing: true,
+        serverSide: true,
+        pageLength: 10,
+        lengthMenu: [10, 25, 50, 100],
+        ajax: {
+          url: `/backend/getCampaingnDetais?campaignId=${campaignId}`,
+          type: 'POST',
+          dataSrc: function (response) {
+            if (response.status !== 'success') {
+              $('#couponTableBody').html('<tr><td colspan="5" class="text-center text-danger">Failed to load coupons.</td></tr>');
+              return [];
             }
-        });
+            $('#addCouponsBtn').toggle(response.recordsTotal === 0);
+            $('#printCampaignQrBtn, #printProductQrBtn').toggle(response.recordsTotal > 0);
+            return response.result || [];
+          }
+        },
+        columns: [
+          { data: null, render: function (data, type, row, meta) { return meta.row + meta.settings._iDisplayStart + 1; } },
+          { data: 'productId' },
+          { data: 'campaignQrCode', render: function (data, type, row) {
+            const copies = parseInt($('#campaignPrintData').data('bags'), 10) || 0;
+            return data ? `<a href="javascript:void(0)" class="product-qr-cell" data-qr="${data}" data-copy-type="campaign" data-copies="${copies}" data-code="${row.campaignName || 'Campaign'}" data-product="${row.productId}"><img src="${data}" width="60" style="cursor:pointer"></a>` : '-';
+          } },
+          { data: 'productQrCode', render: function (data, type, row) {
+            const copies = parseInt($('#campaignPrintData').data('bags'), 10) || 0;
+            return data ? `<a href="javascript:void(0)" class="product-qr-cell" data-qr="${data}" data-copy-type="product" data-copies="${copies}" data-code="${row.campaignName || 'Campaign'}" data-product="${row.productId}"><img src="${data}" width="60" style="cursor:pointer"></a>` : '-';
+          } },
+          { data: 'couponCount' }
+        ],
+        createdRow: function (row, data) {
+          $(row).addClass('product-row').attr('data-product', data.productId);
+        }
+      });
     }
 
   function showMessage(type, message) {
@@ -991,14 +945,12 @@ $(document).on("click", "#importPreviewedCoupons", function (e) {
     const totalCoupons = previewRows.length;
     let uploadedCouponNumber = 1;
     const updateImportButton = function () {
-      $importButton.text(`Uploading coupon ${uploadedCouponNumber} ...`);
+      $importButton.html(`Uploading coupon <span class="spinner-border spinner-border-sm mr-2" role="status" aria-hidden="true"></span>`);
     };
     updateImportButton();
     const importLoadingTimer = setInterval(function () {
       uploadedCouponNumber += 1;
-      if (uploadedCouponNumber <= totalCoupons) {
-        updateImportButton();
-      }
+      updateImportButton();
     }, 1000);
     $importButton.prop('disabled', true);
     $('#uploadStatus').show();
@@ -1071,7 +1023,20 @@ $(document).on("click", "#publishDraftCouponsBtn", function () {
 $(document).on("click", ".product-row", function () {
   const productId = $(this).data("product");
   window.currentProductId = productId;
-  const coupons = grouped[productId] || [];
+  const $couponBody = $("#productCouponBody");
+  $("#modalProductId").text(productId);
+  $couponBody.html('<tr><td colspan="7" class="text-center">Loading coupons...</td></tr>');
+  $("#productCouponModal").modal("show");
+  $.ajax({
+    url: `/backend/getCampaingnDetais?campaignId=${campaignId}&productId=${encodeURIComponent(productId)}`,
+    type: "POST",
+    success: function (response) {
+      if (response.status !== "success" || !response.result) {
+        $couponBody.html('<tr><td colspan="7" class="text-center text-danger">Failed to load coupons.</td></tr>');
+        return;
+      }
+      grouped[productId] = response.result;
+      const coupons = response.result;
   // const productQrCopies = coupons.length;
   const productQrCopies = parseInt($('#campaignPrintData').data('bags'), 10) || 0;
   console.log('product-row clicked ->', productId, 'coupons:', coupons.length);
@@ -1116,9 +1081,12 @@ const statusBadge = item.status === "used" ? '<span class="badge badge-danger">U
       </tr>
     `;
   });
-  $("#productCouponBody").html(html);
-
-  $('#productCouponModal').modal('show');
+      $couponBody.html(html);
+    },
+    error: function () {
+      $couponBody.html('<tr><td colspan="7" class="text-center text-danger">Failed to load coupons.</td></tr>');
+    }
+  });
 });
 
 $(document).on('shown.bs.modal', '#productCouponModal', function() {
