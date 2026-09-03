@@ -8,6 +8,7 @@ const { log } = require("winston");
 const { stringify } = require("querystring");
 const { where, json } = require("sequelize");
 const { fail } = require("assert");
+const uploadJobs = new Map();
 
 module.exports = function (model) {
   var module = {};
@@ -639,6 +640,14 @@ async function generateProductQrPath(qrContent, productId) {
     }
   };
 
+  module.getUploadStatus = function (request, response) {
+    const job = uploadJobs.get(request.params.jobId);
+    if (!job) {
+      return response.status(404).json({ success: false, message: "Upload job not found." });
+    }
+    return response.json({ success: true, job });
+  };
+
   module.uploadCoupon = async function (request, response) {
     try {
       const file = request.files;
@@ -736,7 +745,7 @@ async function generateProductQrPath(qrContent, productId) {
           couponCount: insertedCoupons.length,
           totalBagCount,
         });
-        await createAndInsertBagRecords({
+        const jobId = startBagUploadJob({
           model,
           insertedCoupons,
           totalBagCount,
@@ -746,20 +755,14 @@ async function generateProductQrPath(qrContent, productId) {
           brandId,
           expiryDate: request.body.expiryDate,
           startingDate: request.body.startingDate,
+          totalCouponCount: Number(request.body.coupons || request.body.couponNo || insertedCoupons.length),
         });
-        if (request.body.campaignId) {
-          const campaignUpdate = {};
-          const totalCouponCount = Number(request.body.coupons || request.body.couponNo || insertedCoupons.length);
-          if (totalBagCount > 0) campaignUpdate.bags = totalBagCount;
-          campaignUpdate.coupons = totalCouponCount;
-          if (request.body.expiryDate !== undefined) campaignUpdate.expiryDate = request.body.expiryDate;
-          if (request.body.startingDate !== undefined) campaignUpdate.startingDate = request.body.startingDate;
-          if (Object.keys(campaignUpdate).length) {
-            await model.Campaign.update(campaignUpdate, { where: { id: request.body.campaignId } });
-          }
-        }
-        console.log("[uploadCoupon] completed", { couponCount: updatedCoupons.length, totalBagCount });
-        return response.json({ success: true, message: `Added ${updatedCoupons.length} coupon(s).` });
+        return response.status(202).json({
+          success: true,
+          asynchronous: true,
+          jobId,
+          message: `Added ${updatedCoupons.length} coupon(s). Bag generation is running in the background.`,
+        });
       }
 
       if (!file) {
@@ -910,6 +913,7 @@ async function createAndInsertBagRecords({
   brandId,
   expiryDate,
   startingDate,
+  onProgress,
 }) {
   const bagProductIds = createBagProductIds(productId, totalBagCount);
   const batchSize = 500;
@@ -955,6 +959,9 @@ async function createAndInsertBagRecords({
         rowsInBatch,
         elapsedMs: Date.now() - startedAt,
       });
+      if (onProgress) {
+        onProgress(bagIndex + 1);
+      }
     }
   }
 
@@ -962,6 +969,53 @@ async function createAndInsertBagRecords({
     totalBagCount,
     elapsedMs: Date.now() - startedAt,
   });
+}
+
+function startBagUploadJob(options) {
+  const jobId = `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+  uploadJobs.set(jobId, {
+    status: "processing",
+    bagsCompleted: 0,
+    totalBags: options.totalBagCount,
+    error: null,
+  });
+
+  setImmediate(async () => {
+    try {
+      await createAndInsertBagRecords({
+        ...options,
+        onProgress: (bagsCompleted) => {
+          const job = uploadJobs.get(jobId);
+          if (job) job.bagsCompleted = bagsCompleted;
+        },
+      });
+      if (options.campaignId) {
+        const campaignUpdate = {
+          coupons: options.totalCouponCount,
+        };
+        if (options.totalBagCount > 0) campaignUpdate.bags = options.totalBagCount;
+        if (options.expiryDate !== undefined) campaignUpdate.expiryDate = options.expiryDate;
+        if (options.startingDate !== undefined) campaignUpdate.startingDate = options.startingDate;
+        await options.model.Campaign.update(campaignUpdate, { where: { id: options.campaignId } });
+      }
+      const job = uploadJobs.get(jobId);
+      if (job) {
+        job.status = "completed";
+        job.bagsCompleted = options.totalBagCount;
+      }
+      console.log("[uploadCoupon] background job completed", { jobId });
+    } catch (error) {
+      const job = uploadJobs.get(jobId);
+      if (job) {
+        job.status = "failed";
+        job.error = error.message;
+      }
+      console.log("[uploadCoupon] background job failed", { jobId, error });
+    }
+  });
+
+  console.log("[uploadCoupon] background job started", { jobId });
+  return jobId;
 }
 
 function createBagProductIds(baseProductId, bagCount) {

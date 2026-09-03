@@ -660,6 +660,32 @@
         `);
     }
 
+    function pollUploadJob(jobId, $button) {
+        const pollTimer = setInterval(function () {
+            $.get(`/backend/uploadCoupon/status/${encodeURIComponent(jobId)}`)
+                .done(function (response) {
+                    const job = response.job || {};
+                    const completed = Number(job.bagsCompleted) || 0;
+                    const total = Number(job.totalBags) || 0;
+                    $button.html(`<span class="spinner-border spinner-border-sm mr-2" role="status" aria-hidden="true"></span>Uploading bag ${completed} of ${total}...`);
+                    if (job.status === 'completed') {
+                        clearInterval(pollTimer);
+                        $('#uploadProgress').removeClass('alert-info alert-danger').addClass('alert-success').text('Coupons uploaded successfully.');
+                        location.reload();
+                    } else if (job.status === 'failed') {
+                        clearInterval(pollTimer);
+                        $button.prop('disabled', false).text('Import');
+                        $('#uploadProgress').removeClass('alert-info alert-success').addClass('alert-danger').text(job.error || 'Upload failed.');
+                    }
+                })
+                .fail(function () {
+                    clearInterval(pollTimer);
+                    $button.prop('disabled', false).text('Import');
+                    $('#uploadProgress').removeClass('alert-info alert-success').addClass('alert-danger').text('Unable to check upload progress.');
+                });
+        }, 1000);
+    }
+
     $(document).on('click', '#importPreviewedCoupons', function (e) {
         e.preventDefault();
         const previewRows = collectPreviewRows();
@@ -680,10 +706,6 @@
             $importButton.html(`Uploading coupon <span class="spinner-border spinner-border-sm mr-2" role="status" aria-hidden="true"></span>`);
         };
         updateImportButton();
-        const importLoadingTimer = setInterval(function () {
-            uploadedCouponNumber += 1;
-            updateImportButton();
-        }, 1000);
         $importButton.prop('disabled', true);
         $('#uploadStatus').show();
         $('#uploadProgress').text('Importing edited coupons...');
@@ -702,19 +724,21 @@
             contentType: false,
             success: function (response) {
                 if (response.success) {
+                    if (response.asynchronous && response.jobId) {
+                        pollUploadJob(response.jobId, $importButton);
+                        return;
+                    }
                     $('#uploadProgress').removeClass('alert-info alert-danger').addClass('alert-success').text(response.message || 'Upload successful!');
                     setTimeout(() => {
                         location.reload();
                     }, 1000);
                 } else {
-                    clearInterval(importLoadingTimer);
                     $importButton.prop('disabled', false).text('Import');
                     $('#uploadProgress').removeClass('alert-info alert-success').addClass('alert-danger').text(response.message || 'Upload failed.');
                     $('#previewError').show().text(response.message || 'Please review the rows and try again.');
                 }
             },
             error: function () {
-                clearInterval(importLoadingTimer);
                 $importButton.prop('disabled', false).text('Import');
                 $('#uploadProgress').removeClass('alert-info').addClass('alert-danger').text('Error occurred during upload.');
                 $('#uploadError').show().text('Error occurred during the upload.');
