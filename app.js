@@ -2,6 +2,8 @@
 require('dotenv').config()
 
 var express = require('express');
+const os = require("os");
+const v8 = require("v8");
 var app = express();
 
 const port = process.env.PORT || process.env.SERVER_PORT || 8080;
@@ -75,6 +77,32 @@ global.helper = require('./app/helpers/helpers.js');
 
 app.set('port', port);
 var config = require("./config/constants.js");
+
+
+console.log("===== MEMORY INFO =====");
+ 
+console.log(
+  "Total Memory:",
+  Math.round(os.totalmem() / 1024 / 1024),
+  "MB"
+);
+ 
+console.log(
+  "Free Memory:",
+  Math.round(os.freemem() / 1024 / 1024),
+  "MB"
+);
+ 
+console.log(
+  "Node Heap Limit:",
+  Math.round(
+    v8.getHeapStatistics().heap_size_limit / 1024 / 1024
+  ),
+  "MB"
+);
+ 
+console.log("=======================");
+
 server.listen(port, '0.0.0.0', function () {
   console.log("(---------------------------------)");
   console.log("|         Server Started...       |");
