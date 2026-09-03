@@ -677,13 +677,15 @@
         const totalCoupons = previewRows.length;
         let uploadedCouponNumber = 1;
         const updateImportButton = function () {
-            $importButton.text(`Uploading coupon ${uploadedCouponNumber} of ${totalCoupons}...`);
+            $importButton.text(`Uploading coupon ${uploadedCouponNumber} ...`);
         };
         updateImportButton();
         const importLoadingTimer = setInterval(function () {
             uploadedCouponNumber += 1;
-            updateImportButton();
-        }, 500);
+            if (uploadedCouponNumber <= totalCoupons) {
+                updateImportButton();
+            }
+        }, 1000);
         $importButton.prop('disabled', true);
         $('#uploadStatus').show();
         $('#uploadProgress').text('Importing edited coupons...');
