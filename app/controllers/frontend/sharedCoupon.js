@@ -72,7 +72,7 @@ module.exports = function (model, config) {
           userId: sharerUserId,
           couponId,
           productId: resolvedProductId,
-          status: 'assigned',
+          status: 'used',
         });
       }
 
@@ -141,7 +141,7 @@ module.exports = function (model, config) {
           couponId: share.couponId,
           productId: share.productId,
           friendId: recipientUserId,
-          status: 'assigned',
+          status: 'used',
         });
       } else {
         await existing.update({
