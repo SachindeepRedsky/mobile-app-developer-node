@@ -8,6 +8,7 @@ module.exports = function(model){
 		console.log("totalUsers---",totalUsers);
 		let totalBrands = await model.Brand.count({});
 		let totalCampaign = await model.Campaign.count({});
+		let totalGussetScans = await model.GussetCampaign.count({where:{"status": "active" }});
 		
 
 		return res.render('backend/dashboard', {
@@ -19,6 +20,7 @@ module.exports = function(model){
 			totalUsers,
 			totalBrands,
 			totalCampaign,
+			totalGussetScans,
 			alias: 'dashboard',
 			dashboard: "active"
 		});

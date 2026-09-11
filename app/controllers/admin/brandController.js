@@ -8,6 +8,8 @@ const { log } = require("winston");
 const { stringify } = require("querystring");
 const { where, json } = require("sequelize");
 const { fail } = require("assert");
+const crypto = require("crypto");
+
 const uploadJobs = new Map();
 
 module.exports = function (model) {
@@ -15,7 +17,6 @@ module.exports = function (model) {
 
   module.view = async function (request, response) {
     try {
-      // console.log("cmsController get user page", req.session.details);
       response.render("backend/brand/brandList", {
         title: "Brand Management",
         error: request.flash("error"),
@@ -26,32 +27,43 @@ module.exports = function (model) {
         brandManagement: "active",
       });
     } catch (e) {
-      console.log("getBrand  Error", e);
-      return new Error("getBrand  Error", e);
+      console.log("getBrand Error", e);
+      return new Error("getBrand Error", e);
     }
   };
+
   module.getBrand = async function (request, response) {
     try {
-      // console.log('getBrand req body---', request.body);
       let start = parseInt(request.query.start);
       console.log("🚀 ~ start:", start);
+
       let length = parseInt(request.query.length);
       console.log("🚀 ~ length:", length);
+
       let search = request.query.search.value;
       console.log("🚀 ~ search:", search);
+
       let query = {};
       console.log("🚀 ~ query:", query);
 
       if (search != "") {
         query = {
-          [Op.or]: [{ brandName: { [Op.like]: "%" + search + "%" } }],
+          [Op.or]: [
+            {
+              brandName: {
+                [Op.like]: "%" + search + "%",
+              },
+            },
+          ],
         };
       } else {
         query = {};
       }
 
-      // console.log("query: ", query);
-      let brandCount = await model.Brand.count({ where: query });
+      let brandCount = await model.Brand.count({
+        where: query,
+      });
+
       let brand = await model.Brand.findAll({
         where: query,
         include: [
@@ -75,10 +87,14 @@ module.exports = function (model) {
               if (!coupon) {
                 return;
               }
+
               const usageRecord = await model.CouponRecords.findOne({
-                where: { couponId: coupon.id },
+                where: {
+                  couponId: coupon.id,
+                },
                 raw: true,
               });
+
               coupon.dataValues.status = usageRecord ? "used" : "unused";
               coupon.status = usageRecord ? "used" : "unused";
             })
@@ -94,12 +110,13 @@ module.exports = function (model) {
         recordsFiltered: brandCount,
         data: brandWithCouponStatus,
       };
-      //   console.log("obj",JSON.stringify(obj));
+
       return response.send(JSON.stringify(obj));
     } catch (error) {
       console.log("error in get users", error);
     }
   };
+
   module.addBrand = async function (request, response) {
     try {
       response.render("backend/brand/addBrand", {
@@ -116,22 +133,26 @@ module.exports = function (model) {
       return request.flash("success", "Something went wrong.");
     }
   };
+
   module.addBrandPost = async function (req, res) {
     try {
-      // console.log("addBrandPost body --> ", req.body);
-      // console.log("req.files --- >", req.files);
-
       let customImage = "";
 
       let addData = {
         brandName: req.body.brandName,
         status: req.body.status,
+
+        // New advertiser website URL
+        websiteUrl: req.body.websiteUrl || "",
       };
+
       if (req.files && req.files.picture__input) {
         let image = req.files.picture__input;
         let re = /(?:\.([^.]+))?$/;
         let ext = re.exec(image.name)[1];
+
         customImage = Date.now() + "." + ext;
+
         image.mv(
           "./public/dist/brandLogo/" + customImage,
           async function (err) {
@@ -142,10 +163,9 @@ module.exports = function (model) {
             }
           }
         );
+
         addData.brandLogo = "/dist/brandLogo/" + customImage;
       }
-
-      // console.log('Final addData  ---->', addData);
 
       await model.Brand.create(addData);
 
@@ -156,13 +176,15 @@ module.exports = function (model) {
       return new Error("addPostGame game Error", e);
     }
   };
+
   module.editBrand = async function (request, response) {
     try {
-      // console.log("editBrand data", request.params);
       let brand = await model.Brand.findOne({
-        where: { id: request.params.id },
+        where: {
+          id: request.params.id,
+        },
       });
-      // console.log("editBrand", brand);
+
       response.render("backend/brand/addBrand", {
         error: request.flash("error"),
         success: request.flash("success"),
@@ -173,39 +195,50 @@ module.exports = function (model) {
         brand,
       });
     } catch (e) {
-      console.log("editBrand  Error", e);
+      console.log("editBrand Error", e);
       return new Error("editBrand Error", e);
     }
   };
+
   module.updateBrand = async function (request, response) {
     try {
-      // console.log("updateBrand data", request.body);
       let brand = await model.Brand.findOne({
-        where: { id: request.params.id },
+        where: {
+          id: request.params.id,
+        },
         raw: true,
       });
-      // console.log("updateBrand", brand);
+
+      let customImage = "";
+
       let addData = {
         brandName: request.body.brandName,
         status: request.body.status,
+
+        // New advertiser website URL
+        websiteUrl: request.body.websiteUrl || "",
       };
 
-      // console.log("request.files --- >", request.files);
       if (request.files && request.files.picture__input) {
         let image = request.files.picture__input;
         let re = /(?:\.([^.]+))?$/;
         let ext = re.exec(image.name)[1];
+
         customImage = Date.now() + "." + ext;
+
         image.mv(
           "./public/dist/brandLogo/" + customImage,
           async function (err) {
             if (err) {
               console.log("err", err);
               request.flash("error", "Error uploading in game image");
-              return res.redirect("/backend/addBrand");
+              return response.redirect(
+                "/backend/editBrand/" + request.params.id
+              );
             }
           }
         );
+
         addData.brandLogo = "/dist/brandLogo/" + customImage;
       }
 
@@ -214,7 +247,7 @@ module.exports = function (model) {
           id: request.params.id,
         },
       });
-      // console.log("updateBrand result", result);
+
       if (result) {
         request.flash("success", "Brand updated successfully");
         response.redirect("/backend/brand");
@@ -227,13 +260,15 @@ module.exports = function (model) {
       return new Error("updateBrand Error", e);
     }
   };
+
   module.deleteBrand = async function (request, response) {
     try {
-      // console.log("deleteBrand  ---> ", request.params.id);
       let brand = await model.Brand.findOne({
-        where: { id: request.params.id },
+        where: {
+          id: request.params.id,
+        },
       });
-      // console.log("brand----", brand);
+
       if (brand) {
         if (brand.brandLogo) {
           fs.unlink("./public/" + brand.brandLogo, (err) => {
@@ -244,10 +279,13 @@ module.exports = function (model) {
             }
           });
         }
+
         let deletebrand = await model.Brand.destroy({
-          where: { id: request.params.id },
+          where: {
+            id: request.params.id,
+          },
         });
-        // console.log("deleted---", deletebrand);
+
         request.flash("success", "Brand Successfully added");
         response.redirect("/backend/brand");
       } else {
@@ -259,33 +297,41 @@ module.exports = function (model) {
       response.redirect("/backend/brand");
     }
   };
+
   module.brandDetail = async function (request, response) {
-    // console.log("detail---", request.params);
     let brandId = request.params.id;
+
     if (brandId != "" && brandId != 0) {
       try {
         let brandDetail = await model.Brand.findOne({
-          where: { id: brandId },
+          where: {
+            id: brandId,
+          },
           include: [
             {
               model: model.Coupon,
             },
           ],
         });
-        // console.log("brandDetail -->", brandDetail.coupons);
+
         let totalCoupons = brandDetail.coupons.length;
         let usedCoupons = 0;
         let unUsedCoupons = 0;
+
         if (brandDetail.coupons.length) {
           await Promise.all(
             brandDetail.coupons.map(async (coupon) => {
               if (!coupon) {
                 return;
               }
+
               const usedRecord = await model.CouponRecords.findOne({
-                where: { couponId: coupon.id },
+                where: {
+                  couponId: coupon.id,
+                },
                 raw: true,
               });
+
               if (usedRecord) {
                 usedCoupons++;
               } else {
@@ -294,8 +340,10 @@ module.exports = function (model) {
             })
           );
         }
+
         console.log("usedCoupons---", usedCoupons);
         console.log("unUsedCoupons---", unUsedCoupons);
+
         if (brandDetail != null) {
           response.render("backend/brand/brandDetail", {
             title: "View Brand",
@@ -325,30 +373,24 @@ module.exports = function (model) {
       response.redirect("/backend/brand");
     }
   };
+
   module.brandCouponDetail = async function (request, response) {
     try {
-      // console.log('getBrand req body--->>>', request.query);
       let start = parseInt(request.query.start);
       let length = parseInt(request.query.length);
-      // let search = request.query.search.value;
-      let query = { id: request.query.brandId };
+
+      let query = {
+        id: request.query.brandId,
+      };
+
       let selectedValue = request.query.selectedVal;
-      // console.log("selectedValue -->", selectedValue);
 
       selectedValue = selectedValue == "all" ? "" : selectedValue;
-      // console.log("selectedValue 2 -->", selectedValue);
-      // if (search != '') {
-      //     query = {
-      //         [Op.or]: [
-      //             { 'couponCode': { [Op.like]: '%' + search + '%' } },
-      //         ]
-      //     };
-      // }
 
-      // console.log("query: ", query);
       let brand = await model.Brand.findOne({
         where: query,
       });
+
       if (!brand) {
         return response
           .status(404)
@@ -356,6 +398,7 @@ module.exports = function (model) {
       }
 
       const campaign_id = brand.campaign_id;
+
       let include = [
         {
           model: model.Coupon,
@@ -372,67 +415,63 @@ module.exports = function (model) {
         });
       }
 
-      // if (campaign_id) {
-      //     include = [
-      //         {
-      //             model: model.Coupon,
-      //             where: selectedValue ? { status: selectedValue } : {},
-      //             required: false,
-      //             offset: start,
-      //             limit: length,
-      //         },
-      //         {
-      //             model: model.Campaign,
-      //             as: 'campaignDetails',
-      //         }
-      //     ]
-      // } else {
-      //     include = [
-      //         {
-      //             model: model.Coupon,
-      //             where: selectedValue ? { status: selectedValue } : {},
-      //             required: false,
-      //             offset: start,
-      //             limit: length,
-      //         },
-      //     ]
-      // }
       let array = [];
+
       const brandDetailWithCampaign = await model.Brand.findOne({
         where: query,
         include: include,
         order: [["id", "DESC"]],
       });
+
       const allCoupons = await Promise.all(
         brandDetailWithCampaign.coupons.map(async (i) => {
           if (!i.id) {
             return i;
           }
+
           let bag = await model.Bags.findOne({
-            where: { coupon_id: i.id, brand_id: i.brand_id },
+            where: {
+              coupon_id: i.id,
+              brand_id: i.brand_id,
+            },
           });
+
           if (bag && bag.campaign_id) {
             let campaignDetailss = await model.Campaign.findOne({
-              where: { id: bag.campaign_id },
+              where: {
+                id: bag.campaign_id,
+              },
             });
+
             if (campaignDetailss) {
-              i.dataValues.campaignName = campaignDetailss.campaignName || "";
+              i.dataValues.campaignName =
+                campaignDetailss.campaignName || "";
             }
           }
 
           const usageRecord = await model.CouponRecords.findOne({
-            where: { couponId: i.id },
+            where: {
+              couponId: i.id,
+            },
             raw: true,
           });
+
           if (usageRecord) {
             i.dataValues.status = "used";
+
             if (usageRecord.userId) {
               const userData = await model.User.findOne({
-                where: { id: usageRecord.userId },
+                where: {
+                  id: usageRecord.userId,
+                },
                 raw: true,
               });
+
               if (userData) {
-                i.dataValues.userName = `${userData.firstName || ""} ${userData.lastName || ""}`.trim();
+                i.dataValues.userName =
+                  `${userData.firstName || ""} ${
+                    userData.lastName || ""
+                  }`.trim();
               } else {
                 i.dataValues.userName = "-";
               }
@@ -443,13 +482,17 @@ module.exports = function (model) {
             i.dataValues.status = "unused";
             i.dataValues.userName = "-";
           }
+
           return i;
         })
       );
 
       let filteredCoupons = allCoupons;
+
       if (selectedValue && selectedValue !== "all") {
-        filteredCoupons = allCoupons.filter((coupon) => coupon.dataValues.status === selectedValue);
+        filteredCoupons = allCoupons.filter(
+          (coupon) => coupon.dataValues.status === selectedValue
+        );
       }
 
       let obj = {
@@ -458,70 +501,160 @@ module.exports = function (model) {
         recordsFiltered: filteredCoupons.length,
         data: filteredCoupons,
       };
+
       return response.send(JSON.stringify(obj));
     } catch (error) {
       console.log("error in get users", error);
     }
   };
 
-async function generateProductQrPath(qrContent, productId) {
+  async function generateProductQrPath(qrContent, productId) {
     const QRCode = require("qrcode");
-    const qrDirectory = path.join(__dirname, "../../../public/dist/qr_codes");
+
+    const qrDirectory = path.join(
+      __dirname,
+      "../../../public/dist/qr_codes"
+    );
+
     if (!fs.existsSync(qrDirectory)) {
-      fs.mkdirSync(qrDirectory, { recursive: true });
+      fs.mkdirSync(qrDirectory, {
+        recursive: true,
+      });
     }
-    const safeProductId = String(productId).replace(/[^a-zA-Z0-9_-]/g, "_");
+
+    const safeProductId = String(productId).replace(
+      /[^a-zA-Z0-9_-]/g,
+      "_"
+    );
+
     const fileName = `${Date.now()}_product_${safeProductId}.png`;
+
     const filePath = path.join(qrDirectory, fileName);
+
     await QRCode.toFile(filePath, qrContent, {
       type: "png",
       width: 300,
     });
+
     return `/dist/qr_codes/${fileName}`;
   }
 
   function saveCouponImage(base64Image) {
     if (!base64Image.startsWith("data:image")) {
-        return base64Image;
+      return base64Image;
     }
-    const matches = base64Image.match(/^data:image\/(\w+);base64,(.+)$/);
+
+    const matches = base64Image.match(
+      /^data:image\/(\w+);base64,(.+)$/
+    );
+
     if (!matches) return "";
+
     const ext = matches[1];
     const data = matches[2];
-    const uploadDir = path.join(__dirname, "../../../public/dist/coupon_images");
+
+    const uploadDir = path.join(
+      __dirname,
+      "../../../public/dist/coupon_images"
+    );
+
     if (!fs.existsSync(uploadDir)) {
-        fs.mkdirSync(uploadDir, { recursive: true });
+      fs.mkdirSync(uploadDir, {
+        recursive: true,
+      });
     }
+
     const fileName = Date.now() + "." + ext;
+
     const filePath = path.join(uploadDir, fileName);
-    fs.writeFileSync(filePath, Buffer.from(data, "base64"));
+
+    fs.writeFileSync(
+      filePath,
+      Buffer.from(data, "base64")
+    );
+
     return "/dist/coupon_images/" + fileName;
   }
+
   module.addCoupon = async function (request, response) {
     try {
-      const brandId = request.body.brandId || request.query.brandId;
+      const brandId =
+        request.body.brandId || request.query.brandId;
+
       const mode = request.body.mode || "manual";
-      const couponStatus = String(request.body.couponStatus || request.body.status || "unused").trim() || "unused";
-      if (!brandId) { return response.status(400).json({ success: false, message: "Brand id is required." }); }
-      let manualCoupons = [];
-      if (mode === "manual") {
-        manualCoupons = Array.isArray(request.body.coupons) ? request.body.coupons : [];
-      } else {
-        return response.status(400).json({ success: false, message: "Invalid mode selected." });
+
+      const couponStatus =
+        String(
+          request.body.couponStatus ||
+            request.body.status ||
+            "unused"
+        ).trim() || "unused";
+
+      if (!brandId) {
+        return response.status(400).json({
+          success: false,
+          message: "Brand id is required.",
+        });
       }
-      if (!manualCoupons.length) { return response.status(400).json({ success: false, message: "Please add at least one coupon." }); }
-      const existingCoupons = await model.Coupon.findAll({ where: { brand_id: brandId }, attributes: ["couponCode"], raw: true, });
-      const existingSet = new Set(existingCoupons.map((coupon) => String(coupon.couponCode).toUpperCase()));
+
+      let manualCoupons = [];
+
+      if (mode === "manual") {
+        manualCoupons = Array.isArray(request.body.coupons)
+          ? request.body.coupons
+          : [];
+      } else {
+        return response.status(400).json({
+          success: false,
+          message: "Invalid mode selected.",
+        });
+      }
+
+      if (!manualCoupons.length) {
+        return response.status(400).json({
+          success: false,
+          message: "Please add at least one coupon.",
+        });
+      }
+
+      const existingCoupons = await model.Coupon.findAll({
+        where: {
+          brand_id: brandId,
+        },
+        attributes: ["couponCode"],
+        raw: true,
+      });
+
+      const existingSet = new Set(
+        existingCoupons.map((coupon) =>
+          String(coupon.couponCode).toUpperCase()
+        )
+      );
+
       const uniqueCoupons = [];
       const seen = new Set();
+
       for (const item of manualCoupons) {
-        const normalizedCode = String(item.couponCode || "").trim();
+        const normalizedCode = String(
+          item.couponCode || ""
+        ).trim();
+
         const key = normalizedCode.toUpperCase();
-        if (!normalizedCode || seen.has(key) || existingSet.has(key)) {
+
+        if (
+          !normalizedCode ||
+          seen.has(key) ||
+          existingSet.has(key)
+        ) {
           continue;
         }
+
         seen.add(key);
-        const imagePath = saveCouponImage(item.couponImage);
+
+        const imagePath = saveCouponImage(
+          item.couponImage
+        );
+
         uniqueCoupons.push({
           couponCode: normalizedCode,
           title: String(item.title || ""),
@@ -535,17 +668,31 @@ async function generateProductQrPath(qrContent, productId) {
           startingDate: request.body.startingDate,
         });
       }
+
       if (!uniqueCoupons.length) {
-        return response.status(400).json({ success: false, message: "No valid or unique coupon codes were provided." });
+        return response.status(400).json({
+          success: false,
+          message:
+            "No valid or unique coupon codes were provided.",
+        });
       }
+
       const updatedCoupons = uniqueCoupons.map((coupon) => ({
         ...coupon,
         expiryDate: request.body.expiryDate,
         startingDate: request.body.startingDate,
       }));
-      const insertedCoupons = await model.Coupon.bulkCreate(updatedCoupons);
-      const totalBagCount = Number(request.body.bags || request.body.bagsNo || 0);
-        await createAndInsertBagRecords({
+
+      const insertedCoupons =
+        await model.Coupon.bulkCreate(updatedCoupons);
+
+      const totalBagCount = Number(
+        request.body.bags ||
+          request.body.bagsNo ||
+          0
+      );
+
+      await createAndInsertBagRecords({
         model,
         insertedCoupons,
         totalBagCount,
@@ -555,208 +702,426 @@ async function generateProductQrPath(qrContent, productId) {
         brandId,
         expiryDate: request.body.expiryDate,
         startingDate: request.body.startingDate,
-        });
+      });
+
       if (request.body.campaignId) {
         const campaignUpdate = {};
-        const totalBagCount = Number(request.body.bags || request.body.bagsNo || 0);
-        const totalCouponCount = Number(request.body.coupons || request.body.couponNo || insertedCoupons.length);
-        if (totalBagCount > 0) campaignUpdate.bags = totalBagCount;
+
+        const totalBagCount = Number(
+          request.body.bags ||
+            request.body.bagsNo ||
+            0
+        );
+
+        const totalCouponCount = Number(
+          request.body.coupons ||
+            request.body.couponNo ||
+            insertedCoupons.length
+        );
+
+        if (totalBagCount > 0) {
+          campaignUpdate.bags = totalBagCount;
+        }
+
         campaignUpdate.coupons = totalCouponCount;
-        if (request.body.expiryDate !== undefined) campaignUpdate.expiryDate = request.body.expiryDate;
-        if (request.body.startingDate !== undefined) campaignUpdate.startingDate = request.body.startingDate;
+
+        if (
+          request.body.expiryDate !== undefined
+        ) {
+          campaignUpdate.expiryDate =
+            request.body.expiryDate;
+        }
+
+        if (
+          request.body.startingDate !== undefined
+        ) {
+          campaignUpdate.startingDate =
+            request.body.startingDate;
+        }
+
         if (Object.keys(campaignUpdate).length) {
-          await model.Campaign.update(campaignUpdate, { where: { id: request.body.campaignId } });
+          await model.Campaign.update(
+            campaignUpdate,
+            {
+              where: {
+                id: request.body.campaignId,
+              },
+            }
+          );
         }
       }
+
       return response.json({
-        success: true, message: `Added ${updatedCoupons.length} coupon(s).`,
+        success: true,
+        message: `Added ${updatedCoupons.length} coupon(s).`,
       });
     } catch (error) {
       console.log("Error in addCoupon", error);
-      return response
-        .status(500)
-        .json({ success: false, message: "Internal Server Error" });
+
+      return response.status(500).json({
+        success: false,
+        message: "Internal Server Error",
+      });
     }
   };
 
-  module.previewCouponUpload = async function (request, response) {
+  module.previewCouponUpload = async function (
+    request,
+    response
+  ) {
     try {
       const file = request.files;
+
       if (!file || !file.file) {
-        return response.status(400).json({ success: false, message: "No file uploaded" });
-      }
-
-      const brandId = request.body.brandId || request.query.brandId;
-      if (!brandId) {
-        return response.status(400).json({ success: false, message: "Brand id is required." });
-      }
-
-      const fileExtension = path.extname(file.file.name).toLowerCase();
-      if (fileExtension === ".csv") {
-        parseCSVFile(file, [], (error, result) => {
-          if (error) {
-            return response.json({ success: false, message: error.message });
-          }
-
-          const previewRows = (result.coupons || []).map((coupon) => ({
-            couponCode: coupon.couponCode || "",
-            title: coupon.title || "",
-            description: coupon.description || "",
-            couponImage: coupon.couponImage || "",
-          }));
-
-          return response.json({
-            success: true,
-            previewRows,
-            columns: ["couponCode", "title", "description", "couponImage"],
-          });
+        return response.status(400).json({
+          success: false,
+          message: "No file uploaded",
         });
+      }
+
+      const brandId =
+        request.body.brandId ||
+        request.query.brandId;
+
+      if (!brandId) {
+        return response.status(400).json({
+          success: false,
+          message: "Brand id is required.",
+        });
+      }
+
+      const fileExtension = path
+        .extname(file.file.name)
+        .toLowerCase();
+
+      if (fileExtension === ".csv") {
+        parseCSVFile(
+          file,
+          [],
+          (error, result) => {
+            if (error) {
+              return response.json({
+                success: false,
+                message: error.message,
+              });
+            }
+
+            const previewRows = (
+              result.coupons || []
+            ).map((coupon) => ({
+              couponCode:
+                coupon.couponCode || "",
+              title: coupon.title || "",
+              description:
+                coupon.description || "",
+              couponImage:
+                coupon.couponImage || "",
+            }));
+
+            return response.json({
+              success: true,
+              previewRows,
+              columns: [
+                "couponCode",
+                "title",
+                "description",
+                "couponImage",
+              ],
+            });
+          }
+        );
+
         return;
       }
 
-      if (fileExtension === ".xls" || fileExtension === ".xlsx") {
-        const couponbulk = parseExcelFile(file, []);
+      if (
+        fileExtension === ".xls" ||
+        fileExtension === ".xlsx"
+      ) {
+        const couponbulk =
+          parseExcelFile(file, []);
+
         if (couponbulk.status === "success") {
-          const previewRows = (couponbulk.coupons || []).map((coupon) => ({
-            couponCode: coupon.couponCode || "",
+          const previewRows = (
+            couponbulk.coupons || []
+          ).map((coupon) => ({
+            couponCode:
+              coupon.couponCode || "",
             title: coupon.title || "",
-            description: coupon.description || "",
-            couponImage: coupon.couponImage || "",
+            description:
+              coupon.description || "",
+            couponImage:
+              coupon.couponImage || "",
           }));
 
           return response.json({
             success: true,
             previewRows,
-            columns: ["couponCode", "title", "description", "couponImage"],
+            columns: [
+              "couponCode",
+              "title",
+              "description",
+              "couponImage",
+            ],
           });
         }
-        return response.json({ success: false, message: couponbulk.message });
+
+        return response.json({
+          success: false,
+          message: couponbulk.message,
+        });
       }
 
-      return response.status(400).json({ success: false, message: "Format is Not Valid" });
+      return response.status(400).json({
+        success: false,
+        message: "Format is Not Valid",
+      });
     } catch (error) {
-      console.log("Error while previewing coupon upload", error);
-      return response.status(500).json({ success: false, message: "Internal Server Error" });
+      console.log(
+        "Error while previewing coupon upload",
+        error
+      );
+
+      return response.status(500).json({
+        success: false,
+        message: "Internal Server Error",
+      });
     }
   };
 
-  module.getUploadStatus = function (request, response) {
-    const job = uploadJobs.get(request.params.jobId);
+  module.getUploadStatus = function (
+    request,
+    response
+  ) {
+    const job = uploadJobs.get(
+      request.params.jobId
+    );
+
     if (!job) {
-      return response.status(404).json({ success: false, message: "Upload job not found." });
+      return response.status(404).json({
+        success: false,
+        message: "Upload job not found.",
+      });
     }
-    return response.json({ success: true, job });
+
+    return response.json({
+      success: true,
+      job,
+    });
   };
 
-  module.uploadCoupon = async function (request, response) {
+  module.uploadCoupon = async function (
+    request,
+    response
+  ) {
     try {
       const file = request.files;
-      const brandId = request.body.brandId || request.query.brandId;
-      const couponStatus = String(request.body.couponStatus || request.body.status || "unused").trim() || "unused";
+
+      const brandId =
+        request.body.brandId ||
+        request.query.brandId;
+
+      const couponStatus =
+        String(
+          request.body.couponStatus ||
+            request.body.status ||
+            "unused"
+        ).trim() || "unused";
+
       console.log("[uploadCoupon] started", {
         brandId,
         campaignId: request.body.campaignId,
-        bags: request.body.bags || request.body.bagsNo,
-        coupons: request.body.coupons || request.body.couponNo,
-        hasPreviewData: Boolean(request.body.previewData),
-        fileName: file?.file?.name || null,
+        bags:
+          request.body.bags ||
+          request.body.bagsNo,
+        coupons:
+          request.body.coupons ||
+          request.body.couponNo,
+        hasPreviewData: Boolean(
+          request.body.previewData
+        ),
+        fileName:
+          file?.file?.name || null,
       });
+
       if (!brandId) {
-        return response
-          .status(400)
-          .json({ success: false, message: "Brand id is required." });
+        return response.status(400).json({
+          success: false,
+          message: "Brand id is required.",
+        });
       }
 
-      const previewData = request.body.previewData || request.body.rows || request.body.coupons;
+      const previewData =
+        request.body.previewData ||
+        request.body.rows ||
+        request.body.coupons;
+
       if (previewData) {
         let parsedRows = [];
+
         if (Array.isArray(previewData)) {
           parsedRows = previewData;
-        } else if (typeof previewData === "string") {
+        } else if (
+          typeof previewData === "string"
+        ) {
           try {
-            const parsedPayload = JSON.parse(previewData);
+            const parsedPayload =
+              JSON.parse(previewData);
+
             if (Array.isArray(parsedPayload)) {
               parsedRows = parsedPayload;
             }
           } catch (error) {
-            console.log("Invalid preview data payload", error);
+            console.log(
+              "Invalid preview data payload",
+              error
+            );
           }
         }
 
         if (!parsedRows.length) {
-          return response.json({ success: false, message: "No preview rows were provided." });
+          return response.json({
+            success: false,
+            message:
+              "No preview rows were provided.",
+          });
         }
 
-        const expectedCount = Number(request.body.coupons || request.body.couponNo || 0);
-        const existingCoupons = await model.Coupon.findAll({
-          where: { brand_id: brandId },
-          attributes: ["couponCode"],
-          raw: true,
-        });
-        const existingSet = new Set(existingCoupons.map((coupon) => String(coupon.couponCode).toUpperCase()));
+        const expectedCount = Number(
+          request.body.coupons ||
+            request.body.couponNo ||
+            0
+        );
+
+        const existingCoupons =
+          await model.Coupon.findAll({
+            where: {
+              brand_id: brandId,
+            },
+            attributes: ["couponCode"],
+            raw: true,
+          });
+
+        const existingSet = new Set(
+          existingCoupons.map((coupon) =>
+            String(
+              coupon.couponCode
+            ).toUpperCase()
+          )
+        );
 
         const normalizedCoupons = [];
         const validationErrors = [];
         const seenCodes = new Set();
 
-        parsedRows.forEach((row, index) => {
-          const normalizedCoupon = normalizeCouponEntry(row);
-          if (!normalizedCoupon || !normalizedCoupon.couponCode) {
-            validationErrors.push({ row: index + 1, message: "Coupon code is required." });
-            return;
+        parsedRows.forEach(
+          (row, index) => {
+            const normalizedCoupon =
+              normalizeCouponEntry(row);
+
+            if (
+              !normalizedCoupon ||
+              !normalizedCoupon.couponCode
+            ) {
+              validationErrors.push({
+                row: index + 1,
+                message:
+                  "Coupon code is required.",
+              });
+
+              return;
+            }
+
+            const key =
+              normalizedCoupon.couponCode.toUpperCase();
+
+            seenCodes.add(key);
+            normalizedCoupons.push(
+              normalizedCoupon
+            );
           }
-
-          const key = normalizedCoupon.couponCode.toUpperCase();
-         
-
-          seenCodes.add(key);
-          normalizedCoupons.push(normalizedCoupon);
-        });
+        );
 
         if (validationErrors.length) {
           return response.json({
             success: false,
-            message: "Validation failed for the edited coupon data.",
+            message:
+              "Validation failed for the edited coupon data.",
             errors: validationErrors,
           });
         }
 
-        if (expectedCount > 0 && normalizedCoupons.length !== expectedCount) {
+        if (
+          expectedCount > 0 &&
+          normalizedCoupons.length !==
+            expectedCount
+        ) {
           return response.json({
             success: false,
             message: `Please upload exactly ${expectedCount} coupons. Found ${normalizedCoupons.length}.`,
           });
         }
 
-        const updatedCoupons = await Promise.all(
-          normalizedCoupons.map(async (coupon) => ({
-            ...coupon,
-            couponImage: saveCouponImage(coupon.couponImage),
-            brand_id: brandId,
-            status: couponStatus,
-            expiryDate: request.body.expiryDate,
-            startingDate: request.body.startingDate,
-          }))
+        const updatedCoupons =
+          await Promise.all(
+            normalizedCoupons.map(
+              async (coupon) => ({
+                ...coupon,
+                couponImage:
+                  saveCouponImage(
+                    coupon.couponImage
+                  ),
+                brand_id: brandId,
+                status: couponStatus,
+                expiryDate:
+                  request.body.expiryDate,
+                startingDate:
+                  request.body.startingDate,
+              })
+            )
+          );
+
+        const insertedCoupons =
+          await model.Coupon.bulkCreate(
+            updatedCoupons
+          );
+
+        const totalBagCount = Number(
+          request.body.bags ||
+            request.body.bagsNo ||
+            0
         );
 
-        const insertedCoupons = await model.Coupon.bulkCreate(updatedCoupons);
-        const totalBagCount = Number(request.body.bags || request.body.bagsNo || 0);
-        console.log("[uploadCoupon] preview rows inserted", {
-          couponCount: insertedCoupons.length,
-          totalBagCount,
-        });
+        console.log(
+          "[uploadCoupon] preview rows inserted",
+          {
+            couponCount:
+              insertedCoupons.length,
+            totalBagCount,
+          }
+        );
+
         const jobId = startBagUploadJob({
           model,
           insertedCoupons,
           totalBagCount,
           generateProductQrPath,
-          productId: request.body.productId,
-          campaignId: request.body.campaignId,
+          productId:
+            request.body.productId,
+          campaignId:
+            request.body.campaignId,
           brandId,
-          expiryDate: request.body.expiryDate,
-          startingDate: request.body.startingDate,
-          totalCouponCount: Number(request.body.coupons || request.body.couponNo || insertedCoupons.length),
+          expiryDate:
+            request.body.expiryDate,
+          startingDate:
+            request.body.startingDate,
+          totalCouponCount: Number(
+            request.body.coupons ||
+              request.body.couponNo ||
+              insertedCoupons.length
+          ),
         });
+
         return response.status(202).json({
           success: true,
           asynchronous: true,
@@ -766,142 +1131,326 @@ async function generateProductQrPath(qrContent, productId) {
       }
 
       if (!file) {
-        return response
-          .status(400)
-          .json({ success: false, message: "No file uploaded" });
+        return response.status(400).json({
+          success: false,
+          message: "No file uploaded",
+        });
       }
 
-      const fileExtension = path.extname(file.file.name).toLowerCase();
+      const fileExtension = path
+        .extname(file.file.name)
+        .toLowerCase();
+
       const coupons = [];
 
       if (fileExtension === ".csv") {
-        parseCSVFile(file, [], async (error, result) => {
-          try {
-          if (error) {
-            return response.json({ success: false, message: error.message });
-          }
+        parseCSVFile(
+          file,
+          coupons,
+          async (error, result) => {
+            try {
+              if (error) {
+                return response.json({
+                  success: false,
+                  message: error.message,
+                });
+              }
 
-          const parsedCoupons = result.coupons || [];
-          const expectedCount = Number(request.body.coupons);
-          if (expectedCount > 0 && parsedCoupons.length !== expectedCount) {
+              const parsedCoupons =
+                result.coupons || [];
+
+              const expectedCount = Number(
+                request.body.coupons
+              );
+
+              if (
+                expectedCount > 0 &&
+                parsedCoupons.length !==
+                  expectedCount
+              ) {
+                return response.json({
+                  success: false,
+                  message: `Please upload exactly ${expectedCount} coupons. Found ${parsedCoupons.length}.`,
+                });
+              }
+
+              const updatedCoupons =
+                await Promise.all(
+                  parsedCoupons.map(
+                    async (coupon) => {
+                      return {
+                        ...coupon,
+                        brand_id: brandId,
+                        expiryDate:
+                          request.body
+                            .expiryDate,
+                        startingDate:
+                          request.body
+                            .startingDate,
+                      };
+                    }
+                  )
+                );
+
+              const insertedCoupons =
+                await model.Coupon.bulkCreate(
+                  updatedCoupons
+                );
+
+              const totalBagCount = Number(
+                request.body.bags ||
+                  request.body.bagsNo ||
+                  0
+              );
+
+              await createAndInsertBagRecords({
+                model,
+                insertedCoupons,
+                totalBagCount,
+                generateProductQrPath,
+                productId:
+                  request.body.productId,
+                campaignId:
+                  request.body.campaignId,
+                brandId,
+                expiryDate:
+                  request.body.expiryDate,
+                startingDate:
+                  request.body.startingDate,
+              });
+
+              try {
+                if (request.body.campaignId) {
+                  const campaignUpdate =
+                    {};
+
+                  const totalCouponCount =
+                    Number(
+                      request.body.coupons ||
+                        request.body
+                          .couponNo ||
+                        insertedCoupons.length
+                    );
+
+                  if (totalBagCount > 0) {
+                    campaignUpdate.bags =
+                      totalBagCount;
+                  }
+
+                  campaignUpdate.coupons =
+                    totalCouponCount;
+
+                  if (
+                    request.body
+                      .expiryDate !==
+                    undefined
+                  ) {
+                    campaignUpdate.expiryDate =
+                      request.body.expiryDate;
+                  }
+
+                  if (
+                    request.body
+                      .startingDate !==
+                    undefined
+                  ) {
+                    campaignUpdate.startingDate =
+                      request.body.startingDate;
+                  }
+
+                  if (
+                    Object.keys(
+                      campaignUpdate
+                    ).length
+                  ) {
+                    await model.Campaign.update(
+                      campaignUpdate,
+                      {
+                        where: {
+                          id: request.body
+                            .campaignId,
+                        },
+                      }
+                    );
+                  }
+                }
+              } catch (bagError) {
+                return response.json({
+                  success: false,
+                  message:
+                    "Error inserting bag records.",
+                });
+              }
+
+              return response.json({
+                success: true,
+              });
+            } catch (error) {
+              console.log(
+                "[uploadCoupon] CSV processing failed",
+                error
+              );
+
+              return response.status(500).json({
+                success: false,
+                message:
+                  "Error processing coupon upload.",
+              });
+            }
+          }
+        );
+      } else if (
+        fileExtension === ".xls" ||
+        fileExtension === ".xlsx"
+      ) {
+        let couponbulk =
+          await parseExcelFile(
+            file,
+            coupons
+          );
+
+        if (couponbulk.status == "success") {
+          const parsedCoupons =
+            couponbulk.coupons || [];
+
+          const expectedCount = Number(
+            request.body.coupons
+          );
+
+          if (
+            expectedCount > 0 &&
+            parsedCoupons.length !==
+              expectedCount
+          ) {
             return response.json({
               success: false,
               message: `Please upload exactly ${expectedCount} coupons. Found ${parsedCoupons.length}.`,
             });
           }
 
-          const updatedCoupons = await Promise.all(
-            parsedCoupons.map(async (coupon) => {
-              return {
-                ...coupon,
-                brand_id: brandId,
-                expiryDate: request.body.expiryDate,
-                startingDate: request.body.startingDate,
-              };
-            })
+          const updatedCoupons =
+            await Promise.all(
+              parsedCoupons.map(
+                async (coupon) => {
+                  return {
+                    ...coupon,
+                    brand_id: brandId,
+                    expiryDate:
+                      request.body.expiryDate,
+                    startingDate:
+                      request.body.startingDate,
+                  };
+                }
+              )
+            );
+
+          const insertedCoupons =
+            await model.Coupon.bulkCreate(
+              updatedCoupons
+            );
+
+          const totalBagCount = Number(
+            request.body.bags ||
+              request.body.bagsNo ||
+              0
           );
 
-        const insertedCoupons = await model.Coupon.bulkCreate(updatedCoupons);
-          const totalBagCount = Number(request.body.bags || request.body.bagsNo || 0);
           await createAndInsertBagRecords({
             model,
             insertedCoupons,
             totalBagCount,
             generateProductQrPath,
-            productId: request.body.productId,
-            campaignId: request.body.campaignId,
+            productId:
+              request.body.productId,
+            campaignId:
+              request.body.campaignId,
             brandId,
-            expiryDate: request.body.expiryDate,
-            startingDate: request.body.startingDate,
+            expiryDate:
+              request.body.expiryDate,
+            startingDate:
+              request.body.startingDate,
           });
-          try {
-            if (request.body.campaignId) {
-              const campaignUpdate = {};
-              const totalCouponCount = Number(request.body.coupons || request.body.couponNo || insertedCoupons.length);
-              if (totalBagCount > 0) campaignUpdate.bags = totalBagCount;
-              campaignUpdate.coupons = totalCouponCount;
-              if (request.body.expiryDate !== undefined) campaignUpdate.expiryDate = request.body.expiryDate;
-              if (request.body.startingDate !== undefined) campaignUpdate.startingDate = request.body.startingDate;
-              if (Object.keys(campaignUpdate).length) {
-                await model.Campaign.update(campaignUpdate, { where: { id: request.body.campaignId } });
-              }
-            }
-          } catch (bagError) {
-            return response.json({ success: false, message: "Error inserting bag records." });
-          }
-          return response.json({ success: true });
-          } catch (error) {
-            console.log("[uploadCoupon] CSV processing failed", error);
-            return response.status(500).json({ success: false, message: "Error processing coupon upload." });
-          }
-        });
-      } else if (fileExtension === ".xls" || fileExtension === ".xlsx") {
-        let couponbulk = await parseExcelFile(file, coupons);
 
-        if (couponbulk.status == "success") {
-          const parsedCoupons = couponbulk.coupons || [];
-          const expectedCount = Number(request.body.coupons);
-          if (expectedCount > 0 && parsedCoupons.length !== expectedCount) {
-            return response.json({
-              success: false,
-              message: `Please upload exactly ${expectedCount} coupons. Found ${parsedCoupons.length}.`,
-            });
-          }
-          const updatedCoupons = await Promise.all(
-            parsedCoupons.map(async (coupon) => {
-              return {
-                ...coupon,
-                brand_id: brandId,
-                expiryDate: request.body.expiryDate,
-                startingDate: request.body.startingDate,
-              };
-            })
-          );
-
-        const insertedCoupons = await model.Coupon.bulkCreate(updatedCoupons);
-          const totalBagCount = Number(request.body.bags || request.body.bagsNo || 0);
-          await createAndInsertBagRecords({
-            model,
-            insertedCoupons,
-            totalBagCount,
-            productId: request.body.productId,
-            campaignId: request.body.campaignId,
-            brandId,
-            expiryDate: request.body.expiryDate,
-            startingDate: request.body.startingDate,
-          });
           if (request.body.campaignId) {
             const campaignUpdate = {};
-            const totalCouponCount = Number(request.body.coupons || request.body.couponNo || insertedCoupons.length);
-            if (totalBagCount > 0) campaignUpdate.bags = totalBagCount;
-            campaignUpdate.coupons = totalCouponCount;
-            if (request.body.expiryDate !== undefined) campaignUpdate.expiryDate = request.body.expiryDate;
-            if (request.body.startingDate !== undefined) campaignUpdate.startingDate = request.body.startingDate;
-            if (Object.keys(campaignUpdate).length) {
-              await model.Campaign.update(campaignUpdate, { where: { id: request.body.campaignId } });
+
+            const totalCouponCount =
+              Number(
+                request.body.coupons ||
+                  request.body.couponNo ||
+                  insertedCoupons.length
+              );
+
+            if (totalBagCount > 0) {
+              campaignUpdate.bags =
+                totalBagCount;
+            }
+
+            campaignUpdate.coupons =
+              totalCouponCount;
+
+            if (
+              request.body.expiryDate !==
+              undefined
+            ) {
+              campaignUpdate.expiryDate =
+                request.body.expiryDate;
+            }
+
+            if (
+              request.body.startingDate !==
+              undefined
+            ) {
+              campaignUpdate.startingDate =
+                request.body.startingDate;
+            }
+
+            if (
+              Object.keys(campaignUpdate)
+                .length
+            ) {
+              await model.Campaign.update(
+                campaignUpdate,
+                {
+                  where: {
+                    id: request.body
+                      .campaignId,
+                  },
+                }
+              );
             }
           }
 
-          return response.json({ success: true });
+          return response.json({
+            success: true,
+          });
         } else {
-          return response.json({ success: false, message: couponbulk.message });
+          return response.json({
+            success: false,
+            message: couponbulk.message,
+          });
         }
       } else {
         console.log("Invalid file type----");
-        return response
-          .status(400)
-          .json({ success: false, message: "Format is Not Valid" });
+
+        return response.status(400).json({
+          success: false,
+          message: "Format is Not Valid",
+        });
       }
     } catch (error) {
       console.log("Error:", error);
-      return response
-        .status(500)
-        .json({ success: false, message: "Internal Server Error" });
+
+      return response.status(500).json({
+        success: false,
+        message: "Internal Server Error",
+      });
     }
   };
 
   return module;
 };
+
 
 async function createAndInsertBagRecords({
   model,
@@ -915,68 +1464,129 @@ async function createAndInsertBagRecords({
   startingDate,
   onProgress,
 }) {
-  const bagProductIds = createBagProductIds(productId, totalBagCount);
+  const bagProductIds = createBagProductIds(
+    productId,
+    totalBagCount
+  );
+
   const batchSize = 500;
+
   let bagRecords = [];
+
   const startedAt = Date.now();
 
-  console.log("[uploadCoupon] bag creation started", {
-    totalBagCount,
-    couponCount: insertedCoupons.length,
-    totalRows: totalBagCount * insertedCoupons.length,
-    batchSize,
-  });
+  console.log(
+    "[uploadCoupon] bag creation started",
+    {
+      totalBagCount,
+      couponCount: insertedCoupons.length,
+      totalRows:
+        totalBagCount *
+        insertedCoupons.length,
+      batchSize,
+    }
+  );
 
-  for (let bagIndex = 0; bagIndex < totalBagCount; bagIndex += 1) {
-    const currentProductId = bagProductIds.length
-      ? bagProductIds[bagIndex]
-      : productId;
-    const qrLink = `${process.env.BASE_URL}/coupon/${currentProductId}`;
-    const productQrCode = await generateProductQrPath(qrLink, currentProductId);
+  for (
+    let bagIndex = 0;
+    bagIndex < totalBagCount;
+    bagIndex += 1
+  ) {
+    const currentProductId =
+      bagProductIds.length
+        ? bagProductIds[bagIndex]
+        : productId;
 
-    insertedCoupons.forEach((coupon) => {
-      bagRecords.push({
-        campaign_id: campaignId,
-        brand_id: brandId,
-        coupon_id: coupon.id,
-        bagName: `Bag${bagIndex + 1}`,
-        productId: currentProductId,
-        qrCode: productQrCode,
-        expiryDate,
-        startingDate,
-        status: false,
-        isExpired: false,
-      });
-    });
+    /*
+     * Existing product/coupon QR functionality.
+     * KEEP THIS.
+     */
+    const qrLink =
+      `${process.env.BASE_URL}/coupon/${currentProductId}`;
 
-    if (bagRecords.length >= batchSize || bagIndex === totalBagCount - 1) {
-      const rowsInBatch = bagRecords.length;
-      await model.Bags.bulkCreate(bagRecords);
+    const productQrCode =
+      await generateProductQrPath(
+        qrLink,
+        currentProductId
+      );
+
+    insertedCoupons.forEach(
+      (coupon) => {
+        bagRecords.push({
+          campaign_id: campaignId,
+          brand_id: brandId,
+          coupon_id: coupon.id,
+
+          bagName: `Bag${bagIndex + 1}`,
+
+          productId: currentProductId,
+
+          /*
+           * Existing product QR.
+           */
+          qrCode: productQrCode,
+
+          expiryDate,
+          startingDate,
+          status: false,
+          isExpired: false,
+        });
+      }
+    );
+
+    if (
+      bagRecords.length >= batchSize ||
+      bagIndex === totalBagCount - 1
+    ) {
+      const rowsInBatch =
+        bagRecords.length;
+
+      await model.Bags.bulkCreate(
+        bagRecords
+      );
+
       bagRecords = [];
-      console.log("[uploadCoupon] bag batch inserted", {
-        bagsCompleted: bagIndex + 1,
-        totalBagCount,
-        rowsInBatch,
-        elapsedMs: Date.now() - startedAt,
-      });
+
+      console.log(
+        "[uploadCoupon] bag batch inserted",
+        {
+          bagsCompleted:
+            bagIndex + 1,
+          totalBagCount,
+          rowsInBatch,
+          elapsedMs:
+            Date.now() - startedAt,
+        }
+      );
+
       if (onProgress) {
         onProgress(bagIndex + 1);
       }
     }
   }
 
-  console.log("[uploadCoupon] bag creation completed", {
-    totalBagCount,
-    elapsedMs: Date.now() - startedAt,
-  });
+  console.log(
+    "[uploadCoupon] bag creation completed",
+    {
+      totalBagCount,
+      elapsedMs:
+        Date.now() - startedAt,
+    }
+  );
 }
 
+
 function startBagUploadJob(options) {
-  const jobId = `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+  const jobId =
+    `${Date.now()}-${Math.random()
+      .toString(36)
+      .slice(2)}`;
+
   uploadJobs.set(jobId, {
     status: "processing",
     bagsCompleted: 0,
-    totalBags: options.totalBagCount,
+    totalBags:
+      options.totalBagCount,
     error: null,
   });
 
@@ -984,66 +1594,154 @@ function startBagUploadJob(options) {
     try {
       await createAndInsertBagRecords({
         ...options,
+
         onProgress: (bagsCompleted) => {
-          const job = uploadJobs.get(jobId);
-          if (job) job.bagsCompleted = bagsCompleted;
+          const job =
+            uploadJobs.get(jobId);
+
+          if (job) {
+            job.bagsCompleted =
+              bagsCompleted;
+          }
         },
       });
+
       if (options.campaignId) {
         const campaignUpdate = {
-          coupons: options.totalCouponCount,
+          coupons:
+            options.totalCouponCount,
         };
-        if (options.totalBagCount > 0) campaignUpdate.bags = options.totalBagCount;
-        if (options.expiryDate !== undefined) campaignUpdate.expiryDate = options.expiryDate;
-        if (options.startingDate !== undefined) campaignUpdate.startingDate = options.startingDate;
-        await options.model.Campaign.update(campaignUpdate, { where: { id: options.campaignId } });
+
+        if (
+          options.totalBagCount > 0
+        ) {
+          campaignUpdate.bags =
+            options.totalBagCount;
+        }
+
+        if (
+          options.expiryDate !==
+          undefined
+        ) {
+          campaignUpdate.expiryDate =
+            options.expiryDate;
+        }
+
+        if (
+          options.startingDate !==
+          undefined
+        ) {
+          campaignUpdate.startingDate =
+            options.startingDate;
+        }
+
+        await options.model.Campaign.update(
+          campaignUpdate,
+          {
+            where: {
+              id: options.campaignId,
+            },
+          }
+        );
       }
-      const job = uploadJobs.get(jobId);
+
+      const job =
+        uploadJobs.get(jobId);
+
       if (job) {
         job.status = "completed";
-        job.bagsCompleted = options.totalBagCount;
+        job.bagsCompleted =
+          options.totalBagCount;
       }
-      console.log("[uploadCoupon] background job completed", { jobId });
+
+      console.log(
+        "[uploadCoupon] background job completed",
+        {
+          jobId,
+        }
+      );
     } catch (error) {
-      const job = uploadJobs.get(jobId);
+      const job =
+        uploadJobs.get(jobId);
+
       if (job) {
         job.status = "failed";
         job.error = error.message;
       }
-      console.log("[uploadCoupon] background job failed", { jobId, error });
+
+      console.log(
+        "[uploadCoupon] background job failed",
+        {
+          jobId,
+          error,
+        }
+      );
     }
   });
 
-  console.log("[uploadCoupon] background job started", { jobId });
+  console.log(
+    "[uploadCoupon] background job started",
+    {
+      jobId,
+    }
+  );
+
   return jobId;
 }
 
-function createBagProductIds(baseProductId, bagCount) {
-  const count = Number(bagCount) || 0;
+
+function createBagProductIds(
+  baseProductId,
+  bagCount
+) {
+  const count =
+    Number(bagCount) || 0;
+
   if (count <= 0) {
     return [];
   }
 
   const ids = new Set();
+
   while (ids.size < count) {
-    ids.add(generateRandomNumericId(8));
+    ids.add(
+      generateRandomNumericId(8)
+    );
   }
 
   return Array.from(ids);
 }
 
-function generateRandomNumericId(length = 8) {
-  const digits = "0123456789";
+
+function generateRandomNumericId(
+  length = 8
+) {
+  const digits =
+    "0123456789";
+
   let result = "";
-  while (result.length < length) {
-    result += digits.charAt(Math.floor(Math.random() * digits.length));
+
+  while (
+    result.length < length
+  ) {
+    result += digits.charAt(
+      Math.floor(
+        Math.random() *
+          digits.length
+      )
+    );
   }
+
   return result.slice(0, length);
 }
 
+
 function normalizeCouponEntry(row) {
   const couponCode = String(
-    row?.["Coupon Code"] || row?.couponCode || row?.["couponCode"] || ""
+    row?.["Coupon Code"] ||
+      row?.couponCode ||
+      row?.["couponCode"] ||
+      ""
   ).trim();
 
   if (!couponCode) {
@@ -1052,78 +1750,125 @@ function normalizeCouponEntry(row) {
 
   return {
     couponCode,
-    title: String(row?.title || row?.["Title"] || row?.["title"] || "").trim(),
-    description: String(
-      row?.description || row?.["Description"] || row?.["description"] || ""
+
+    title: String(
+      row?.title ||
+        row?.["Title"] ||
+        row?.["title"] ||
+        ""
     ).trim(),
+
+    description: String(
+      row?.description ||
+        row?.["Description"] ||
+        row?.["description"] ||
+        ""
+    ).trim(),
+
     couponImage: String(
-      row?.couponImage || row?.["CouponImage"] || row?.["couponImage"] || ""
+      row?.couponImage ||
+        row?.["CouponImage"] ||
+        row?.["couponImage"] ||
+        ""
     ).trim(),
   };
 }
 
+
 function collectUniqueCoupons(rows) {
   const uniqueCoupons = [];
-  const seenCodes = new Set();
+
+  const seenCodes =
+    new Set();
 
   for (const row of rows || []) {
-    const normalizedCoupon = normalizeCouponEntry(row);
+    const normalizedCoupon =
+      normalizeCouponEntry(row);
+
     if (!normalizedCoupon) {
       continue;
     }
 
-    const key = normalizedCoupon.couponCode.toUpperCase();
+    const key =
+      normalizedCoupon.couponCode.toUpperCase();
+
     if (seenCodes.has(key)) {
       continue;
     }
 
     seenCodes.add(key);
-    uniqueCoupons.push(normalizedCoupon);
+
+    uniqueCoupons.push(
+      normalizedCoupon
+    );
   }
 
   return uniqueCoupons;
 }
 
-function parseCSVFile(file, coupons, callback) {
-  const stream = require("stream");
-  const bufferStream = new stream.PassThrough();
-  bufferStream.end(file.file.data);
+
+function parseCSVFile(
+  file,
+  coupons,
+  callback
+) {
+  const stream =
+    require("stream");
+
+  const bufferStream =
+    new stream.PassThrough();
+
+  bufferStream.end(
+    file.file.data
+  );
 
   let hasValidCoupons = false;
-  let hasErrorOccurred = false; // Flag to prevent multiple error returns
+  let hasErrorOccurred = false;
 
   bufferStream
     .pipe(csv())
     .on("data", (row) => {
-      if (hasErrorOccurred) return;
+      if (hasErrorOccurred) {
+        return;
+      }
 
-      const normalizedCoupon = normalizeCouponEntry(row);
+      const normalizedCoupon =
+        normalizeCouponEntry(row);
+
       if (!normalizedCoupon) {
         return;
       }
 
-      const existing = coupons.some(
-        (item) => item.couponCode.toUpperCase() === normalizedCoupon.couponCode.toUpperCase()
-      );
+      const existing =
+        coupons.some(
+          (item) =>
+            item.couponCode.toUpperCase() ===
+            normalizedCoupon.couponCode.toUpperCase()
+        );
+
       if (!existing) {
-        coupons.push(normalizedCoupon);
+        coupons.push(
+          normalizedCoupon
+        );
+
         hasValidCoupons = true;
       }
     })
     .on("end", () => {
       if (!hasErrorOccurred) {
-        // If no error occurred, proceed
         if (hasValidCoupons) {
           callback(null, {
             status: "success",
-            message: "Coupons parsed successfully",
+            message:
+              "Coupons parsed successfully",
             coupons: coupons,
           });
         } else {
           callback(
             {
               status: "failed",
-              message: "No valid coupon codes found in the CSV file",
+              message:
+                "No valid coupon codes found in the CSV file",
             },
             null
           );
@@ -1132,29 +1877,66 @@ function parseCSVFile(file, coupons, callback) {
     })
     .on("error", (error) => {
       if (!hasErrorOccurred) {
-        // Only call the callback if no previous error
-        hasErrorOccurred = true; // Set the flag to prevent multiple error callbacks
+        hasErrorOccurred = true;
+
         callback(
           {
             status: "failed",
-            message: "Error while parsing CSV file",
+            message:
+              "Error while parsing CSV file",
             error: error,
           },
           null
-        ); // Pass error to callback
+        );
       }
     });
 }
 
-function parseExcelFile(file, coupons) {
-  const workbook = XLSX.read(file.file.data, { type: "buffer" });
-  console.log("workbook---", JSON.stringify(workbook));
-  const sheetName = workbook.SheetNames[0];
-  const worksheet = XLSX.utils.sheet_to_json(workbook.Sheets[sheetName]);
-  const uniqueCoupons = collectUniqueCoupons(worksheet);
+
+function parseExcelFile(
+  file,
+  coupons
+) {
+  const workbook =
+    XLSX.read(
+      file.file.data,
+      {
+        type: "buffer",
+      }
+    );
+
+  console.log(
+    "workbook---",
+    JSON.stringify(workbook)
+  );
+
+  const sheetName =
+    workbook.SheetNames[0];
+
+  const worksheet =
+    XLSX.utils.sheet_to_json(
+      workbook.Sheets[
+        sheetName
+      ]
+    );
+
+  const uniqueCoupons =
+    collectUniqueCoupons(
+      worksheet
+    );
 
   if (!uniqueCoupons.length) {
-    return { status: "fail", message: "No valid coupon codes found in the Excel file" };
+    return {
+      status: "fail",
+      message:
+        "No valid coupon codes found in the Excel file",
+    };
   }
-  return { status: "success", coupons: uniqueCoupons, message: "Coupons parsed successfully" };
+
+  return {
+    status: "success",
+    coupons: uniqueCoupons,
+    message:
+      "Coupons parsed successfully",
+  };
 }

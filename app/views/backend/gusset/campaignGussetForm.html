@@ -1,0 +1,108 @@
+{% extends "backend/auth_partials/layout.html" %}
+{% block body %}
+<div class="page-wrapper">
+    <div class="container-fluid">
+        <div class="content-header">
+            <div class="container-fluid">
+                <div class="row mb-2">
+                    <div class="col-sm-6">
+                        <h1>{{ title }}</h1>
+                    </div>
+                    <div class="col-sm-6">
+                        <ol class="breadcrumb float-sm-right">
+                            <li class="breadcrumb-item"><a href="/backend/dashboard"><i class="fas fa-tachometer-alt"></i>
+                                    Dashboard</a></li>
+                                <li class="breadcrumb-item"><a href="/backend/brand">Campaign</a></li>
+                            <li class="breadcrumb-item"><a href="/backend/gusset/campaign">Advertise Campaigns</a></li>
+                            <li class="breadcrumb-item active">{% if campaign %}Edit{% else %}Add{% endif %}</li>
+                        </ol>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% include "backend/auth_partials/notification.html" %}
+
+        <section class="content">
+            <div class="container-fluid">
+                <div class="row">
+                    <div class="col-md-12">
+                        <div class="card">
+                            <div class="card-header">
+                                <h6 class="card-title font-weight-bold">{% if campaign %}Edit Advertise Campaign{% else %}Add New Advertise Campaign{% endif %}</h6>
+                            </div>
+                            <div class="card-body">
+                                <form method="post"
+                                    action="{% if campaign %}/backend/gusset/campaign/update/{{ campaign.id }}{% else %}/backend/gusset/campaign{% endif %}"
+                                    class="form-horizontal" id="gussetCampaignForm">
+                                    <div class="form-group row">
+                                        <label class="control-label mb-10 col-sm-2" for="campaignName">Campaign Name*:</label>
+                                        <div class="col-sm-6">
+                                            <input class="form-control" id="campaignName" name="campaignName"
+                                                value="{{ campaign.campaignName if campaign else '' }}" required>
+                                        </div>
+                                    </div>
+
+                                    <div class="form-group row">
+                                        <label class="control-label mb-10 col-sm-2" for="brandId">Advertise Brand*:</label>
+                                        <div class="col-sm-6">
+                                            <select class="form-control" name="brandId" id="brandId" required>
+                                                <option value="">Select brand</option>
+                                                {% for brand in brands %}
+                                                <option value="{{ brand.id }}" {% if campaign and campaign.gussetBrandId == brand.id %}selected{% endif %}>
+                                                    {{ brand.brandName }}
+                                                </option>
+                                                {% endfor %}
+                                            </select>
+                                        </div>
+                                    </div>
+
+                                    <div class="form-group row">
+                                        <label class="control-label mb-10 col-sm-2" for="destinationUrl">Destination URL*:</label>
+                                        <div class="col-sm-6">
+                                            <input class="form-control" type="url" id="destinationUrl" name="destinationUrl"
+                                                value="{{ campaign.destinationUrl if campaign else '' }}"
+                                                placeholder="https://example.com/offer" required>
+                                        </div>
+                                    </div>
+
+                                    <div class="form-group row">
+                                        <label class="mb-10 col-sm-2 col-form-label" for="status">Status</label>
+                                        <div class="col-sm-6">
+                                            <select class="form-control" name="status" id="status">
+                                                <option value="active" {% if not campaign or campaign.status == 'active' %}selected{% endif %}>Active</option>
+                                                <option value="inactive" {% if campaign and campaign.status == 'inactive' %}selected{% endif %}>Inactive</option>
+                                            </select>
+                                        </div>
+                                    </div>
+
+                                    <div class="text-right">
+                                        <button class="btn btn-success" type="submit">{% if campaign %}Update{% else %}Add{% endif %}</button>
+                                        <a class="btn btn-danger" href="/backend/gusset/campaign">Back</a>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </div>
+</div>
+{% endblock %}
+
+{% block Jscript %}
+<script>
+    $('#gussetCampaignForm').validate({
+        rules: {
+            campaignName: { required: true },
+            brandId: { required: true },
+            destinationUrl: { required: true, url: true }
+        },
+        messages: {
+            campaignName: { required: '*Campaign name is required' },
+            brandId: { required: '*Please select an advertise brand' },
+            destinationUrl: { required: '*Destination URL is required', url: '*Please enter a valid URL' }
+        }
+    });
+</script>
+{% endblock %}

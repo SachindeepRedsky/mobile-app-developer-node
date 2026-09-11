@@ -24,7 +24,7 @@ module.exports = function (model, config) {
 
 	module.getUsers = async function (request, response) {
 		try {
-			// console.log('ge/tUsers req body---', request.body);
+			console.log('ge/tUsers req body---', request.body);
 			let start = parseInt(request.query.start);
 			let length = parseInt(request.query.length);
 			let search = request.query.search.value;

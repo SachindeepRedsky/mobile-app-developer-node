@@ -39,8 +39,6 @@ module.exports = function (model) {
                         { 'campaignName': { [Op.like]: '%' + search + '%' } },
                     ]
                 };
-            } else {
-                query = {};
             }
 
             let campaignCount = await model.Campaign.count({ where: query });
@@ -51,38 +49,50 @@ module.exports = function (model) {
                 offset: start,
                 limit: length, /* raw: true */
             });
-            let brandData;
-            let campaignWithBrand = await Promise.all(campaign.map(async (camp) => {
-                let campaignBrandHistory = await model.CampaignBrandHistory.findOne({
-                    where: { campaign_id: camp.id },
-                    raw: true
-                });
-                console.log("campaignBrandHistory", campaignBrandHistory);
-                if (campaignBrandHistory) {
+    
+            let campaignWithBrand = await Promise.all(
+                campaign.map(async (camp) => {
+    
+                    let campaignBrandHistory = await model.CampaignBrandHistory.findOne({
+                        where: { campaign_id: camp.id },
+                        raw: true
+                    });
+    
+                    if (!campaignBrandHistory) {
+                        return null;
+                    }
+    
+                    let brandData = await model.Brand.findOne({
+                        where: { id: campaignBrandHistory.brand_id },
+                        raw: true
+                    });
+                    if (!brandData) {
+                        return null;
+                    }
+    
                     camp.dataValues.brand_id = campaignBrandHistory.brand_id;
-                    brandData = await model.Brand.findOne({ where: { id: campaignBrandHistory.brand_id }, raw: true });
-                    console.log("brandData", brandData);
                     camp.dataValues.brand_name = brandData.brandName;
-                } else {
-                    camp.dataValues.brand_id = null;
-                    camp.dataValues.brand_name = null;
-                }
-                return camp;
-            }));
-            campaign = campaignWithBrand;
-
-
+    
+                    return camp;
+                })
+            );
+            campaign = campaignWithBrand.filter(camp => camp !== null);
+    
             let obj = {
                 'draw': request.query.draw,
                 'recordsTotal': campaignCount,
                 'recordsFiltered': campaignCount,
                 'data': campaign
             };
+    
             return response.send(JSON.stringify(obj));
         } catch (error) {
-            console.log("error in get users", error);
+            console.log("error in getCampaign", error);
+            return response.status(500).send({
+                success: false,
+                message: "Something went wrong"
+            });
         }
-
     };
 
     module.createCampaign = async function (request, response) {
@@ -673,7 +683,7 @@ module.exports = function (model) {
                         [Sequelize.col('coupenDetails.id'), 'coupon_id'],
                         [Sequelize.col('brandDetails.brand_name'), 'brand_name'],
                         [Sequelize.col('brandDetails.id'), 'brand_id'],
-                        [Sequelize.col('campaignDetails.status'), 'camaign_status'],
+                        [Sequelize.col('campaignDetails.status'), 'campaign_status'],
                         ['created_at', 'first_created_at'],
                         ['updated_at', 'last_updated_at'],
                     ],
@@ -717,7 +727,7 @@ module.exports = function (model) {
                         found = {
                             product_id: curr.product_id,
                             coupon_id: curr.coupon_id,
-                            status: curr.camaign_status,
+                            status: curr.campaign_status,
 
                         };
                         acc.push(found);

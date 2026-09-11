@@ -1,8 +1,8 @@
 {% extends "backend/auth_partials/layout.html" %}
-
+ 
 {% block body %}
-
-
+ 
+ 
     <!-- Content Wrapper. Contains page content -->
         <!-- Content Header (Page header) -->
         <div class="content-header">
@@ -22,7 +22,7 @@
         </div>
         <!-- /.content-header -->
         {% include "backend/auth_partials/notification.html" %}
-
+ 
         <!-- Main content -->
         <section class="content">
             <div class="container-fluid">
@@ -75,6 +75,20 @@
                             <a href="/backend/campaign" class="small-box-footer">More info <i class="fas fa-arrow-circle-right"></i></a>
                         </div>
                     </div>
+ 
+                    <!-- Gusset Scan Count -->
+                    <div class="col-lg-3 col-6">
+                        <div class="small-box bg-danger">
+                            <div class="inner">
+                                <h3>{{ totalGussetScans }}</h3>
+                                <p>Active Advertisers</p>
+                            </div>
+                            <div class="icon">
+                                <i class="fas fa-qrcode"></i>
+                            </div>
+                            <a href="/backend/gusset" class="small-box-footer">More info <i class="fas fa-arrow-circle-right"></i></a>
+                        </div>
+                    </div>
                     
                 </div>
                 <!-- /.row -->
@@ -86,7 +100,7 @@
                 <!-- /.row (main row) -->
             </div><!-- /.container-fluid -->
         </section>
-
-
+ 
+ 
 <!-- ./wrapper -->
 {% endblock %}

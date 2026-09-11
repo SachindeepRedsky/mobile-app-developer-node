@@ -15,6 +15,10 @@ module.exports = function (Sequelize, Schema, Campaign, Coupon) {
             type: Sequelize.STRING(255),
             allowNull: true,
         },
+        websiteUrl: {
+            type: Sequelize.TEXT,
+            allowNull: true,
+        },
     }, {
         underscored: true,
     });

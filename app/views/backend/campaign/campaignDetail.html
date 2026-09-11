@@ -516,7 +516,14 @@
             }
             $('#addCouponsBtn').toggle(response.recordsTotal === 0);
             $('#printCampaignQrBtn, #printProductQrBtn').toggle(response.recordsTotal > 0);
-            return response.result || [];
+            const products = response.result || [];
+            products.forEach(function (product) {
+              if (product.productId) {
+                grouped[product.productId] = [product];
+              }
+            });
+            console.log("Grouped product data:", grouped);
+            return products;
           }
         },
         columns: [
@@ -741,27 +748,27 @@
     }
 
     function getProductQrCards() {
-    const cards = [];
+      const cards = [];
 
-    Object.keys(grouped).forEach(function (productId) {
-        const entry = grouped[productId] && grouped[productId][0];
+      Object.keys(grouped).forEach(function (productId) {
+          const entry = grouped[productId] && grouped[productId][0];
 
-        if (!entry || !entry.productQrCode) {
-            return;
-        }
+          if (!entry || !entry.productQrCode) {
+              return;
+          }
 
-        const label = `${entry.campaignName || 'Campaign'} - ${productId}`;
+          const label = `${entry.campaignName || 'Campaign'} - ${productId}`;
 
-        // Print only ONE Product QR for this product
-        cards.push({
-            qr: entry.productQrCode,
-            name: label,
-            extra: 'Product QR Label'
-        });
-    });
+          // Print only ONE Product QR for this product
+          cards.push({
+              qr: entry.productQrCode,
+              name: label,
+              extra: 'Product QR Label'
+          });
+      });
 
-    return cards;
-}
+      return cards;
+  }
 
     $(document).on('click', '#printCampaignQrBtn', function (e) {
       e.preventDefault();
@@ -776,6 +783,7 @@
     $(document).on('click', '#printProductQrBtn', function (e) {
       e.preventDefault();
       const cards = getProductQrCards();
+      console.log("Product QR cards to print:", cards);
       if (!cards.length) {
         Swal.fire('Nothing to print', 'No product QR codes or bag count available.', 'info');
         return;
@@ -935,7 +943,7 @@ function pollUploadJob(jobId, $button) {
           clearInterval(pollTimer);
           $('#uploadProgress').removeClass('alert-info alert-danger').addClass('alert-success').text('Coupons uploaded successfully.');
           hideAddCouponButtons();
-          closeCouponModals(function () { loadCouponTable(campaignId); });
+          closeCouponModals(function () { window.location.reload(); });
         } else if (job.status === 'failed') {
           clearInterval(pollTimer);
           $button.prop('disabled', false).text('Import');
@@ -1005,7 +1013,7 @@ $(document).on("click", "#importPreviewedCoupons", function (e) {
                 $('#uploadError').hide();
                 hideAddCouponButtons();
                 closeCouponModals(function () {
-                    loadCouponTable(campaignId);
+                  window.location.reload();
                 });
             } else {
               $importButton.prop('disabled', false).text('Import');
@@ -1189,7 +1197,7 @@ $(document).on('shown.bs.modal', '#productCouponModal', function() {
                                   $('#csvPreviewModal').modal('hide');
                                   $('#couponEntryModal').modal('hide');
                                   $('#uploadCouponModal').modal('hide');
-                                  loadCouponTable(campaignId);
+                                  window.location.reload();
                                 }, 1000);
                         } else {
                             $('#uploadProgress').removeClass('alert-info alert-success').addClass('alert-danger').text(response.message || 'Upload failed.');
@@ -1300,7 +1308,7 @@ $(document).on('shown.bs.modal', '#productCouponModal', function() {
                         manualStatus.removeClass('alert-info').addClass('alert-success').text(response.message || 'Coupons saved successfully.');
                         hideAddCouponButtons();
                         closeCouponModals(function () {
-                            loadCouponTable(campaignId);
+                          window.location.reload();
                         });
                     } else {
                         manualStatus.removeClass('alert-info').addClass('alert-danger').text(response.message || 'Unable to save coupons.');

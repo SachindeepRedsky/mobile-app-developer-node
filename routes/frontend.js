@@ -22,5 +22,9 @@ module.exports = function (app, model, controller) {
   app.post("/qrscan", controller.auth.qrScan);
   app.post("/getMyCoupon", controller.auth.getMyCoupon);
   app.post("/updateStatus", controller.auth.updateStatus);
-  app.post("/redeemCoupon", controller.auth.redeemCoupon);
+  app.post("/redeemCoupon", middleware.frontend.login, controller.auth.redeemCoupon);
+  app.post("/coupons/share", middleware.frontend.login, controller.sharedCoupon.create);
+  app.get("/coupons/share/:shareToken", controller.sharedCoupon.resolve);
+  app.post("/coupons/share/:shareToken/add", middleware.frontend.login, controller.sharedCoupon.add);
+  app.get("/coupon/share/:shareToken", controller.sharedCoupon.landing);
 };

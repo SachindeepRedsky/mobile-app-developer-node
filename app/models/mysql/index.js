@@ -4,12 +4,18 @@ module.exports = function (Sequelize, Schema) {
     module.User = require('./user')(Sequelize, Schema);
     module.Admin = require('./admin')(Sequelize, Schema);
     module.Cms = require('./cms')(Sequelize, Schema);
+    module.GussetBrand = require('./gussetBrand')(Sequelize, Schema);
+    module.GussetCampaign = require('./gussetCampaign')(Sequelize, Schema, module.GussetBrand);
+    module.GussetAd = require('./gussetAd')(Sequelize, Schema, module.GussetCampaign);
     module.Campaign = require('./campaign')(Sequelize, Schema);
     module.Brand = require('./brand')(Sequelize, Schema, module.Campaign);
     module.Coupon = require('./coupon')(Sequelize, Schema, module.User, module.Brand);
     module.CampaignBrandHistory = require('./campaignBrandHistory')(Sequelize, Schema, module.Campaign, module.Brand);
     module.Bags = require('./bags')(Sequelize, Schema, module.Campaign, module.Brand, module.Coupon);
+    module.GussetScan = require('./gussetScan')(Sequelize, Schema, module.GussetAd);
     module.CouponRecords = require('./couponRecords')(Sequelize, Schema, module.Coupon);
+    module.CouponShares = require('./couponShares')(Sequelize, Schema);
+
 
     module.Brand.hasMany(module.Coupon, { foreignKey: 'brand_id' });
 

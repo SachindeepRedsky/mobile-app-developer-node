@@ -1,0 +1,120 @@
+{% extends "backend/auth_partials/layout.html" %}
+{% block body %}
+<section class="content-header">
+    <div class="container-fluid">
+        <div class="row mb-2">
+            <div class="col-sm-6">
+                <h1>Advertise Campaign Management</h1>
+            </div>
+            <div class="col-sm-6">
+                <ol class="breadcrumb float-sm-right">
+                    <li class="breadcrumb-item"><a href="/backend/dashboard"><i class="fas fa-tachometer-alt"></i> Dashboard</a></li>
+                    <li class="breadcrumb-item"><a href="/backend/brand">Campaign</a></li>
+                    <li class="breadcrumb-item active">Advertise Campaigns</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+</section>
+{% include "backend/auth_partials/notification.html" %}
+<section class="content">
+    <div class="container-fluid">
+        <div class="card">
+            <div class="card-header text-right"><a href="/backend/gusset/campaign/new" class="btn btn-primary">Create Advertise Campaign</a></div>
+            <div class="card-body ">
+                <div class="table-responsive">
+                <table id="gussetCampaignTable" class="table table-bordered table-striped text-nowrap">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Campaign</th>
+                            <th>Brand</th>
+                            <th>Destination URL</th>
+                            <th>Original URL</th>
+                            <th>Status</th>
+                            <th>QR Code</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>{% for campaign in campaigns %}{% set ad = campaign.ads[0] %}<tr>
+                            <td>{{ loop.index }}</td>
+                            <td>{{ campaign.campaignName }}</td>
+                            <td>{{ campaign.brandDetails.brandName }}</td>
+                            <td><a href="{{ campaign.destinationUrl }}" target="_blank">{{ campaign.destinationUrl | truncate(35, true, "...") }}</a></td>
+                            <td>{% if ad %}{{ ad.dataValues.scanUrl }}{% else %}-{% endif %}</td>
+                            <td>{{ campaign.status }}</td>
+                                <td>{% if ad %}<img src="/dist/qr_codes/gusset_{{ ad.adId }}.png" alt="Advertise QR Code"
+                                    width="100" height="100" class="qr-code-cell" data-qr="/dist/qr_codes/gusset_{{ ad.adId }}.png"
+                                    data-label="{{ campaign.campaignName }}" title="Click to preview QR code" style="cursor: pointer;">
+                                <div><small>{{ ad.scanUrl }}</small></div>{% else %}-{% endif %}
+                            </td>
+                            <td><a href="/backend/gusset/campaign/edit/{{ campaign.id }}" title="Edit Campaign"
+                                    class="btn btn-warning btn-xs"><i class="far fa-edit"></i></a> <a
+                                    href="/backend/gusset/campaign/delete/{{ campaign.id }}" title="Delete Campaign"
+                                    class="btn btn-danger btn-xs"
+                                    onclick="return confirm('Delete this Advertise campaign and its QR code?');"><i
+                                        class="fa fa-trash"></i></a></td>
+                        </tr>{% endfor %}</tbody>
+                </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}
+ 
+{% block Jscript %}
+<script>
+    $('#gussetCampaignTable').DataTable({
+        oLanguage: { sSearch: 'Search' },
+        processing: true,
+        ordering: false,
+        autoWidth: false,
+        pageLength: 10,
+        scrollX: true
+    });
+
+    function openGussetQrModal(qr, label) {
+        $('#modalQrImage').attr('src', qr);
+        $('#modalCampaignName').text(label);
+        $('#downloadGussetQrBtn').attr('href', qr).attr('download', label + '.png');
+        $('#printGussetQrBtn').data('qr', qr).data('label', label);
+        $('#gussetQrCodeModal').modal('show');
+    }
+ 
+    $(document).on('click', '.qr-code-cell', function () {
+        openGussetQrModal($(this).data('qr'), $(this).data('label'));
+    });
+ 
+    $(document).on('click', '#printGussetQrBtn', function () {
+        const qr = $(this).data('qr');
+        const label = $(this).data('label');
+        const printWindow = window.open('', '_blank');
+        printWindow.document.write('<html><head><title>' + label + '</title><style>body{text-align:center;font-family:Arial;padding:30px}img{width:250px}</style></head><body><h2>' + label + '</h2><img src="' + qr + '"></body></html>');
+        printWindow.document.close();
+        printWindow.onload = function () {
+            printWindow.print();
+            printWindow.close();
+        };
+    });
+</script>
+ 
+<div class="modal fade" id="gussetQrCodeModal" tabindex="-1" role="dialog" aria-labelledby="gussetQrCodeModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="gussetQrCodeModalLabel">Campaign - <span id="modalCampaignName"></span></h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+            </div>
+            <div class="modal-body text-center">
+                <img id="modalQrImage" class="qr-modal-img" src="" alt="Gusset QR Code" style="max-width:100%;height:auto;">
+            </div>
+            <div class="modal-footer justify-content-center">
+                <a id="downloadGussetQrBtn" href="" download class="btn btn-success"><i class="fa fa-download"></i> Download QR</a>
+                <button id="printGussetQrBtn" type="button" class="btn btn-success"><i class="fa fa-print"></i> Print</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+ 

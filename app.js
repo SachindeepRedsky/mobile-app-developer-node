@@ -46,6 +46,7 @@ app.use(bodyParser.urlencoded({ extended: true, limit: '50mb' }));
 app.use(cookieParser());
 
 app.use(express.static(path.join(__dirname, 'public')));
+app.use('/dist', express.static(path.join(__dirname, 'public/dist')));
 nunjucks.configure('app/views', {
   autoescape: false,
   express: app,

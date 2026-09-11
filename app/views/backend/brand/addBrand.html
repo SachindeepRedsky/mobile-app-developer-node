@@ -6,7 +6,7 @@
         width: 150px !important;
         height: 150px !important;
     }
-
+ 
     .resp-picture img {
         width: 100%;
     }
@@ -38,7 +38,7 @@
         </div>
         <!-- /Title -->
         {% include "backend/auth_partials/notification.html" %}
-
+ 
         <section class="content">
             <div class="container-fluid">
                 <div class="row">
@@ -56,7 +56,7 @@
                                     action="{% if brand %}/backend/updateBrand/{{brand.id}}{% else %}/backend/addBrandPost{% endif %}"
                                     class="form-horizontal" enctype="multipart/form-data"
                                     id="{% if brand %}editBrandForm{% else %}addBrandForm{% endif %}">
-
+ 
                                     <!-- Brand Logo -->
                                     <div class="form-group">
                                         <div class="row align-items-center">
@@ -65,9 +65,9 @@
                                             <label class="picture resp-picture" for="picture__input" tabIndex="0">
                                                 <span class="picture__image">
                                                     {% if brand and brand.brandLogo %}
-                                                    <img src="{{ brand.brandLogo }}" alt="Brand Logo" id="picture">
+                                                    <img src="{{ brand.brandLogo }}" alt="Brand Logo" id="picture" width="100" height="100">
                                                     {% else %}
-                                                    <img src="/dist/brandLogo/user.png" alt="Upload Image" id="picture">
+                                                    <img src="/dist/brandLogo/user.png" alt="Upload Image" id="picture" width="100" height="100">
                                                     {% endif %}
                                                 </span>
                                             </label>
@@ -76,8 +76,8 @@
                                                 class="form-control">
                                         </div>
                                     </div>
-
-
+ 
+ 
                                     <!-- Brand Name -->
                                     <div class="form-group">
                                         <div class="row">
@@ -90,7 +90,7 @@
                                             </div>
                                         </div>
                                     </div>
-
+ 
                                     <!-- Status -->
                                     <div class="form-group row">
                                         <label for="status" class="mb-10 col-sm-2 col-form-label">Status</label>
@@ -103,7 +103,7 @@
                                             </select>
                                         </div>
                                     </div>
-
+ 
                                     <!-- Submit Button -->
                                     <div class="text-right">
                                         <input type="submit" class="btn btn-success statusChange"
@@ -119,29 +119,29 @@
         </section>
     </div>
 </div>
-
+ 
 {% endblock %}
-
+ 
 {% block Jscript %}
 <script>
     function validateImage(input) {
         const file = input.files[0];
         const validExtensions = ['image/jpeg', 'image/png', 'image/jpg']; // Allowed MIME types
         const maxSize = 2 * 1024 * 1024; // 2 MB maximum size
-
+ 
         if (file) {
             if (!validExtensions.includes(file.type)) {
                 alert('Only JPG, PNG, or JPEG files are allowed.');
                 input.value = ''; // Clear the input
                 return;
             }
-
+ 
             if (file.size > maxSize) {
                 alert('File size must be less than 2 MB.');
                 input.value = ''; // Clear the input
                 return;
             }
-
+ 
             // If valid, display the selected image (optional)
             const reader = new FileReader();
             reader.onload = function (e) {
@@ -151,7 +151,7 @@
         }
     }
 </script>
-
+ 
 <script>
     $(document).ready(function () {
         $('#addBrandForm').validate({
@@ -185,29 +185,29 @@
             },
         });
     });
-
+ 
     // Image Preview
     const inputFile = document.querySelector("#picture__input");
     const pictureImage = document.querySelector(".picture__image");
-
+ 
     inputFile.addEventListener("change", function (e) {
         const inputTarget = e.target;
         const file = inputTarget.files[0];
-
+ 
         if (file) {
             const reader = new FileReader();
-
+ 
             reader.addEventListener("load", function (e) {
                 const readerTarget = e.target;
-
+ 
                 const img = document.createElement("img");
                 img.src = readerTarget.result;
                 img.classList.add("picture__img");
-
+ 
                 pictureImage.innerHTML = "";
                 pictureImage.appendChild(img);
             });
-
+ 
             reader.readAsDataURL(file);
         }
     });

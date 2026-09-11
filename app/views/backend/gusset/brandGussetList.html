@@ -1,0 +1,72 @@
+{% extends "backend/auth_partials/layout.html" %}
+{% block body %}
+<section class="content-header">
+    <div class="container-fluid">
+        <div class="row mb-2">
+            <div class="col-sm-6">
+                <h1>Advertise Brand Management</h1>
+            </div>
+            <div class="col-sm-6">
+                <ol class="breadcrumb float-sm-right">
+                    <li class="breadcrumb-item"><a href="/backend/dashboard"><i class="fas fa-tachometer-alt"></i> Dashboard</a></li>
+                    <li class="breadcrumb-item"><a href="/backend/brand">Campaign</a></li>
+                    <li class="breadcrumb-item active">Advertise Brands</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+</section>
+{% include "backend/auth_partials/notification.html" %}
+<section class="content">
+    <div class="container-fluid">
+        <div class="card">
+            <div class="card-header text-right"><a href="/backend/gusset/brand/new" class="btn btn-primary">Add Advertise Brand</a></div>
+            <div class="card-body">
+                <div class="table-responsive">
+                <table id="gussetBrandTable" class="table table-bordered table-striped text-nowrap">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Brand ID</th>
+                            <th>Brand Logo</th>
+                            <th>Brand Name</th>
+                            <th>Status</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>{% for brand in brands %}<tr>
+                            <td>{{ loop.index }}</td>
+                            <td>{{ brand.id }}</td>
+                            <td>{% if brand.brandLogo %}<img src="{{ brand.brandLogo }}" alt="Brand Logo" width="50"
+                                    height="50">{% else %}-{% endif %}</td>
+                            <td>{{ brand.brandName }}</td>
+                            <td>{% if brand.status == 'active' %}<span style="color: green;">Active</span>{% else
+                                %}<span style="color: red;">Inactive</span>{% endif %}</td>
+                            <td><a href="/backend/gusset/brand/edit/{{ brand.id }}" title="Edit Brand"
+                                    class="btn btn-warning btn-xs"><i class="far fa-edit"></i></a>
+                                <a href="/backend/gusset/brand/delete/{{ brand.id }}" title="Delete Brand"
+                                    class="btn btn-danger btn-xs"
+                                    onclick="return confirm('Delete this Gusset brand?');"><i
+                                        class="fa fa-trash"></i></a></td>
+                        </tr>{% endfor %}</tbody>
+                </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block Jscript %}
+<script>
+    $('#gussetBrandTable').DataTable({
+        oLanguage: { sSearch: 'Search' },
+        processing: true,
+        ordering: false,
+        autoWidth: false,
+        pageLength: 10,
+        scrollX: true,
+        responsive: true
+    });
+</script>
+{% endblock %}

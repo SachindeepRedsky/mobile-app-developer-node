@@ -738,7 +738,7 @@ module.exports = function (model, config) {
       failedMessage.message = "No valid coupon data found";
       return res.status(404).send(failedMessage);
     } catch (error) {
-      console.error("qrScan:::::::::::::::>>>>error: ", error);
+      console.error("qrScan1:::::::::::::::>>>>error: ", error);
       failedMessage.message = "Something went wrong, please try again";
       return res.status(500).send(failedMessage); // Return 500 for server errors
     }
@@ -787,7 +787,7 @@ module.exports = function (model, config) {
         .status(200)
         .send({ status: "success", message: "Status Updated Successfully." }); // Return success response with data
     } catch (error) {
-      console.error("qrScan:::::::::::::::>>>>error: ", error);
+      console.error("qrScan3:::::::::::::::>>>>error: ", error);
       failedMessage.message = "Something went wrong, please try again";
       return res.status(500).send(failedMessage); // Return 500 for server errors
     }
@@ -801,6 +801,7 @@ module.exports = function (model, config) {
     };
     var failedMessage = { status: "fail", message: "", data: {} };
     const { couponId, couponCode, userId, productId } = req.body;
+    const authenticatedUserId = req.authUserId || userId;
     console.log("redeemCoupon:::::::::::::::>>>>couponId: ", couponId, couponCode, userId, productId);
     if (!couponId && !couponCode) {
       failedMessage.message = "Please provide couponId or couponCode.";
@@ -818,10 +819,26 @@ module.exports = function (model, config) {
         return res.status(400).send(failedMessage);
       }
 
-      const targetUserId = userId || couponDetail.userId || 0;
+      const targetUserId = authenticatedUserId || couponDetail.userId || 0;
       const targetProductId = productId || "0";
+      const sharedByCurrentUser = await model.CouponShares.findOne({
+        where: {
+          couponId: couponDetail.id,
+          productId: targetProductId,
+          sharerUserId: authenticatedUserId,
+        },
+        raw: true,
+      });
+      if (sharedByCurrentUser) {
+        failedMessage.message = "This coupon was shared by you and can only be redeemed by your friend.";
+        return res.status(403).send(failedMessage);
+      }
       const existingRecord = await model.CouponRecords.findOne({
-        where: { couponId: couponDetail.id, productId: targetProductId },
+        where: {
+          userId: targetUserId,
+          couponId: couponDetail.id,
+          productId: targetProductId,
+        },
         raw: true,
       });
       if (!existingRecord) {
@@ -869,7 +886,7 @@ module.exports = function (model, config) {
       // Fetch details from the Coupon model
       const recodrds = await model.CouponRecords.findAll({
         where: { userId },
-        attributes: ['coupon_id', 'productId', 'status'],
+        attributes: ['coupon_id', 'productId', 'friend_id', 'status'],
         raw: true
       });
       const idsArray = [...new Set(recodrds.map(i => i.coupon_id))];
@@ -891,7 +908,7 @@ module.exports = function (model, config) {
         failedMessage.message = "Data not found";
         return res.status(200).send({ status: "success", message: "", data: [] }); // Return success but with empty data
       }
-
+console.log("recodrds", recodrds);
       // Process coupon details
       const couponData = await Promise.all(
         recodrds.map(async (record) => {
@@ -908,6 +925,19 @@ module.exports = function (model, config) {
 
             coupon.assignStatus = record.status;
             coupon.productId = record.productId;
+            coupon.friendId = record.friend_id || record.friendId || null;
+            coupon.isSharedCoupon = Boolean(coupon.friendId);
+            if(coupon.friendId) {           
+              const sharedByOwner = await model.CouponShares.findOne({
+                where: {
+                  couponId: record.coupon_id,
+                  productId: record.productId,
+                  sharerUserId: userId,
+                },
+                raw: true,
+              });
+              coupon.isSharedByMe = Boolean(sharedByOwner);
+            }
 
             const brandDetail = await model.Brand.findOne({
                 where: {
@@ -934,7 +964,7 @@ module.exports = function (model, config) {
     });
 
     } catch (error) {
-      console.error("qrScan:::::::::::::::>>>>error: ", error);
+      console.error("qrScan2:::::::::::::::>>>>error: ", error);
       failedMessage.message = "Something went wrong, please try again";
       return res.status(500).send(failedMessage); // Return 500 for server errors
     }

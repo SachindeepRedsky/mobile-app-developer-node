@@ -18,6 +18,9 @@ var config = {
 	localhost: {
 		"port": SERVER_PORT || 8080,
 		"baseUrl": BASE_URL || `http://localhost:${DEFAULT_PORT}`,
+		"shareBaseUrl": process.env.SHARE_BASE_URL || BASE_URL || "https://mydomain.com",
+		"androidStoreUrl": process.env.ANDROID_STORE_URL || "https://play.google.com/store/apps/details?id=com.bagvertising",
+		"iosStoreUrl": process.env.IOS_STORE_URL || "https://apps.apple.com/us/search?term=Bagvertising",
 		"siteName": "Bagvertising",
 		smtpMailer: {
 			host: SMTP_HOST,
@@ -33,6 +36,9 @@ var config = {
 	development: {
 		"port": SERVER_PORT || 8080,
 		"baseUrl": BASE_URL || `http://localhost:${DEFAULT_PORT}`,
+		"shareBaseUrl": process.env.SHARE_BASE_URL || BASE_URL || "https://mydomain.com",
+		"androidStoreUrl": process.env.ANDROID_STORE_URL || "https://play.google.com/store/apps/details?id=com.bagvertising",
+		"iosStoreUrl": process.env.IOS_STORE_URL || "https://apps.apple.com/us/search?term=Bagvertising",
 		"siteName": "Bagvertising",
 		smtpMailer: {
 			host: SMTP_HOST,
@@ -48,6 +54,9 @@ var config = {
 	production: {
 		"port": SERVER_PORT || 8080,
 		"baseUrl": BASE_URL || `http://localhost:${DEFAULT_PORT}`,
+		"shareBaseUrl": process.env.SHARE_BASE_URL || BASE_URL || "https://mydomain.com",
+		"androidStoreUrl": process.env.ANDROID_STORE_URL || "https://play.google.com/store/apps/details?id=com.bagvertising",
+		"iosStoreUrl": process.env.IOS_STORE_URL || "https://apps.apple.com/us/search?term=Bagvertising",
 		"siteName": "Bagvertising",
 		smtpMailer: {
 			host: SMTP_HOST,

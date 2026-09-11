@@ -1,0 +1,108 @@
+{% extends "backend/auth_partials/layout.html" %}
+{% block body %}
+<section class="content-header">
+    <div class="container-fluid">
+        <div class="row mb-2">
+            <div class="col-sm-6">
+                <h1>{{ title }}</h1>
+            </div>
+            <div class="col-sm-6">
+                <ol class="breadcrumb float-sm-right">
+                    <li class="breadcrumb-item"><a href="/backend/dashboard"><i class="fas fa-tachometer-alt"></i>
+                            Dashboard</a></li>
+                        <li class="breadcrumb-item"><a href="/backend/brand">Campaign</a></li>
+                    <li class="breadcrumb-item"><a href="/backend/gusset/brand">Advertise Brands</a></li>
+                    <li class="breadcrumb-item active">{% if brand %}Edit{% else %}Add{% endif %}</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+</section>
+{% include "backend/auth_partials/notification.html" %}
+<section class="content">
+    <div class="container-fluid">
+        <div class="card">
+            <div class="card-header">
+                <h6 class="card-title font-weight-bold">{% if brand %}Edit Advertise Brand{% else %}Add New Advertise Brand{% endif %}</h6>
+            </div>
+            <div class="card-body">
+                <form method="post"
+                    action="{% if brand %}/backend/gusset/brand/update/{{ brand.id }}{% else %}/backend/gusset/brand{% endif %}"
+                    enctype="multipart/form-data" id="gussetBrandForm">
+                    <div class="form-group">
+                        <div class="row align-items-center">
+                            <label class="control-label mb-10 col-sm-2" for="picture__input">Brand Logo{% if not brand %} *{% endif %}:</label>
+                            <label class="picture resp-picture" for="picture__input" tabindex="0">
+                                <span class="picture__image">
+                                    <img src="{% if brand and brand.brandLogo %}{{ brand.brandLogo }}{% else %}/dist/brandLogo/user.png{% endif %}"
+                                        alt="Brand Logo" id="picture" width="100" height="100">
+                                </span>
+                            </label>
+                            <input type="file" name="picture__input" id="picture__input" accept=".png,.jpg,.jpeg"
+                                class="form-control-file" {% if not brand %}required{% endif %}>
+                        </div>
+                    </div>
+
+                    <div class="form-group row">
+                        <label class="control-label mb-10 col-sm-2" for="brandName">Brand Name*:</label>
+                        <div class="col-sm-6">
+                            <input class="form-control" id="brandName" name="brandName" required
+                                value="{% if brand %}{{ brand.brandName }}{% endif %}">
+                        </div>
+                    </div>
+
+                    <div class="form-group row">
+                        <label class="mb-10 col-sm-2 col-form-label" for="status">Status</label>
+                        <div class="col-sm-6">
+                            <select class="form-control" name="status" id="status">
+                                <option value="active" {% if not brand or brand.status == 'active' %}selected{% endif %}>Active</option>
+                                <option value="inactive" {% if brand and brand.status == 'inactive' %}selected{% endif %}>Inactive</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="text-right">
+                        <button class="btn btn-success" type="submit">{% if brand %}Update{% else %}Add{% endif %}</button>
+                        <a class="btn btn-danger" href="/backend/gusset/brand">Back</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}
+ 
+{% block Jscript %}
+<style>
+    .resp-picture {
+        aspect-ratio: auto !important;
+        width: 150px !important;
+        height: 150px !important;
+    }
+
+    .resp-picture img {
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
+    }
+</style>
+<script>
+    function validateImage(input) {
+        const file = input.files[0];
+        if (!file) return;
+        if (!['image/jpeg', 'image/png', 'image/jpg'].includes(file.type) || file.size > 2 * 1024 * 1024) {
+            alert('Only JPG/PNG images smaller than 2 MB are allowed.');
+            input.value = '';
+            return;
+        }
+        const reader = new FileReader();
+        reader.onload = (event) => { document.getElementById('picture').src = event.target.result; };
+        reader.readAsDataURL(file);
+    }
+
+    document.getElementById('picture__input').addEventListener('change', function () {
+        validateImage(this);
+    });
+</script>
+{% endblock %}
+ 

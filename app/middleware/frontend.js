@@ -11,7 +11,7 @@ module.exports = function (model) {
 
     jwt.verify(token, config.jwt_secret, async function (err, decoded) {
       if (!err) {
-        var userId = req.body.userId ? req.body.userId : req.query.userId;
+        var userId = decoded.data;
 
         // console.log('userId -->', userId);
 
@@ -21,6 +21,7 @@ module.exports = function (model) {
             where: { id: userId, jwtLoginToken: token },
           });
           if (userData) {
+            req.authUserId = userData.id;
             if (userData.status == "active") {
               next();
             } else {

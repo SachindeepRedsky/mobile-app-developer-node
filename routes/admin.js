@@ -41,6 +41,21 @@ module.exports = function (app, model, controller) {
 
     // Brand Management
     app.get('/backend/brand', middleware.admin.login, controller.brand.view);
+    app.get('/backend/gusset', middleware.admin.login, controller.gusset.view);
+    app.get('/backend/gusset/brand', middleware.admin.login, controller.gussetBrand.list);
+    app.get('/backend/gusset/brand/new', middleware.admin.login, controller.gussetBrand.create);
+    app.get('/backend/gusset/brand/edit/:id', middleware.admin.login, controller.gussetBrand.edit);
+    app.post('/backend/gusset/brand', middleware.admin.login, controller.gussetBrand.store);
+    app.post('/backend/gusset/brand/update/:id', middleware.admin.login, controller.gussetBrand.update);
+    app.get('/backend/gusset/brand/delete/:id', middleware.admin.login, controller.gussetBrand.remove);
+    app.get('/backend/gusset/campaign', middleware.admin.login, controller.gussetCampaign.list);
+    app.get('/backend/gusset/campaign/qr/:adId', middleware.admin.login, controller.gussetCampaign.qr);
+    app.get('/backend/gusset/campaign/new', middleware.admin.login, controller.gussetCampaign.create);
+    app.post('/backend/gusset/campaign', middleware.admin.login, controller.gussetCampaign.store);
+    app.get('/backend/gusset/campaign/edit/:id', middleware.admin.login, controller.gussetCampaign.edit);
+    app.post('/backend/gusset/campaign/update/:id', middleware.admin.login, controller.gussetCampaign.update);
+    app.get('/backend/gusset/campaign/delete/:id', middleware.admin.login, controller.gussetCampaign.remove);
+ 
     app.get('/backend/getBrand', middleware.admin.login, controller.brand.getBrand)
     app.get('/backend/addBrand', middleware.admin.login, controller.brand.addBrand)
     app.post('/backend/addBrandPost', middleware.admin.login, controller.brand.addBrandPost)
@@ -78,4 +93,6 @@ module.exports = function (app, model, controller) {
     app.get('/backend/deleteCampaign/:id', middleware.admin.login, controller.campaign.deleteCampaign)
     app.get("/backend/getCamaignCoupon", middleware.admin.login, controller.campaign.getCamaignCoupon)
     app.post('/backend/publishDraftCoupons', middleware.admin.login, controller.campaign.publishDraftCoupons)
+    app.get('/r/:qrToken', controller.gusset.trackGusset);
+    app.get('/g/:gussetAdId', controller.gusset.trackGussetView);
 } 

@@ -15,6 +15,11 @@ module.exports = function(Sequelize, Schema) {
             allowNull: false,
             field: 'coupon_id',
         },
+        friendId: {
+            type: Sequelize.INTEGER,
+            allowNull: true,
+            field: 'friend_id',
+        },
         status: {
             type: Sequelize.ENUM,
             values: ['active', 'used', 'expired', 'assigned'],
@@ -22,6 +27,12 @@ module.exports = function(Sequelize, Schema) {
         },
     }, {
         underscored: true,
+        indexes: [
+            { fields: ['user_id'] },
+            { fields: ['coupon_id'] },
+            { fields: ['friend_id'] },
+            { unique: true, fields: ['user_id', 'coupon_id', 'product_Id'] },
+        ],
     });
 
     couponRecords.sync({ force: false });
