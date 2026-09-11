@@ -889,6 +889,7 @@ module.exports = function (model, config) {
         attributes: ['coupon_id', 'productId', 'friend_id', 'status'],
         raw: true
       });
+      console.log("recodrds12121212", recodrds);
       const idsArray = [...new Set(recodrds.map(i => i.coupon_id))];
       // console.log("idsArray", idsArray);
       const details = await model.Coupon.findAll({
@@ -927,17 +928,15 @@ console.log("recodrds", recodrds);
             coupon.productId = record.productId;
             coupon.friendId = record.friend_id || record.friendId || null;
             coupon.isSharedCoupon = Boolean(coupon.friendId);
-            if(coupon.friendId) {           
-              const sharedByOwner = await model.CouponShares.findOne({
-                where: {
-                  couponId: record.coupon_id,
-                  productId: record.productId,
-                  sharerUserId: userId,
-                },
-                raw: true,
-              });
-              coupon.isSharedByMe = Boolean(sharedByOwner);
-            }
+            const sharedByOwner = await model.CouponShares.findOne({
+              where: {
+                couponId: record.coupon_id,
+                productId: record.productId,
+                sharerUserId: userId,
+              },
+              raw: true,
+            });
+            coupon.isSharedByMe = Boolean(sharedByOwner);
 
             const brandDetail = await model.Brand.findOne({
                 where: {
