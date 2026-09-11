@@ -12,7 +12,7 @@
                         <ol class="breadcrumb float-sm-right">
                             <li class="breadcrumb-item"><a href="/backend/dashboard"><i class="fas fa-tachometer-alt"></i>
                                     Dashboard</a></li>
-                                <li class="breadcrumb-item"><a href="/backend/brand">Campaign</a></li>
+                                <li class="breadcrumb-item"><a href="/backend/gusset">Advertise Tracking</a></li>
                             <li class="breadcrumb-item"><a href="/backend/gusset/campaign">Advertise Campaigns</a></li>
                             <li class="breadcrumb-item active">{% if campaign %}Edit{% else %}Add{% endif %}</li>
                         </ol>
@@ -92,6 +92,15 @@
 
 {% block Jscript %}
 <script>
+    function setFormLoading(form) {
+        const button = form.querySelector('button[type="submit"], input[type="submit"]');
+        if (!button || button.disabled) return;
+
+        button.disabled = true;
+        button.innerHTML = '<span class="spinner-border spinner-border-sm mr-2" role="status" aria-hidden="true"></span>Saving...';
+        form.submit();
+    }
+
     $('#gussetCampaignForm').validate({
         rules: {
             campaignName: { required: true },
@@ -102,7 +111,8 @@
             campaignName: { required: '*Campaign name is required' },
             brandId: { required: '*Please select an advertise brand' },
             destinationUrl: { required: '*Destination URL is required', url: '*Please enter a valid URL' }
-        }
+        },
+        submitHandler: setFormLoading
     });
 </script>
 {% endblock %}

@@ -153,6 +153,19 @@
 </script>
  
 <script>
+    function setFormLoading(form) {
+        const button = form.querySelector('button[type="submit"], input[type="submit"]');
+        if (!button || button.disabled) return;
+
+        button.disabled = true;
+        if (button.tagName === 'INPUT') {
+            button.value = 'Saving...';
+        } else {
+            button.innerHTML = '<span class="spinner-border spinner-border-sm mr-2" role="status" aria-hidden="true"></span>Saving...';
+        }
+        form.submit();
+    }
+
     $(document).ready(function () {
         $('#addBrandForm').validate({
             rules: {
@@ -171,6 +184,7 @@
                     required: '*Please choose a brand logo',
                 }
             },
+            submitHandler: setFormLoading,
         });
         $('#editBrandForm').validate({
             rules: {
@@ -183,6 +197,7 @@
                     required: '*Brand name is required',
                 },
             },
+            submitHandler: setFormLoading,
         });
     });
  

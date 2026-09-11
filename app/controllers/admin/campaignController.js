@@ -447,9 +447,14 @@ module.exports = function (model) {
                 ]
             })
             const requestedProductId = String(request.query.productId || '').trim();
+            const searchValue = String(request.body?.search?.value || request.query.search?.value || request.query.search || '').trim();
             if (!requestedProductId) {
                 const start = Math.max(Number.parseInt(request.body?.start || request.query.start, 10) || 0, 0);
                 const length = Math.min(Math.max(Number.parseInt(request.body?.length || request.query.length, 10) || 10, 1), 100);
+                const baseWhere = { campaign_id: campaignId };
+                if (searchValue) {
+                    baseWhere.productId = { [Op.like]: `%${searchValue}%` };
+                }
                 const [products, productCount] = await Promise.all([
                     model.Bags.findAll({
                     attributes: [
@@ -457,7 +462,7 @@ module.exports = function (model) {
                         'qrCode',
                         [Sequelize.fn('COUNT', Sequelize.col('id')), 'couponCount'],
                     ],
-                    where: { campaign_id: campaignId },
+                    where: baseWhere,
                     group: ['productId', 'qrCode'],
                     limit: length,
                     offset: start,
@@ -467,7 +472,7 @@ module.exports = function (model) {
                     model.Bags.count({
                         distinct: true,
                         col: 'productId',
-                        where: { campaign_id: campaignId },
+                        where: baseWhere,
                     }),
                 ]);
                 return response.send({
