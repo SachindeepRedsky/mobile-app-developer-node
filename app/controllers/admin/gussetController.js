@@ -81,8 +81,11 @@ module.exports = function (model, config) {
     module.trackGussetView = async function (req, res) {
         try {
             const { gussetAdId } = req.params;
+            const publicAdId = String(gussetAdId || '');
             const ad = await model.GussetAd.findOne({
-                where: { adId: gussetAdId },
+                where: {
+                    adId: publicAdId.startsWith('gusset-') ? publicAdId : `gusset-${publicAdId}`,
+                },
                 raw: true,
             });
  
@@ -275,6 +278,7 @@ console.log("records::", records)
             return res.render("backend/gusset/gussetList.html", {
                 title: "Gusset Tracking",
                 gussetManagement: "active",
+                gussetMenuOpen: "menu-open",
  
                 totalScans: totalScans,
                 totalQrCodes: totalQrCodes,

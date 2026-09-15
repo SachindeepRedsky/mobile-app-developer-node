@@ -43,12 +43,14 @@ module.exports = function (app, model, controller) {
     app.get('/backend/brand', middleware.admin.login, controller.brand.view);
     app.get('/backend/gusset', middleware.admin.login, controller.gusset.view);
     app.get('/backend/gusset/brand', middleware.admin.login, controller.gussetBrand.list);
+    app.get('/backend/gusset/brand/scan-analytics/:id', middleware.admin.login, controller.gussetBrand.scanAnalytics);
     app.get('/backend/gusset/brand/new', middleware.admin.login, controller.gussetBrand.create);
     app.get('/backend/gusset/brand/edit/:id', middleware.admin.login, controller.gussetBrand.edit);
     app.post('/backend/gusset/brand', middleware.admin.login, controller.gussetBrand.store);
     app.post('/backend/gusset/brand/update/:id', middleware.admin.login, controller.gussetBrand.update);
     app.get('/backend/gusset/brand/delete/:id', middleware.admin.login, controller.gussetBrand.remove);
     app.get('/backend/gusset/campaign', middleware.admin.login, controller.gussetCampaign.list);
+    app.get('/backend/gusset/campaign/scan-analytics/:id', middleware.admin.login, controller.gussetCampaign.scanAnalytics);
     app.get('/backend/gusset/campaign/qr/:adId', middleware.admin.login, controller.gussetCampaign.qr);
     app.get('/backend/gusset/campaign/new', middleware.admin.login, controller.gussetCampaign.create);
     app.post('/backend/gusset/campaign', middleware.admin.login, controller.gussetCampaign.store);

@@ -11,6 +11,17 @@ const crypto = require('crypto');
 const fs = require('fs');
 const path = require('path');
 const QRCode = require('qrcode');
+const { QueryTypes } = require('sequelize');
+
+const publicGussetAdId = (adId) => String(adId || '').replace(/^gusset-/, '');
+
+function getPublicBaseUrl(req) {
+    const configuredBaseUrl = String(process.env.BASE_URL || '').replace(/\/$/, '');
+    if (configuredBaseUrl && !/^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/i.test(configuredBaseUrl)) {
+        return configuredBaseUrl;
+    }
+    return `${req.protocol}://${req.get('host')}`;
+}
  
 async function generateGussetCampaignQrPath(qrContent, adId) {
     const qrDirectory = path.join(__dirname, '../../../public/dist/qr_codes');
@@ -25,11 +36,63 @@ async function generateGussetCampaignQrPath(qrContent, adId) {
         margin: 2,
         width: 300,
     });
+    console.log('QR DIRECTORY:', qrDirectory);
+    console.log('QR FILE PATH:', filePath);
+    console.log('QR FILE EXISTS:', fs.existsSync(filePath));
+    console.log('QR FILE SIZE:', fs.existsSync(filePath) ? fs.statSync(filePath).size : 0);
     return `/dist/qr_codes/${fileName}`;
 }
  
 module.exports = function (model) {
     const module = {};
+
+    module.scanAnalytics = async function (req, res) {
+        try {
+            const campaignId = Number(req.params.id);
+            const period = ['daily', 'weekly', 'monthly'].includes(req.query.period)
+                ? req.query.period
+                : 'daily';
+            if (!Number.isInteger(campaignId) || campaignId <= 0) {
+                return res.status(400).json({ success: false, message: 'Invalid campaign ID.' });
+            }
+
+            const campaign = await model.GussetCampaign.findByPk(campaignId, {
+                attributes: ['id', 'campaignName'],
+            });
+            if (!campaign) {
+                return res.status(404).json({ success: false, message: 'Gusset campaign not found.' });
+            }
+
+            const periodExpression = {
+                daily: 'DATE(gs.scanned_at)',
+                weekly: 'DATE_SUB(DATE(gs.scanned_at), INTERVAL WEEKDAY(gs.scanned_at) DAY)',
+                monthly: "DATE_FORMAT(gs.scanned_at, '%Y-%m-01')",
+            }[period];
+            const rows = await model.GussetScan.sequelize.query(`
+                SELECT ${periodExpression} AS date, COUNT(gs.id) AS scanCount
+                FROM gusset_scans AS gs
+                INNER JOIN gusset_ads AS ga ON ga.ad_id = gs.gusset_ad_id
+                WHERE ga.gusset_campaign_id = :campaignId
+                  AND gs.event_type IN ('gusset_scan', 'gusset_view')
+                GROUP BY ${periodExpression}
+                ORDER BY ${periodExpression} ASC
+            `, {
+                replacements: { campaignId },
+                type: QueryTypes.SELECT,
+            });
+
+            return res.json({
+                success: true,
+                campaignId: campaign.id,
+                campaignName: campaign.campaignName,
+                period,
+                data: rows.map((row) => ({ date: row.date, scanCount: Number(row.scanCount) })),
+            });
+        } catch (error) {
+            console.error('Gusset campaign scan analytics error:', error);
+            return res.status(500).json({ success: false, message: 'Unable to load scan analytics.' });
+        }
+    };
  
     module.list = async function (req, res) {
         const campaigns = await model.GussetCampaign.findAll({
@@ -43,7 +106,7 @@ module.exports = function (model) {
             const ad = campaign.ads && campaign.ads[0];
             console.log('[gussetCampaign.list] Processing campaign', { campaignId: campaign.id,  ad });
             if (ad) {
-                const scanUrl = `${process.env.BASE_URL || `${req.protocol}://${req.get('host')}`}/g/${ad.adId}`;
+                const scanUrl = `${getPublicBaseUrl(req)}/g/${publicGussetAdId(ad.adId)}`;
                 ad.dataValues.scanUrl = scanUrl;
                 ad.dataValues.qrImageUrl = await generateGussetCampaignQrPath(scanUrl, ad.adId);
                 console.log('[gussetCampaign.list] QR image ready', {
@@ -55,7 +118,7 @@ module.exports = function (model) {
             }
         }));
         return res.render('backend/gusset/campaignGussetList', {
-            title: 'Gusset Campaigns', campaigns, gussetManagement: 'active', gussetCampaignManagement: 'active',
+            title: 'Gusset Campaigns', campaigns, analyticsCampaigns: campaigns, gussetManagement: 'active', gussetMenuOpen: 'menu-open', gussetCampaignManagement: 'active',
             user: req.session.admin,
             error: req.flash('error'),
             success: req.flash('success'),
@@ -71,7 +134,7 @@ module.exports = function (model) {
             if (!ad) {
                 return res.status(404).send('QR code not found');
             }
-            const scanUrl = `${process.env.BASE_URL || `${req.protocol}://${req.get('host')}`}/g/${ad.adId}`;
+            const scanUrl = `${getPublicBaseUrl(req)}/g/${publicGussetAdId(ad.adId)}`;
             const image = await QRCode.toBuffer(scanUrl, {
                 type: 'png',
                 errorCorrectionLevel: 'M',
@@ -97,7 +160,7 @@ module.exports = function (model) {
     module.create = async function (req, res) {
         const brands = await model.GussetBrand.findAll({ where: { status: 'active' }, order: [['brandName', 'ASC']] });
         return res.render('backend/gusset/campaignGussetForm', {
-            title: 'Add Gusset Campaign', brands, gussetManagement: 'active', user: req.session.admin,
+            title: 'Add Gusset Campaign', brands, gussetManagement: 'active', gussetMenuOpen: 'menu-open', user: req.session.admin,
             campaign: null,
             error: req.flash('error'),
             success: req.flash('success'),
@@ -115,7 +178,7 @@ module.exports = function (model) {
         }
         return res.render('backend/gusset/campaignGussetForm', {
             title: 'Edit Gusset Campaign', brands, campaign,
-            gussetManagement: 'active', gussetCampaignManagement: 'active', user: req.session.admin,
+            gussetManagement: 'active', gussetMenuOpen: 'menu-open', gussetCampaignManagement: 'active', user: req.session.admin,
             error: req.flash('error'),
             success: req.flash('success'),
         });
@@ -143,7 +206,7 @@ module.exports = function (model) {
             gussetCampaignId: campaign.id,
         });
         const ad = await model.GussetAd.findOne({ where: { gussetCampaignId: campaign.id }, order: [['id', 'DESC']] });
-        const scanUrl = `${process.env.BASE_URL || `${req.protocol}://${req.get('host')}`}/g/${ad.adId}`;
+        const scanUrl = `${getPublicBaseUrl(req)}/g/${publicGussetAdId(ad.adId)}`;
         const qrImageUrl = await generateGussetCampaignQrPath(scanUrl, ad.adId);
         console.log('[gussetCampaign.store] QR file generated', { adId: ad.adId, scanUrl, qrImageUrl });
         req.flash('success', 'Gusset campaign created successfully.');

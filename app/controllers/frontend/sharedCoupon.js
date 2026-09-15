@@ -52,7 +52,10 @@ module.exports = function (model, config) {
       if (productId) bagWhere.productId = String(productId);
       const bag = await model.Bags.findOne({ where: bagWhere, raw: true });
       const resolvedProductId = String(productId || bag?.productId || '0');
-      const shareToken = crypto.randomBytes(32).toString('base64url');
+       const shareToken = crypto
+      .randomBytes(32)
+      .toString('hex');
+      console.log('create shared coupon', shareToken);
       const shareUrl = `${config.shareBaseUrl}/coupon/share/${shareToken}`;
       console.log('shareUrl', shareUrl, couponId, resolvedProductId, sharerUserId, shareToken, shareUrl);
       const share = await model.CouponShares.create({

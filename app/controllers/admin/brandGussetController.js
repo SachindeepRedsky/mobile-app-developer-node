@@ -1,7 +1,61 @@
 const path = require('path');
+const { QueryTypes } = require('sequelize');
  
 module.exports = function (model) {
     const module = {};
+
+    module.scanAnalytics = async function (req, res) {
+        try {
+            const brandId = Number(req.params.id);
+            const period = ['daily', 'weekly', 'monthly'].includes(req.query.period)
+                ? req.query.period
+                : 'daily';
+            if (!Number.isInteger(brandId) || brandId <= 0) {
+                return res.status(400).json({ success: false, message: 'Invalid brand ID.' });
+            }
+
+            const brand = await model.GussetBrand.findOne({
+                where: { id: brandId, status: 'active' },
+                attributes: ['id', 'brandName'],
+            });
+            if (!brand) {
+                return res.status(404).json({ success: false, message: 'Gusset brand not found.' });
+            }
+
+            const periodExpression = {
+                daily: 'DATE(gs.scanned_at)',
+                weekly: 'DATE_SUB(DATE(gs.scanned_at), INTERVAL WEEKDAY(gs.scanned_at) DAY)',
+                monthly: "DATE_FORMAT(gs.scanned_at, '%Y-%m-01')",
+            }[period];
+            const rows = await model.GussetScan.sequelize.query(`
+                SELECT ${periodExpression} AS date, COUNT(gs.id) AS scanCount
+                FROM gusset_scans AS gs
+                INNER JOIN gusset_ads AS ga ON ga.ad_id = gs.gusset_ad_id
+                INNER JOIN gusset_campaigns AS gc ON gc.id = ga.gusset_campaign_id
+                WHERE gc.gusset_brand_id = :brandId
+                  AND gs.event_type IN ('gusset_scan', 'gusset_view')
+                GROUP BY ${periodExpression}
+                ORDER BY ${periodExpression} ASC
+            `, {
+                replacements: { brandId },
+                type: QueryTypes.SELECT,
+            });
+
+            return res.json({
+                success: true,
+                brandId: brand.id,
+                brandName: brand.brandName,
+                period,
+                data: rows.map((row) => ({
+                    date: row.date,
+                    scanCount: Number(row.scanCount),
+                })),
+            });
+        } catch (error) {
+            console.error('Gusset brand scan analytics error:', error);
+            return res.status(500).json({ success: false, message: 'Unable to load scan analytics.' });
+        }
+    };
  
     const saveLogo = (file) => new Promise((resolve, reject) => {
         if (!file) {
@@ -18,8 +72,9 @@ module.exports = function (model) {
  
     module.list = async function (req, res) {
         const brands = await model.GussetBrand.findAll({ order: [['id', 'DESC']] });
+        const analyticsBrands = brands.filter((brand) => brand.status === 'active');
         return res.render('backend/gusset/brandGussetList', {
-            title: 'Gusset Brands', brands, gussetManagement: 'active', gussetBrandManagement: 'active',
+            title: 'Gusset Brands', brands, analyticsBrands, gussetManagement: 'active', gussetMenuOpen: 'menu-open', gussetBrandManagement: 'active',
             user: req.session.admin,
             error: req.flash('error'),
             success: req.flash('success'),
@@ -28,7 +83,7 @@ module.exports = function (model) {
  
     module.create = function (req, res) {
         return res.render('backend/gusset/brandGussetForm', {
-            title: 'Add Gusset Brand', gussetManagement: 'active', user: req.session.admin,
+            title: 'Add Gusset Brand', gussetManagement: 'active', gussetMenuOpen: 'menu-open', user: req.session.admin,
             brand: null,
             error: req.flash('error'), success: req.flash('success'),
         });
@@ -41,7 +96,7 @@ module.exports = function (model) {
             return res.redirect('/backend/gusset/brand');
         }
         return res.render('backend/gusset/brandGussetForm', {
-            title: 'Edit Gusset Brand', gussetManagement: 'active', gussetBrandManagement: 'active',
+            title: 'Edit Gusset Brand', gussetManagement: 'active', gussetMenuOpen: 'menu-open', gussetBrandManagement: 'active',
             user: req.session.admin, brand,
             error: req.flash('error'), success: req.flash('success'),
         });

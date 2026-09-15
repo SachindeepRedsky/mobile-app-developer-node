@@ -43,26 +43,36 @@
             <p>Campaign Management</p>
           </a>
         </li>
- 
-        <!-- Advertise Tracking -->
-        <li class="nav-item">
-          <a href="/backend/gusset" class="nav-link {{gussetManagement}}">
-            <i class="nav-icon fas fa-qrcode"></i>
-            <p>Advertise Tracking</p>
-          </a>
-        </li>
-        <!-- <li class="nav-item">
-          <a href="/backend/gusset/brand" class="nav-link {{gussetBrandManagement}}">
-            <i class="nav-icon fas fa-building"></i>
-            <p>Gusset Brands</p>
-          </a>
-        </li>
-        <li class="nav-item">
-          <a href="/backend/gusset/campaign" class="nav-link {{gussetCampaignManagement}}">
-            <i class="nav-icon fas fa-bullhorn"></i>
-            <p>Gusset Campaigns</p>
-          </a>
-        </li> -->
+ <!-- Advertise Tracking -->
+<li class="nav-item {{gussetMenuOpen}}">
+
+  <a href="/backend/gusset" class="nav-link advertise-tracking-link {{gussetManagement}}" onclick="window.location.href = this.href; return false;">
+    <i class="nav-icon fas fa-qrcode"></i>
+    <p>Advertise Tracking</p>
+  </a>
+
+  <button type="button" class="advertise-tracking-toggle" aria-label="Toggle Advertise Tracking menu"
+    aria-expanded="{{ 'true' if gussetMenuOpen else 'false' }}"
+    onclick="event.preventDefault(); event.stopPropagation(); var menuItem = this.closest('.nav-item'); var isOpen = menuItem.classList.toggle('menu-open'); this.setAttribute('aria-expanded', isOpen);">
+    <i class="fas fa-angle-left"></i>
+  </button>
+
+  <ul class="nav nav-treeview">
+
+    <li class="nav-item">
+      <a href="/backend/gusset/brand" class="nav-link {{gussetBrandManagement}}">
+        <p>Gusset Brands</p>
+      </a>
+    </li>
+
+    <li class="nav-item">
+      <a href="/backend/gusset/campaign" class="nav-link {{gussetCampaignManagement}}">
+        <p>Gusset Campaigns</p>
+      </a>
+    </li>
+
+  </ul>
+</li>
  
         <!-- CMS Management -->
         <li class="nav-item">

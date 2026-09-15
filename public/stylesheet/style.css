@@ -99,6 +99,56 @@ table#userTable{
     padding-left: 10px;
 }
 
+.main-sidebar .nav-item:has(> .advertise-tracking-toggle) {
+    position: relative;
+}
+
+.main-sidebar .advertise-tracking-link {
+    padding-right: 42px;
+}
+
+.main-sidebar .advertise-tracking-toggle {
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 42px;
+    height: 44px;
+    border: 0;
+    padding: 0;
+    background: transparent;
+    color: rgba(255, 255, 255, 0.8);
+    cursor: pointer;
+    z-index: 2;
+}
+
+.main-sidebar .advertise-tracking-toggle:hover,
+.main-sidebar .advertise-tracking-toggle:focus,
+.main-sidebar .advertise-tracking-toggle:active {
+    background: transparent;
+    color: rgba(255, 255, 255, 0.8);
+    outline: none;
+}
+
+.main-sidebar .advertise-tracking-link.active {
+    background-color: #007bff;
+    color: #ffffff;
+}
+
+.main-sidebar .nav-item.menu-open > .nav-treeview > .nav-item > .nav-link.active,
+.main-sidebar .nav-item.menu-open > .nav-treeview > .nav-item > .nav-link.active:focus,
+.main-sidebar .nav-item.menu-open > .nav-treeview > .nav-item > .nav-link.active:hover {
+    background-color: #007bff;
+    color: #ffffff;
+}
+
+.main-sidebar .advertise-tracking-toggle i {
+    transition: transform 0.2s ease;
+}
+
+.main-sidebar .nav-item.menu-open > .advertise-tracking-toggle i {
+    transform: rotate(-90deg);
+}
+
 /* Profile page Change Password Block CSS */
 
 .inputField {

@@ -19,43 +19,87 @@
 {% include "backend/auth_partials/notification.html" %}
 <section class="content">
     <div class="container-fluid">
-        <div class="card">
-            <div class="card-header text-right"><a href="/backend/gusset/campaign/new" class="btn btn-primary">Create Advertise Campaign</a></div>
-            <div class="card-body ">
-                <div class="table-responsive">
-                <table id="gussetCampaignTable" class="table table-bordered table-striped text-nowrap">
-                    <thead>
-                        <tr>
-                            <th>Sr. No.</th>
-                            <th>Campaign</th>
-                            <th>Brand</th>
-                            <th>Destination URL</th>
-                            <th>Original URL</th>
-                            <th>Status</th>
-                            <th>QR Code</th>
-                            <th>Action</th>
-                        </tr>
-                    </thead>
-                    <tbody>{% for campaign in campaigns %}{% set ad = campaign.ads[0] %}<tr>
-                            <td>{{ loop.index }}</td>
-                            <td>{{ campaign.campaignName }}</td>
-                            <td>{{ campaign.brandDetails.brandName }}</td>
-                            <td><a href="{{ campaign.destinationUrl }}" target="_blank">{{ campaign.destinationUrl | truncate(35, true, "...") }}</a></td>
-                            <td>{% if ad %}{{ ad.dataValues.scanUrl }}{% else %}-{% endif %}</td>
-                            <td>{{ campaign.status }}</td>
-                                <td>{% if ad %}<img src="/dist/qr_codes/gusset_{{ ad.adId }}.png" alt="Advertise QR Code"
-                                    width="100" height="100" class="qr-code-cell" data-qr="/dist/qr_codes/gusset_{{ ad.adId }}.png"
-                                    data-label="{{ campaign.campaignName }}" title="Click to preview QR code" style="cursor: pointer;">
-                                <div><small>{{ ad.scanUrl }}</small></div>{% else %}-{% endif %}
-                            </td>
-                            <td><a href="/backend/gusset/campaign/edit/{{ campaign.id }}" title="Edit Campaign"
-                                    class="btn btn-warning btn-xs"><i class="far fa-edit"></i></a> <a
-                                    href="/backend/gusset/campaign/delete/{{ campaign.id }}" title="Delete Campaign"
-                                    class="btn btn-danger btn-xs"
-                                    onclick="return confirm('Delete this Advertise campaign and its QR code?');"><i
-                                        class="fa fa-trash"></i></a></td>
-                        </tr>{% endfor %}</tbody>
-                </table>
+        <div class="row">
+            <div class="col-lg-7 col-md-12">
+                <div class="card">
+                    <div class="card-header text-right"><a href="/backend/gusset/campaign/new" class="btn btn-primary">Create Advertise Campaign</a></div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                        <table id="gussetCampaignTable" class="table table-bordered table-striped text-nowrap" style="min-width: 900px;">
+                            <thead>
+                                <tr>
+                                    <th>Sr. No.</th>
+                                    <th>Campaign</th>
+                                    <th>Brand</th>
+                                    <th>Destination URL</th>
+                                    <th>Original URL</th>
+                                    <th>Status</th>
+                                    <th>QR Code</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>{% for campaign in campaigns %}{% set ad = campaign.ads[0] %}<tr>
+                                    <td>{{ loop.index }}</td>
+                                    <td>{{ campaign.campaignName }}</td>
+                                    <td>{{ campaign.brandDetails.brandName }}</td>
+                                    <td><a href="{{ campaign.destinationUrl }}" target="_blank">{{ campaign.destinationUrl | truncate(35, true, "...") }}</a></td>
+                                    <td>{% if ad %}{{ ad.dataValues.scanUrl }}{% else %}-{% endif %}</td>
+                                    <td>{{ campaign.status }}</td>
+                                    <td>{% if ad %}<img src="/dist/qr_codes/gusset_{{ ad.adId }}.png" alt="Advertise QR Code"
+                                        width="100" height="100" class="qr-code-cell" data-qr="/dist/qr_codes/gusset_{{ ad.adId }}.png"
+                                        data-label="{{ campaign.campaignName }}" title="Click to preview QR code" style="cursor: pointer;">
+                                    <div><small>{{ ad.scanUrl }}</small></div>{% else %}-{% endif %}
+                                    </td>
+                                    <td><a href="/backend/gusset/campaign/edit/{{ campaign.id }}" title="Edit Campaign"
+                                            class="btn btn-warning btn-xs"><i class="far fa-edit"></i></a> <a
+                                            href="/backend/gusset/campaign/delete/{{ campaign.id }}" title="Delete Campaign"
+                                            class="btn btn-danger btn-xs"
+                                            onclick="return confirm('Delete this Advertise campaign and its QR code?');"><i
+                                                class="fa fa-trash"></i></a></td>
+                                </tr>{% endfor %}</tbody>
+                        </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-5 col-md-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">Advertise Campaign Scan Analytics</h3>
+                    </div>
+                    <div class="card-body">
+                        <div class="form-row">
+                            <div class="form-group col-md-7">
+                                <label for="advertiseCampaignSelect">Select Advertise Campaign</label>
+                                <select id="advertiseCampaignSelect" class="form-control" {% if not analyticsCampaigns.length %}disabled{% endif %}>
+                                    {% for campaign in analyticsCampaigns %}
+                                        <option value="{{ campaign.id }}">{{ campaign.campaignName }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="form-group col-md-5">
+                                <label for="campaignScanAnalyticsPeriod">Period</label>
+                                <select id="campaignScanAnalyticsPeriod" class="form-control" {% if not analyticsCampaigns.length %}disabled{% endif %}>
+                                    <option value="daily" selected>Daily</option>
+                                    <option value="weekly">Weekly</option>
+                                    <option value="monthly">Monthly</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div id="campaignScanAnalyticsLoading" class="text-center text-muted py-4" style="display: none;">
+                            Loading scan analytics...
+                        </div>
+                        <div id="campaignScanAnalyticsError" class="text-center text-danger py-4" style="display: none;">
+                            Unable to load scan analytics.
+                        </div>
+                        <div id="campaignScanAnalyticsEmpty" class="text-center text-muted py-4" style="display: none;">
+                            No scan data available for this campaign.
+                        </div>
+                        <div class="chart-container" style="position: relative; height: 300px;">
+                            <canvas id="advertiseCampaignScanChart"></canvas>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -71,8 +115,96 @@
         ordering: false,
         autoWidth: false,
         pageLength: 10,
-        scrollX: true
+        scrollX: true,
+        responsive: false
     });
+
+    var advertiseCampaignScanChart;
+    var $campaignSelect = $('#advertiseCampaignSelect');
+    var $campaignPeriodSelect = $('#campaignScanAnalyticsPeriod');
+
+    function resetCampaignScanAnalytics() {
+        if (advertiseCampaignScanChart) {
+            advertiseCampaignScanChart.destroy();
+            advertiseCampaignScanChart = null;
+        }
+        $('#advertiseCampaignScanChart').hide();
+        $('#campaignScanAnalyticsEmpty, #campaignScanAnalyticsError').hide();
+    }
+
+    function loadCampaignScanAnalytics(campaignId, period) {
+        if (!campaignId) {
+            resetCampaignScanAnalytics();
+            $('#campaignScanAnalyticsEmpty').show();
+            return;
+        }
+
+        resetCampaignScanAnalytics();
+        $('#campaignScanAnalyticsLoading').show();
+
+        $.ajax({
+            url: '/backend/gusset/campaign/scan-analytics/' + encodeURIComponent(campaignId),
+            method: 'GET',
+            data: { period: period || 'daily' },
+            dataType: 'json'
+        }).done(function (response) {
+            if (!response.success || !response.data || !response.data.length) {
+                $('#campaignScanAnalyticsEmpty').show();
+                return;
+            }
+
+            $('#advertiseCampaignScanChart').show();
+            advertiseCampaignScanChart = new Chart($('#advertiseCampaignScanChart'), {
+                type: 'line',
+                data: {
+                    labels: response.data.map(function (item) { return item.date; }),
+                    datasets: [{
+                        label: 'Scans',
+                        data: response.data.map(function (item) { return item.scanCount; }),
+                        borderColor: '#007bff',
+                        backgroundColor: 'rgba(0, 123, 255, 0.15)',
+                        borderWidth: 2,
+                        pointRadius: 3,
+                        pointBackgroundColor: '#007bff',
+                        fill: true,
+                        lineTension: 0.2
+                    }]
+                },
+                options: {
+                    maintainAspectRatio: false,
+                    responsive: true,
+                    scales: {
+                        yAxes: [{
+                            scaleLabel: { display: true, labelString: 'Scans' },
+                            ticks: { beginAtZero: true, precision: 0 }
+                        }],
+                        xAxes: [{
+                            scaleLabel: { display: true, labelString: 'Date' }
+                        }]
+                    }
+                }
+            });
+        }).fail(function (xhr) {
+            console.error('Unable to load Gusset campaign scan analytics:', xhr.status);
+            $('#campaignScanAnalyticsError').show();
+        }).always(function () {
+            $('#campaignScanAnalyticsLoading').hide();
+        });
+    }
+
+    $campaignSelect.on('change', function () {
+        loadCampaignScanAnalytics(this.value, $campaignPeriodSelect.val());
+    });
+
+    $campaignPeriodSelect.on('change', function () {
+        loadCampaignScanAnalytics($campaignSelect.val(), this.value);
+    });
+
+    if ($campaignSelect.val()) {
+        loadCampaignScanAnalytics($campaignSelect.val(), $campaignPeriodSelect.val() || 'daily');
+    } else {
+        $('#campaignScanAnalyticsEmpty').show();
+    }
 
     function openGussetQrModal(qr, label) {
         $('#modalQrImage').attr('src', qr);
