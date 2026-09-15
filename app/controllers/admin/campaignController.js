@@ -580,6 +580,10 @@ module.exports = function (model) {
             type: "png",
             width: 300,
         });
+        console.log("QR DIRECTORY", qrDirectory);
+        console.log("QR FILE PATH", filePath);
+        console.log("QR FILE EXISTS", fs.existsSync(filePath));
+        console.log("QR FILE SIZE", fs.existsSync(filePath) ? fs.statSync(filePath).size : 0);
         return `/dist/qr_codes/${fileName}`;
     }
 
