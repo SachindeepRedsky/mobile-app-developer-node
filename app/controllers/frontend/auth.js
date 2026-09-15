@@ -936,7 +936,19 @@ console.log("recodrds", recodrds);
               },
               raw: true,
             });
+
             coupon.isSharedByMe = Boolean(sharedByOwner);
+
+            const receivedShare = await model.CouponShares.findOne({
+              where: {
+                couponId: record.coupon_id,
+                productId: record.productId,
+                sharerUserId: { [Op.ne]: userId },
+              },
+              raw: true,
+            });
+
+            coupon.isShareme = Boolean(receivedShare);
 
             const brandDetail = await model.Brand.findOne({
                 where: {
