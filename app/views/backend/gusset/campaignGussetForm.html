@@ -12,8 +12,8 @@
                         <ol class="breadcrumb float-sm-right">
                             <li class="breadcrumb-item"><a href="/backend/dashboard"><i class="fas fa-tachometer-alt"></i>
                                     Dashboard</a></li>
-                                <li class="breadcrumb-item"><a href="/backend/gusset">Advertise Tracking</a></li>
-                            <li class="breadcrumb-item"><a href="/backend/gusset/campaign">Advertise Campaigns</a></li>
+                                <li class="breadcrumb-item"><a href="/backend/gusset">Analytics Dashboard</a></li>
+                            <li class="breadcrumb-item"><a href="/backend/gusset/campaign">Analytics Campaigns</a></li>
                             <li class="breadcrumb-item active">{% if campaign %}Edit{% else %}Add{% endif %}</li>
                         </ol>
                     </div>
@@ -28,7 +28,7 @@
                     <div class="col-md-12">
                         <div class="card">
                             <div class="card-header">
-                                <h6 class="card-title font-weight-bold">{% if campaign %}Edit Advertise Campaign{% else %}Add New Advertise Campaign{% endif %}</h6>
+                                <h6 class="card-title font-weight-bold">{% if campaign %}Edit Analytics Campaign{% else %}Add New Analytics Campaign{% endif %}</h6>
                             </div>
                             <div class="card-body">
                                 <form method="post"
@@ -43,7 +43,7 @@
                                     </div>
 
                                     <div class="form-group row">
-                                        <label class="control-label mb-10 col-sm-2" for="brandId">Advertise Brand*:</label>
+                                        <label class="control-label mb-10 col-sm-2" for="brandId">Analytics Brand*:</label>
                                         <div class="col-sm-6">
                                             <select class="form-control" name="brandId" id="brandId" required>
                                                 <option value="">Select brand</option>

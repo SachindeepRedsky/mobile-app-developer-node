@@ -160,7 +160,7 @@ module.exports = function (model) {
     module.create = async function (req, res) {
         const brands = await model.GussetBrand.findAll({ where: { status: 'active' }, order: [['brandName', 'ASC']] });
         return res.render('backend/gusset/campaignGussetForm', {
-            title: 'Add Gusset Campaign', brands, gussetManagement: 'active', gussetMenuOpen: 'menu-open', user: req.session.admin,
+            title: 'Add Campaign', brands, gussetManagement: 'active', gussetMenuOpen: 'menu-open', user: req.session.admin,
             campaign: null,
             error: req.flash('error'),
             success: req.flash('success'),

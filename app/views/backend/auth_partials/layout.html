@@ -92,6 +92,33 @@
 }
  
 </style>
+<style>
+  html.history-guard-page body {
+    visibility: hidden;
+  }
+</style>
+<script>
+  (function () {
+    var path = window.location.pathname;
+    var isFormPage = path === '/backend/addBrand' ||
+      path === '/backend/addCampaign' ||
+      path === '/backend/gusset/brand/new' ||
+      path === '/backend/gusset/campaign/new' ||
+      /^\/backend\/editBrand\/\d+$/.test(path) ||
+      /^\/backend\/editCampaign\/\d+$/.test(path) ||
+      /^\/backend\/gusset\/brand\/edit\/\d+$/.test(path) ||
+      /^\/backend\/gusset\/campaign\/edit\/\d+$/.test(path);
+
+    var navigation = window.performance && window.performance.getEntriesByType
+      ? window.performance.getEntriesByType('navigation')[0]
+      : null;
+    var isHistoryNavigation = navigation && navigation.type === 'back_forward';
+
+    if (isFormPage && isHistoryNavigation) {
+      document.documentElement.classList.add('history-guard-page');
+    }
+  }());
+</script>
 <body class="hold-transition sidebar-mini layout-fixed{% if hideSidebar %} public-campaign-page{% endif %}">
   <div class="wrapper">
  
@@ -174,6 +201,54 @@
   <script
     src="https://cdnjs.cloudflare.com/ajax/libs/jquery-datetimepicker/2.5.20/jquery.datetimepicker.full.min.js"></script>
   {% block Jscript %}{% endblock %}
+  <script>
+    (function () {
+      var formPages = {
+        '/backend/addBrand': '/backend/brand',
+        '/backend/addCampaign': '/backend/campaign',
+        '/backend/gusset/brand/new': '/backend/gusset/brand',
+        '/backend/gusset/campaign/new': '/backend/gusset/campaign'
+      };
+      var formPatterns = [
+        [/^\/backend\/editBrand\/\d+$/, '/backend/brand'],
+        [/^\/backend\/editCampaign\/\d+$/, '/backend/campaign'],
+        [/^\/backend\/gusset\/brand\/edit\/\d+$/, '/backend/gusset/brand'],
+        [/^\/backend\/gusset\/campaign\/edit\/\d+$/, '/backend/gusset/campaign']
+      ];
+
+      function redirectFromFormOnHistoryNavigation(event) {
+        var destination = formPages[window.location.pathname];
+        if (!destination) {
+          formPatterns.some(function (entry) {
+            if (entry[0].test(window.location.pathname)) {
+              destination = entry[1];
+              return true;
+            }
+            return false;
+          });
+        }
+
+        var navigation = window.performance && window.performance.getEntriesByType
+          ? window.performance.getEntriesByType('navigation')[0]
+          : null;
+        var isHistoryNavigation = event.persisted || (navigation && navigation.type === 'back_forward');
+
+        if (destination && isHistoryNavigation) {
+          window.location.replace(destination);
+          return;
+        }
+
+        document.documentElement.classList.remove('history-guard-page');
+      }
+
+      window.addEventListener('pagehide', function (event) {
+        if (event.persisted) {
+          document.documentElement.classList.add('history-guard-page');
+        }
+      });
+      window.addEventListener('pageshow', redirectFromFormOnHistoryNavigation);
+    }());
+  </script>
 </body>
  
 </html>

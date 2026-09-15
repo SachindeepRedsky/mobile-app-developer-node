@@ -4,13 +4,13 @@
     <div class="container-fluid">
         <div class="row mb-2">
             <div class="col-sm-6">
-                <h1>Advertise Campaign Management</h1>
+                <h1>Analytics Campaign Management</h1>
             </div>
             <div class="col-sm-6">
                 <ol class="breadcrumb float-sm-right">
                     <li class="breadcrumb-item"><a href="/backend/dashboard"><i class="fas fa-tachometer-alt"></i> Dashboard</a></li>
-                    <li class="breadcrumb-item"><a href="/backend/gusset">Advertise Tracking</a></li>
-                    <li class="breadcrumb-item active">Advertise Campaigns</li>
+                    <li class="breadcrumb-item"><a href="/backend/gusset">Analytics Dashboard</a></li>
+                    <li class="breadcrumb-item active">Analytics Campaigns</li>
                 </ol>
             </div>
         </div>
@@ -22,7 +22,7 @@
         <div class="row">
             <div class="col-lg-7 col-md-12">
                 <div class="card">
-                    <div class="card-header text-right"><a href="/backend/gusset/campaign/new" class="btn btn-primary">Create Advertise Campaign</a></div>
+                    <div class="card-header text-right"><a href="/backend/gusset/campaign/new" class="btn btn-primary">Create Analytics Campaign</a></div>
                     <div class="card-body">
                         <div class="table-responsive">
                         <table id="gussetCampaignTable" class="table table-bordered table-striped text-nowrap" style="min-width: 900px;">
@@ -66,12 +66,12 @@
             <div class="col-lg-5 col-md-12">
                 <div class="card">
                     <div class="card-header">
-                        <h3 class="card-title">Advertise Campaign Scan Analytics</h3>
+                        <h3 class="card-title">Analytics Campaign Scan Analytics</h3>
                     </div>
                     <div class="card-body">
                         <div class="form-row">
                             <div class="form-group col-md-7">
-                                <label for="advertiseCampaignSelect">Select Advertise Campaign</label>
+                                <label for="advertiseCampaignSelect">Select Analytics Campaign</label>
                                 <select id="advertiseCampaignSelect" class="form-control" {% if not analyticsCampaigns.length %}disabled{% endif %}>
                                     {% for campaign in analyticsCampaigns %}
                                         <option value="{{ campaign.id }}">{{ campaign.campaignName }}</option>

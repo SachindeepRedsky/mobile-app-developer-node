@@ -83,7 +83,7 @@ module.exports = function (model) {
  
     module.create = function (req, res) {
         return res.render('backend/gusset/brandGussetForm', {
-            title: 'Add Gusset Brand', gussetManagement: 'active', gussetMenuOpen: 'menu-open', user: req.session.admin,
+            title: 'Add Brands', gussetManagement: 'active', gussetMenuOpen: 'menu-open', user: req.session.admin,
             brand: null,
             error: req.flash('error'), success: req.flash('success'),
         });

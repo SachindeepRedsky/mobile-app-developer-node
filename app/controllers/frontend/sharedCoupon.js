@@ -33,8 +33,8 @@ module.exports = function (model, config) {
 
   module.create = async function (req, res) {
     try {
-      const { couponId, productId } = req.body;
-      const sharerUserId = req.authUserId;
+      const { couponId, productId, sharerUserId } = req.body;
+      // const sharerUserId = req.authUserId;
 
       if (!couponId || !sharerUserId) {
         return res.status(400).send({ status: 'fail', message: 'Please provide a valid coupon.' });
@@ -119,7 +119,9 @@ module.exports = function (model, config) {
 
   module.add = async function (req, res) {
     try {
-      const recipientUserId = req.authUserId;
+      // const recipientUserId = req.authUserId;
+      const { userId } = req.body;
+      const recipientUserId = userId;
       const share = await getShare(req.params.shareToken);
       if (!share) return res.status(404).send({ status: 'fail', message: 'Share link is invalid or expired.' });
       if (!recipientUserId) return res.status(401).send({ status: 'fail', message: 'Please log in first.' });

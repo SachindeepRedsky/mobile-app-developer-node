@@ -801,7 +801,7 @@ module.exports = function (model, config) {
     };
     var failedMessage = { status: "fail", message: "", data: {} };
     const { couponId, couponCode, userId, productId } = req.body;
-    const authenticatedUserId = req.authUserId || userId;
+    // const authenticatedUserId = req.authUserId || userId;
     console.log("redeemCoupon:::::::::::::::>>>>couponId: ", couponId, couponCode, userId, productId);
     if (!couponId && !couponCode) {
       failedMessage.message = "Please provide couponId or couponCode.";
@@ -819,13 +819,13 @@ module.exports = function (model, config) {
         return res.status(400).send(failedMessage);
       }
 
-      const targetUserId = authenticatedUserId || couponDetail.userId || 0;
+      const targetUserId = couponDetail.userId || 0;
       const targetProductId = productId || "0";
       const sharedByCurrentUser = await model.CouponShares.findOne({
         where: {
           couponId: couponDetail.id,
           productId: targetProductId,
-          sharerUserId: authenticatedUserId,
+          sharerUserId: couponDetail.userId,
         },
         raw: true,
       });
@@ -835,7 +835,7 @@ module.exports = function (model, config) {
       }
       const existingRecord = await model.CouponRecords.findOne({
         where: {
-          userId: targetUserId,
+          userId: userId,
           couponId: couponDetail.id,
           productId: targetProductId,
         },
@@ -843,7 +843,7 @@ module.exports = function (model, config) {
       });
       if (!existingRecord) {
         await model.CouponRecords.create({
-          userId: targetUserId,
+          userId: userId,
           productId: targetProductId,
           couponId: couponDetail.id,
           status: "assigned",
