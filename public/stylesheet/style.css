@@ -141,6 +141,13 @@ table#userTable{
     color: #ffffff;
 }
 
+.main-sidebar .nav-treeview > .nav-item > .nav-link.active,
+.main-sidebar .nav-treeview > .nav-item > .nav-link.active:focus,
+.main-sidebar .nav-treeview > .nav-item > .nav-link.active:hover {
+    background-color: #007bff;
+    color: #ffffff;
+}
+
 .main-sidebar .advertise-tracking-toggle i {
     transition: transform 0.2s ease;
 }
