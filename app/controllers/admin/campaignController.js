@@ -375,11 +375,24 @@ module.exports = function (model) {
                 }
 
                 const totalCoupons = await model.Bags.count({ where: { campaign_id: campaignId } });
-                const usedCoupons = await model.CouponRecords.count({
-                    where: { couponId: { [Op.in]: couponIds } },
+                const usedCouponRecords = await model.CouponRecords.findAll({
+                    where: {
+                        couponId: {
+                            [Op.in]: [...new Set(couponIds)]
+                        },
+                        status: 'used'
+                    },
                     attributes: ['product_id', 'couponId'],
                     raw: true
                 });
+
+                const uniqueUsedCoupons = new Set(
+                    usedCouponRecords.map(record =>
+                        `${record.product_id}_${record.couponId}`
+                    )
+                );
+
+                const usedCoupons = uniqueUsedCoupons.size;
                 const unUsedCoupons = Math.max(totalCoupons - usedCoupons, 0);
 
 
