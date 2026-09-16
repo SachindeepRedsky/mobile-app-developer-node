@@ -377,6 +377,8 @@ module.exports = function (model) {
                 const totalCoupons = await model.Bags.count({ where: { campaign_id: campaignId } });
                 const usedCoupons = await model.CouponRecords.count({
                     where: { couponId: { [Op.in]: couponIds } },
+                    attributes: ['product_id', 'couponId'],
+                    raw: true
                 });
                 const unUsedCoupons = Math.max(totalCoupons - usedCoupons, 0);
 
