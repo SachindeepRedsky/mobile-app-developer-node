@@ -148,12 +148,16 @@ table#userTable{
     color: #ffffff;
 }
 
+.main-sidebar .nav-treeview > .nav-item > .nav-link {
+    margin-left: 15px;
+}
+
 .main-sidebar .advertise-tracking-toggle i {
     transition: transform 0.2s ease;
 }
 
 .main-sidebar .nav-item.menu-open > .advertise-tracking-toggle i {
-    transform: rotate(-90deg);
+    transform: rotate(90deg);
 }
 
 /* Profile page Change Password Block CSS */
