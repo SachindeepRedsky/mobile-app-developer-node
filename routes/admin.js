@@ -52,6 +52,7 @@ module.exports = function (app, model, controller) {
     app.get('/backend/gusset/campaign', middleware.admin.login, controller.gussetCampaign.list);
     app.get('/backend/gusset/campaign/scan-analytics/:id', middleware.admin.login, controller.gussetCampaign.scanAnalytics);
     app.get('/backend/gusset/campaign/qr/:adId', middleware.admin.login, controller.gussetCampaign.qr);
+    app.get('/backend/gusset/campaign/creative/:id', middleware.admin.login, controller.gussetCampaign.creative);
     app.get('/backend/gusset/campaign/new', middleware.admin.login, controller.gussetCampaign.create);
     app.post('/backend/gusset/campaign', middleware.admin.login, controller.gussetCampaign.store);
     app.get('/backend/gusset/campaign/edit/:id', middleware.admin.login, controller.gussetCampaign.edit);
