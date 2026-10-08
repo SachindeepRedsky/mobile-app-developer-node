@@ -53,8 +53,8 @@
 
   <button type="button" class="advertise-tracking-toggle" aria-label="Toggle Advertise Tracking menu"
     aria-expanded="{{ 'true' if gussetMenuOpen else 'false' }}"
-    onclick="event.preventDefault(); event.stopPropagation(); var menuItem = this.closest('.nav-item'); var isOpen = menuItem.classList.toggle('menu-open'); this.setAttribute('aria-expanded', isOpen);">
-    <i class="fas fa-angle-right"></i>
+    onclick="event.preventDefault(); event.stopPropagation(); var menuItem = this.closest('.nav-item'); var isOpen = menuItem.classList.toggle('menu-open'); var icon = this.querySelector('i'); this.setAttribute('aria-expanded', isOpen); icon.classList.toggle('fa-angle-down', isOpen); icon.classList.toggle('fa-angle-right', !isOpen);">
+    <i class="fas {{ 'fa-angle-down' if gussetMenuOpen else 'fa-angle-right' }}"></i>
   </button>
 
   <ul class="nav nav-treeview">

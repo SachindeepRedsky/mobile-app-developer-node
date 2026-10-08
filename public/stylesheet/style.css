@@ -150,7 +150,10 @@ table#userTable{
 
 .main-sidebar .nav-treeview > .nav-item > .nav-link {
     margin-left: 15px;
+    margin-right: 3px;
+    width: auto;
 }
+/* }
 
 .main-sidebar .advertise-tracking-toggle i {
     transition: transform 0.2s ease;
@@ -158,7 +161,8 @@ table#userTable{
 
 .main-sidebar .nav-item.menu-open > .advertise-tracking-toggle i {
     transform: rotate(90deg);
-}
+} */
+     
 
 /* Profile page Change Password Block CSS */
 
